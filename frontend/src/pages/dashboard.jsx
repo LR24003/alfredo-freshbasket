@@ -1,0 +1,254 @@
+// Nuestra pagina principal
+
+import "../styles/dashboard.css";
+import { tieneAcceso } from "../config/permissions.js";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useNavigate, Outlet, useLocation } from "react-router-dom";
+
+function Dashboard({ onLogout }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  //Extrae el rol y correo de cada usuario para mostrarse en el perfil
+  const userRole = (localStorage.getItem("userRole") || "USUARIO").toUpperCase().trim();
+  const userEmail = localStorage.getItem("userEmail") || "correodeejemplo@mail.com";
+
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  // Desde aquí manejamos nuestro submenu
+  const [isProductsOpen, setIsProductsOpen] = useState(false);
+  const [isUsersOpen, setIsUsersOpen] = useState(false);
+
+  const profileRef = useRef(null);
+
+  useEffect(() => {
+    if (!localStorage.getItem("token")) navigate("/login");
+  }, [navigate]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setShowProfileMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    if (onLogout) onLogout();
+    navigate("/login");
+  };
+
+    //Menú de opciones, controlamos quienes tiene acceso a los diferentes botones
+    const menuItems = React.useMemo(() => {
+      return [
+        { key: "home",         icon: "bi-house-fill",         label: "Inicio",       path: "/dashboard" },
+        { key: "productos",    icon: "bi-basket3-fill",       label: "Productos",    path: "/dashboard/productos", hasSubmenu: true },
+        { key: "entradas",     icon: "bi-box-arrow-in-down",  label: "Entradas" },
+        { key: "salidas",      icon: "bi-box-arrow-up",       label: "Salidas" },
+        { key: "proveedores",  icon: "bi-truck",              label: "Proveedores" },
+
+        ...(tieneAcceso(userRole, "verModuloUsuarios") ? [
+          { key: "usuarios",     icon: "bi-people-fill",        label: "Usuarios",     path: "/dashboard/usuarios", hasSubmenu: true }
+        ] : []),
+
+        { key: "categorías",   icon: "bi-tags-fill",          label: "Categorías" },
+        { key: "paises",       icon: "bi-globe-americas",     label: "Países" },
+      ];
+    }, [userRole]);
+
+    // SubMenu: aquí vemos todas las acciones que se pueden realizar
+    const productSubItems = React.useMemo(() => {
+      return [
+        ...(tieneAcceso(userRole, "verTabsConsulta") ? [
+          { key: "all",    icon: "bi-box-seam-fill",    label: "Todos los productos" },
+          { key: "name",   icon: "bi-search",           label: "Buscar por nombre" },
+          { key: "id",     icon: "bi-tag-fill",         label: "Buscar por ID" }
+        ] : []),
+        ...(tieneAcceso(userRole, "crear") ? [
+          { key: "create", icon: "bi-plus-circle-fill", label: "Registrar producto" }
+        ] : []),
+        ...(tieneAcceso(userRole, "actualizar") ? [
+          { key: "update", icon: "bi-pencil-square",    label: "Actualizar producto" }
+        ] : []),
+        ...(tieneAcceso(userRole, "eliminar") ? [
+          { key: "delete", icon: "bi-trash3-fill",      label: "Eliminar producto" }
+        ] : [])
+      ];
+    }, [userRole]);
+
+    //
+    const userSubItems = React.useMemo(() => {
+      return [
+        ...(tieneAcceso(userRole, "verModuloUsuarios") ? [
+          { key: "all",    icon: "bi-box-seam-fill",    label: "Todos los usuarios" },
+          { key: "name",   icon: "bi-search",           label: "Buscar usuarios por nombre" },
+          { key: "id",     icon: "bi-tag-fill",         label: "Buscar usuario por ID" }
+        ] : []),
+        ...(tieneAcceso(userRole, "crear") ? [
+          { key: "create", icon: "bi-plus-circle-fill", label: "Registrar usuario" }
+        ] : []),
+        ...(tieneAcceso(userRole, "actualizar") ? [
+          { key: "update", icon: "bi-pencil-square",    label: "Actualizar usuario" }
+        ] : []),
+        ...(tieneAcceso(userRole, "eliminar") ? [
+          { key: "delete", icon: "bi-trash3-fill",      label: "Eliminar usuario" }
+        ] : [])
+      ];
+    }, [userRole]);
+
+  return (
+      <div className="fb-root">
+        {/* SIDEBAR */}
+        <div className="fb-sidebar">
+          <div className="fb-sidebar-brand">
+            <i className="bi bi-basket3-fill fb-sidebar-brand-icon" />
+            <span className="fb-sidebar-brand-name">FreshBasket</span>
+          </div>
+
+          <div className="fb-sidebar-section">MÓDULOS</div>
+          <nav className="fb-nav">
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.path;
+
+              // Determinar si este menú específico está abierto
+              const isMenuOpen = item.key === "productos" ? isProductsOpen : item.key === "usuarios" ? isUsersOpen : false;
+
+              // Obtener los sub-ítems filtrados dinámicamente desde useMemo
+              const subItemsArr = item.key === "productos" ? productSubItems : item.key === "usuarios" ? userSubItems : [];
+
+              return (
+                <div key={item.key} style={{ width: "100%" }}>
+                  {/* Botón Principal de Menú */}
+                  <button
+                    className={`fb-nav-item ${isActive ? "fb-nav-item-active" : ""}`}
+                    onClick={() => {
+                      if (item.key === "productos") {
+                        setIsProductsOpen(!isProductsOpen);
+                        setIsUsersOpen(false);
+                        navigate(item.path);
+                      } else if (item.key === "usuarios") {
+                        setIsUsersOpen(!isUsersOpen);
+                        setIsProductsOpen(false);
+                        navigate(item.path);
+                      } else if (item.path) {
+                        setIsProductsOpen(false);
+                        setIsUsersOpen(false);
+                        navigate(item.path);
+                      }
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flex: 1 }}>
+                      <i className={`bi ${item.icon} fb-nav-icon`} />
+                      <span>{item.label}</span>
+                    </div>
+
+                    {item.hasSubmenu && subItemsArr.length > 0 && (
+                      <i className={`bi ${isMenuOpen ? "bi-chevron-up" : "bi-chevron-down"} fb-profile-arrow`} style={{ fontSize: "0.8rem" }} />
+                    )}
+                  </button>
+
+                  {/* SUB-MENÚ DINÁMICO */}
+                  {/* Se añade la validación subItemsArr.length > 0 para que no pinte nada si no hay permisos */}
+                  {item.hasSubmenu && isMenuOpen && subItemsArr.length > 0 && (
+                    <div className="fb-sidebar-submenu" style={{ paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.25rem", marginTop: "0.25rem" }}>
+                      {subItemsArr.map((sub) => (
+                        <button
+                          key={sub.key}
+                          className="fb-nav-item"
+                          style={{ fontSize: "0.85rem", padding: "0.5rem 0.75rem", background: "transparent", border: "none" }}
+                          onClick={() => {
+                            if (item.key === "productos") {
+                              localStorage.setItem("activeProductTab", sub.key);
+                              window.dispatchEvent(new Event("productTabChanged"));
+                            } else if (item.key === "usuarios") {
+                              localStorage.setItem("activeUserTab", sub.key);
+                              window.dispatchEvent(new Event("userTabChanged"));
+                            }
+                            navigate(item.path);
+                          }}
+                        >
+                          <i className={`bi ${sub.icon}`} style={{ marginRight: "0.5rem", fontSize: "1rem" }} />
+                          <span>{sub.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* PANEL CONTENT AREA */}
+        <div className="fb-main">
+          {/* TOPBAR */}
+          <div className="fb-topbar">
+            <div>
+              <h2 className="fb-top-title">
+                {menuItems.find(m => location.pathname === m.path)?.label || "Panel"}
+              </h2>
+              <p style={{ margin: 0 }} className="fb-top-sub">Bienvenido a FRESHBASKET</p>
+            </div>
+
+            <div className="fb-top-right fb-profile-container" ref={profileRef}>
+              <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="fb-logout-btn fb-profile-trigger-btn">
+                <i className="bi bi-person-circle fb-profile-icon" />
+                <span>Perfil</span>
+                <i className={`bi ${showProfileMenu ? "bi-chevron-up" : "bi-chevron-down"} fb-profile-arrow`} />
+              </button>
+
+              {showProfileMenu && (
+                <div className="fb-profile-dropdown">
+                  <div className="fb-profile-header">
+                    <span className={`fb-role-badge ${userRole.toUpperCase() === "ADMIN" ? "admin" : "usuario"}`}>{userRole}</span>
+                    <p className="fb-profile-email"><i className="bi bi-envelope-fill" />{userEmail}</p>
+                  </div>
+                  <button onClick={handleLogout} className="fb-logout-btn fb-profile-logout-action-btn">
+                    <i className="bi bi-box-arrow-left" />Cerrar Sesión
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* VISTA DINÁMICA DE CONTENIDO */}
+                  <div className="fb-content">
+                    {location.pathname === "/dashboard" && (
+                      <div
+                        className="fb-photo-section"
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          height: "calc(100vh - 90px)",
+                          width: "100%",
+                          boxSizing: "border-box",
+                          overflow: "hidden",
+                          padding: "2rem"
+                        }}
+                      >
+                        <img
+                          src="/logo1.png"
+                          alt="Foto principal FreshBasket"
+                          className="fb-photo"
+                          style={{
+                            width: "100%",
+                            maxWidth: "500px",
+                            maxHeight: "100%",
+                            objectFit: "contain",
+                            display: "block"
+                          }}
+                        />
+                      </div>
+                    )}
+            <Outlet />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  export default Dashboard;
