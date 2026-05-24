@@ -14,6 +14,7 @@ function Users() {
 
   // Lee la opción elegida desde el menú desplegable de Usuarios
   const [activeTab, setActiveTab] = useState(localStorage.getItem("activeUserTab") || "all");
+  const [showWelcome, setShowWelcome] = useState(true);
 
   const [allUsers, setAllUsers] = useState([]);
   const [usersByName, setUsersByName] = useState([]);
@@ -35,23 +36,34 @@ function Users() {
     countryName: "",
   });
 
-  // Reacciona cuando se presiona una opción del módulo Usuarios en el Dashboard
-  useEffect(() => {
-    const handleUserTabChange = () => {
-      const tab = localStorage.getItem("activeUserTab") || "all";
-      setActiveTab(tab);
+   useEffect(() => {
+       localStorage.setItem("activeUserTab", "home");
+       setActiveTab("home");
+       setShowWelcome(true);
 
-      // Si el usuario da clic en "Todos los usuarios", cargamos la lista automáticamente
-      if (tab === "all") {
-        loadUsers();
-      }
-    };
-    window.addEventListener("userTabChanged", handleUserTabChange);
+       const handleUserTabChange = () => {
+         const tab = localStorage.getItem("activeUserTab") || "home";
+         setActiveTab(tab);
 
-    handleUserTabChange();
+         if (tab === "home") {
+           setShowWelcome(true);
+         } else if (tab === "all") {
+           setShowWelcome(false);
+           if (typeof loadUsers === "function") {
+             loadUsers();
+           }
+         } else if (tab === "name" || tab === "id" || tab === "create" || tab === "update" || tab === "delete") {
 
-    return () => window.removeEventListener("userTabChanged", handleUserTabChange);
-  }, []);
+           setShowWelcome(false);
+         } else {
+           setShowWelcome(false);
+         }
+       };
+       window.addEventListener("userTabChanged", handleUserTabChange);
+
+       return () => window.removeEventListener("userTabChanged", handleUserTabChange);
+     }, []);
+
 
   // Carga dinámica de dependencias
   const loadDependencies = async () => {
@@ -109,18 +121,27 @@ function Users() {
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
-    const nuevoUsuario = Object.fromEntries(fd.entries());
+    const newSupplier = Object.fromEntries(fd.entries());
 
     try {
+
+      const token = localStorage.getItem("token");
+      const authConfig = {
+        headers: { Authorization: token ? `Bearer ${token}` : "" }
+      };
+
+      // Le pasamos el payload del proveedor junto con la configuración de autenticación
       await createUser({
-        ...nuevoUsuario,
-        countryName: nuevoUsuario.countryName?.trim()
-      });
-      alert("¡Usuario creado con éxito!");
+        ...newUser,
+        countryName: newUser.countryName?.trim()
+      }, authConfig);
+
+      alert("¡Proveedor creado con éxito!");
       e.target.reset();
-      loadUsers();
+      loadSuppliers();
     } catch (error) {
-      alert("Error al crear usuario: " + (error.response?.data?.message || "Verifica las credenciales"));
+      console.error("Error completo:", error);
+      alert("Error al crear proveedor: " + (error.response?.data?.message || "No tienes permisos (403) o verifica los datos"));
     }
   };
 
@@ -205,6 +226,16 @@ function Users() {
 
   return (
     <div className="fb-form-container">
+          {activeTab === "home" && showWelcome && (
+              <div className="fb-photo-section">
+              <img
+              src="/logo1.png"
+              alt="Foto principal FreshBasket"
+              className="fb-photo"
+          />
+          </div>
+         )}
+
           {/* ALL USERS */}
           {activeTab === "all" && (
             <div className="fb-form-section">
@@ -327,8 +358,9 @@ function Users() {
                     </div>
                     )}
                 </div>
-
               )}
+
+
 
           {/* CREATE USER */}
           {activeTab === "create" && (
@@ -462,7 +494,7 @@ function Users() {
                     </div>
                   </div>
                   <button type="submit" className="fb-action-btn" style={{ background: "linear-gradient(135deg,#b45309,#fd7e14)", marginTop: "1.5rem" }}>
-                    <i className="bi bi-check-circle-fill" /> Actualizar Usuario
+                    <i className="bi bi-check-circle-fill" /> Actualizar usuario
                   </button>
                 </form>
               </div>

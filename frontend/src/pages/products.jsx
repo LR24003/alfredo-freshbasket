@@ -14,7 +14,8 @@ function Products() {
   const userRole = localStorage.getItem("userRole") || "USUARIO";
 
 
-  const [activeTab, setActiveTab] = useState(localStorage.getItem("activeProductTab") || "home");
+  const [activeTab, setActiveTab] = useState(localStorage.getItem("activeProductTab") || "all");
+  const [showWelcome, setShowWelcome] = useState(true);
 
   const [search, setSearch] = useState("");
   const [searchId, setSearchId] = useState("");
@@ -35,21 +36,34 @@ function Products() {
   const [editSearchId, setEditSearchId] = useState("");
 
 
-  useEffect(() => {
-    const handleTabChange = () => {
-      const tab = localStorage.getItem("activeProductTab") || "home";
-      setActiveTab(tab);
+  // Controla los cambios en el sub menu de productos
+   useEffect(() => {
+     localStorage.setItem("activeProductTab", "home");
+     setActiveTab("home");
+     setShowWelcome(true);
 
-      // Si el usuario da clic en "Todos los productos", cargamos la lista automáticamente
-      if (tab === "all") {
-        loadProducts();
-      }
-    };
-    window.addEventListener("productTabChanged", handleTabChange);
-    handleTabChange();
+     const handleProductTabChange = () => {
+       const tab = localStorage.getItem("activeProductTab") || "home";
+       setActiveTab(tab);
 
-    return () => window.removeEventListener("productTabChanged", handleTabChange);
-  }, []);
+       if (tab === "home") {
+         setShowWelcome(true);
+       } else if (tab === "all") {
+         setShowWelcome(false);
+         if (typeof loadProducts === "function") {
+           loadProducts();
+         }
+       } else if (tab === "name" || tab === "id" || tab === "create" || tab === "update" || tab === "delete") {
+
+         setShowWelcome(false);
+       } else {
+         setShowWelcome(false);
+       }
+     };
+     window.addEventListener("productTabChanged", handleProductTabChange);
+
+     return () => window.removeEventListener("productTabChanged", handleProductTabChange);
+   }, []);
 
   // Carga dinámica de dependencias con Token de autorización
   const loadDependencies = async () => {
@@ -185,16 +199,26 @@ function Products() {
   };
 
   // Redirección de seguridad si cambiamos de rol o pestaña
-  useEffect(() => {
-    if (activeTab === "create" && !tieneAcceso(userRole, "crear")) setActiveTab("all");
-    if (activeTab === "update" && !tieneAcceso(userRole, "actualizar")) setActiveTab("all");
-    if (activeTab === "delete" && !tieneAcceso(userRole, "eliminar")) setActiveTab("all");
-  }, [activeTab, userRole]);
+   useEffect(() => {
+      if (activeTab === "create" && typeof tieneAcceso === "function" && !tieneAcceso(userRole, "crear")) setActiveTab("all");
+      if (activeTab === "update" && typeof tieneAcceso === "function" && !tieneAcceso(userRole, "actualizar")) setActiveTab("all");
+      if (activeTab === "delete" && typeof tieneAcceso === "function" && !tieneAcceso(userRole, "eliminar")) setActiveTab("all");
+    }, [activeTab, userRole]);
 
   return (
       <div className="fb-form-container">
+       {activeTab === "home" && showWelcome && (
+           <div className="fb-photo-section">
+               <img
+               src="/logo1.png"
+               alt="Foto principal FreshBasket"
+               className="fb-photo"
+              />
+           </div>
+       )}
+
       {/* ALL PRODUCTS */}
-      {activeTab === "all" && tieneAcceso(userRole, "verTabsConsulta") && (
+      {activeTab === "all" && !showWelcome && (
         <div className="fb-form-section">
           <div className="fb-section-header">
             <h3 className="fb-table-title">

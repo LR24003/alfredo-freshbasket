@@ -7,6 +7,7 @@ import Register from './pages/register';
 import ForgotPassword from './pages/ForgotPassword';
 
 import Products from "./pages/products";
+import Suppliers from "./pages/suppliers";
 import Users from "./pages/users";
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
           >
             <Route path="productos" element={<Products />} />
             <Route path="usuarios" element={<Users />} />
+            <Route path="proveedores" element={<Suppliers />} />
           </Route>
 
 

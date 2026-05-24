@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Alfredo-freshbasket.iml" filepath="$PROJECT_DIR$/.idea/Alfredo-freshbasket.iml" />
-      <module fileurl="file://$PROJECT_DIR$/backend/freshbasket.iml" filepath="$PROJECT_DIR$/backend/freshbasket.iml" />
     </modules>
   </component>
 </project>

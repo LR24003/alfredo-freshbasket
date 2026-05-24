@@ -1,5 +1,4 @@
 // Nuestra pagina principal
-
 import "../styles/dashboard.css";
 import { tieneAcceso } from "../config/permissions.js";
 import React, { useState, useEffect, useRef, useMemo } from "react";
@@ -18,6 +17,7 @@ function Dashboard({ onLogout }) {
   // Desde aquí manejamos nuestro submenu
   const [isProductsOpen, setIsProductsOpen] = useState(false);
   const [isUsersOpen, setIsUsersOpen] = useState(false);
+  const [isSuppliersOpen, setIsSuppliersOpen] = useState(false);
 
   const profileRef = useRef(null);
 
@@ -44,11 +44,12 @@ function Dashboard({ onLogout }) {
     //Menú de opciones, controlamos quienes tiene acceso a los diferentes botones
     const menuItems = React.useMemo(() => {
       return [
-        { key: "home",         icon: "bi-house-fill",         label: "Inicio",       path: "/dashboard" },
+        { key: "home",         icon: "bi-house-fill",         label: "Inicio",      path: "/dashboard" },
         { key: "productos",    icon: "bi-basket3-fill",       label: "Productos",    path: "/dashboard/productos", hasSubmenu: true },
         { key: "entradas",     icon: "bi-box-arrow-in-down",  label: "Entradas" },
         { key: "salidas",      icon: "bi-box-arrow-up",       label: "Salidas" },
-        { key: "proveedores",  icon: "bi-truck",              label: "Proveedores" },
+        { key: "proveedores",  icon: "bi-truck",              label: "Proveedores",  path: "/dashboard/proveedores", hasSubmenu: true },
+
 
         ...(tieneAcceso(userRole, "verModuloUsuarios") ? [
           { key: "usuarios",     icon: "bi-people-fill",        label: "Usuarios",     path: "/dashboard/usuarios", hasSubmenu: true }
@@ -84,8 +85,8 @@ function Dashboard({ onLogout }) {
       return [
         ...(tieneAcceso(userRole, "verModuloUsuarios") ? [
           { key: "all",    icon: "bi-box-seam-fill",    label: "Todos los usuarios" },
-          { key: "name",   icon: "bi-search",           label: "Buscar usuarios por nombre" },
-          { key: "id",     icon: "bi-tag-fill",         label: "Buscar usuario por ID" }
+          { key: "name",   icon: "bi-search",           label: "Buscar por nombre" },
+          { key: "id",     icon: "bi-tag-fill",         label: "Buscar por ID" }
         ] : []),
         ...(tieneAcceso(userRole, "crear") ? [
           { key: "create", icon: "bi-plus-circle-fill", label: "Registrar usuario" }
@@ -99,6 +100,26 @@ function Dashboard({ onLogout }) {
       ];
     }, [userRole]);
 
+   // Sub menu de proveedores
+   const supplierSubItems = React.useMemo(() => {
+         return [
+           ...(tieneAcceso(userRole, "verTabsConsulta") ? [
+             { key: "all",    icon: "bi-box-seam-fill",    label: "Todos los proveedores" },
+             { key: "name",   icon: "bi-search",           label: "Buscar por nombre" },
+             { key: "id",     icon: "bi-tag-fill",         label: "Buscar por ID" }
+           ] : []),
+           ...(tieneAcceso(userRole, "crear") ? [
+             { key: "create", icon: "bi-plus-circle-fill", label: "Registrar proveedor" }
+           ] : []),
+           ...(tieneAcceso(userRole, "actualizar") ? [
+             { key: "update", icon: "bi-pencil-square",    label: "Actualizar proveedor" }
+           ] : []),
+           ...(tieneAcceso(userRole, "eliminar") ? [
+             { key: "delete", icon: "bi-trash3-fill",      label: "Eliminar proveedor" }
+           ] : [])
+         ];
+       }, [userRole]);
+
   return (
       <div className="fb-root">
         {/* SIDEBAR */}
@@ -111,34 +132,49 @@ function Dashboard({ onLogout }) {
           <div className="fb-sidebar-section">MÓDULOS</div>
           <nav className="fb-nav">
             {menuItems.map((item) => {
-              const isActive = location.pathname === item.path;
+                const isActive = location.pathname === item.path || (item.path !== "/dashboard" && location.pathname.startsWith(item.path));
 
-              // Determinar si este menú específico está abierto
-              const isMenuOpen = item.key === "productos" ? isProductsOpen : item.key === "usuarios" ? isUsersOpen : false;
+              // Controlar el estado de apertura/cierre del menú desplegable
+              const isMenuOpen =
+                item.key === "productos" ? isProductsOpen :
+                item.key === "usuarios" ? isUsersOpen :
+                item.key === "proveedores" ? isSuppliersOpen :
+                false;
 
-              // Obtener los sub-ítems filtrados dinámicamente desde useMemo
-              const subItemsArr = item.key === "productos" ? productSubItems : item.key === "usuarios" ? userSubItems : [];
+              // Obtener los sub-ítems filtrados dinámicamente
+              const subItemsArr =
+                item.key === "productos" ? productSubItems :
+                item.key === "usuarios" ? userSubItems :
+                item.key === "proveedores" ? supplierSubItems :
+                [];
 
               return (
                 <div key={item.key} style={{ width: "100%" }}>
-                  {/* Botón Principal de Menú */}
                   <button
                     className={`fb-nav-item ${isActive ? "fb-nav-item-active" : ""}`}
                     onClick={() => {
                       if (item.key === "productos") {
                         setIsProductsOpen(!isProductsOpen);
                         setIsUsersOpen(false);
+                        setIsSuppliersOpen(false);
                         navigate(item.path);
                       } else if (item.key === "usuarios") {
                         setIsUsersOpen(!isUsersOpen);
                         setIsProductsOpen(false);
+                        setIsSuppliersOpen(false);
+                        navigate(item.path);
+                      } else if (item.key === "proveedores") {
+                        setIsSuppliersOpen(!isSuppliersOpen);
+                        setIsProductsOpen(false);
+                        setIsUsersOpen(false);
                         navigate(item.path);
                       } else if (item.path) {
                         setIsProductsOpen(false);
                         setIsUsersOpen(false);
+                        setIsSuppliersOpen(false);
                         navigate(item.path);
                       }
-                    }}
+                  }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flex: 1 }}>
                       <i className={`bi ${item.icon} fb-nav-icon`} />
@@ -167,6 +203,11 @@ function Dashboard({ onLogout }) {
                               localStorage.setItem("activeUserTab", sub.key);
                               window.dispatchEvent(new Event("userTabChanged"));
                             }
+                            else if (item.key === "proveedores") {
+                              localStorage.setItem("activeSupplierTab", sub.key);
+                              window.dispatchEvent(new Event("supplierTabChanged"));
+                            }
+
                             navigate(item.path);
                           }}
                         >
@@ -190,7 +231,7 @@ function Dashboard({ onLogout }) {
               <h2 className="fb-top-title">
                 {menuItems.find(m => location.pathname === m.path)?.label || "Panel"}
               </h2>
-              <p style={{ margin: 0 }} className="fb-top-sub">Bienvenido a FRESHBASKET</p>
+              <p style={{ margin: 0 }} className="fb-top-sub">Bienvenido/a</p>
             </div>
 
             <div className="fb-top-right fb-profile-container" ref={profileRef}>
@@ -237,7 +278,7 @@ function Dashboard({ onLogout }) {
                           style={{
                             width: "100%",
                             maxWidth: "500px",
-                            maxHeight: "100%",
+                            maxHeight: "calc(100vh - 160px)",
                             objectFit: "contain",
                             display: "block"
                           }}
