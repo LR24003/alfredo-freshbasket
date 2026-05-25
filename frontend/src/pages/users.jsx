@@ -12,7 +12,7 @@ function Users() {
   const navigate = useNavigate();
   const userRole = localStorage.getItem("userRole") || "USUARIO";
 
-  // Lee la opción elegida desde el menú desplegable de Usuarios
+  // Lee la opción elegida desde el menú desplegable de usuarios
   const [activeTab, setActiveTab] = useState(localStorage.getItem("activeUserTab") || "all");
   const [showWelcome, setShowWelcome] = useState(true);
 
@@ -36,6 +36,7 @@ function Users() {
     countryName: "",
   });
 
+   // Controla que mostrar en el sub menu de usuario
    useEffect(() => {
        localStorage.setItem("activeUserTab", "home");
        setActiveTab("home");
@@ -99,7 +100,7 @@ function Users() {
     loadDependencies();
   }, []);
 
-  // Manejadores de Búsqueda
+  // Controla cuando se realiza una bùsqueda por nombre
   const handleSearch = async (e) => {
     e.preventDefault();
     if (search.trim() === "") { setUsersByName([]); return; }
@@ -107,6 +108,7 @@ function Users() {
     setUsersByName(data || []);
   };
 
+  // Controla cuando se realiza una bùsqueda por ID
   const handleSearchById = async (e) => {
     e.preventDefault();
     if (searchId.trim() === "") { setUserById(null); return; }
@@ -118,40 +120,43 @@ function Users() {
     }
   };
 
+// Controla la creaciòn de un usuario
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
     const newSupplier = Object.fromEntries(fd.entries());
 
     try {
-
       const token = localStorage.getItem("token");
       const authConfig = {
         headers: { Authorization: token ? `Bearer ${token}` : "" }
       };
 
-      // Le pasamos el payload del proveedor junto con la configuración de autenticación
       await createUser({
         ...newUser,
         countryName: newUser.countryName?.trim()
       }, authConfig);
 
-      alert("¡Proveedor creado con éxito!");
+      alert("¡Usuario creado con éxito!");
       e.target.reset();
       loadSuppliers();
     } catch (error) {
       console.error("Error completo:", error);
-      alert("Error al crear proveedor: " + (error.response?.data?.message || "No tienes permisos (403) o verifica los datos"));
+      alert("Error al crear usuario: " + (error.response?.data?.message || "No tienes permisos o verifique los datos"));
     }
   };
 
+  // Controla la busqueda de un usuario por ID
   const updateUserById = async (id, payload) => {
     await updateUser(id, payload);
     loadUsers();
   };
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Rellena automaticamente el formulario de UPDATE
+  const handleChange = (e) => setFormData({
+      ...formData, [e.target.name]: e.target.value });
 
+  // Controla que se actualice uno o todos los campos de UPDATE
   const handleBlurId = async (e) => {
     const targetValue = (e && e.target) ? e.target.value : e;
     if (!targetValue || String(targetValue).trim() === "") {
@@ -191,6 +196,7 @@ function Users() {
     }
   };
 
+  // Controla que el formulario se envie correctamente
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
     const { id, name, lastName, phone, email, password, role, countryName } = formData;
@@ -217,7 +223,7 @@ function Users() {
     }
   };
 
-  // Redirección de seguridad si cambiamos de rol o pestaña
+  // Redirección de seguridad si se cambia de rol o pestaña
   useEffect(() => {
     if (activeTab === "create" && !tieneAcceso(userRole, "crear")) setActiveTab("all");
     if (activeTab === "update" && !tieneAcceso(userRole, "actualizar")) setActiveTab("all");
@@ -359,8 +365,6 @@ function Users() {
                     )}
                 </div>
               )}
-
-
 
           {/* CREATE USER */}
           {activeTab === "create" && (

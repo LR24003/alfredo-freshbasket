@@ -37,7 +37,7 @@ function Login() {
               }
 
               alert("¡Login correcto!");
-              window.location.href = "/dashboard";
+              window.location.href = "/freshbasket";
             } else {
 
         // Si el backend responde con 401 o 403, evitamos que .json() rompa la app
@@ -101,8 +101,7 @@ function Login() {
             {/* Panel Formulario */}
             <div className="col-md-7">
               <div className="card-body p-5 p-md-5">
-                <h2 className="text-center mb-4 text-primary fw-bold">
-                  Iniciar Sesión
+                <h2 className="text-center mb-4 fw-bold" style={{ color: "#116237" }}>
                 </h2>
 
                 <form onSubmit={handleLogin}>
@@ -154,8 +153,8 @@ function Login() {
                     <a
                       href="#"
                       onClick={(e) => { e.preventDefault(); navigate("/forgot-password"); }}
-                      className="text-primary text-decoration-none"
-                      style={{ fontSize: '0.85rem' }}
+                      className="fw-bold text-decoration-none"
+                      style={{ color: "#116237 !important", fontSize: "0.85rem" }}
                     >
                       ¿Olvidaste tu contraseña?
                     </a>
@@ -172,7 +171,7 @@ function Login() {
                         e.preventDefault();
                         navigate("/register");
                       }}
-                      className="text-primary fw-bold text-decoration-none"
+                      className="fw-bold text-decoration-none" style={{ color: "#116237" }}
                     >
                       Regístrate aquí
                     </a>

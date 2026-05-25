@@ -1,10 +1,10 @@
 // Nuestra pagina principal
-import "../styles/dashboard.css";
+import "../styles/freshbasket.css";
 import { tieneAcceso } from "../config/permissions.js";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
 
-function Dashboard({ onLogout }) {
+function Freshbasket({ onLogout }) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -41,18 +41,18 @@ function Dashboard({ onLogout }) {
     navigate("/login");
   };
 
-    //Menú de opciones, controlamos quienes tiene acceso a los diferentes botones
+    //Menú de opciones, controlamos quienes tienen acceso a los diferentes botones
     const menuItems = React.useMemo(() => {
       return [
-        { key: "home",         icon: "bi-house-fill",         label: "Inicio",      path: "/dashboard" },
-        { key: "productos",    icon: "bi-basket3-fill",       label: "Productos",    path: "/dashboard/productos", hasSubmenu: true },
+        { key: "home",         icon: "bi-house-fill",         label: "Inicio",      path: "/freshbasket" },
+        { key: "productos",    icon: "bi-basket3-fill",       label: "Productos",    path: "/freshbasket/productos", hasSubmenu: true },
         { key: "entradas",     icon: "bi-box-arrow-in-down",  label: "Entradas" },
         { key: "salidas",      icon: "bi-box-arrow-up",       label: "Salidas" },
-        { key: "proveedores",  icon: "bi-truck",              label: "Proveedores",  path: "/dashboard/proveedores", hasSubmenu: true },
+        { key: "proveedores",  icon: "bi-truck",              label: "Proveedores",  path: "/freshbasket/proveedores", hasSubmenu: true },
 
 
         ...(tieneAcceso(userRole, "verModuloUsuarios") ? [
-          { key: "usuarios",     icon: "bi-people-fill",        label: "Usuarios",     path: "/dashboard/usuarios", hasSubmenu: true }
+          { key: "usuarios",     icon: "bi-people-fill",        label: "Usuarios",     path: "/freshbasket/usuarios", hasSubmenu: true }
         ] : []),
 
         { key: "categorías",   icon: "bi-tags-fill",          label: "Categorías" },
@@ -80,7 +80,7 @@ function Dashboard({ onLogout }) {
       ];
     }, [userRole]);
 
-    //
+    // Sub menu de usuarios
     const userSubItems = React.useMemo(() => {
       return [
         ...(tieneAcceso(userRole, "verModuloUsuarios") ? [
@@ -132,7 +132,7 @@ function Dashboard({ onLogout }) {
           <div className="fb-sidebar-section">MÓDULOS</div>
           <nav className="fb-nav">
             {menuItems.map((item) => {
-                const isActive = location.pathname === item.path || (item.path !== "/dashboard" && location.pathname.startsWith(item.path));
+                const isActive = location.pathname === item.path || (item.path !== "/freshbasket" && location.pathname.startsWith(item.path));
 
               // Controlar el estado de apertura/cierre del menú desplegable
               const isMenuOpen =
@@ -257,7 +257,7 @@ function Dashboard({ onLogout }) {
 
           {/* VISTA DINÁMICA DE CONTENIDO */}
                   <div className="fb-content">
-                    {location.pathname === "/dashboard" && (
+                    {location.pathname === "/freshbasket" && (
                       <div
                         className="fb-photo-section"
                         style={{
@@ -277,7 +277,7 @@ function Dashboard({ onLogout }) {
                           className="fb-photo"
                           style={{
                             width: "100%",
-                            maxWidth: "500px",
+                            maxWidth: "700px",
                             maxHeight: "calc(100vh - 160px)",
                             objectFit: "contain",
                             display: "block"
@@ -292,4 +292,4 @@ function Dashboard({ onLogout }) {
     );
   }
 
-  export default Dashboard;
+  export default Freshbasket;

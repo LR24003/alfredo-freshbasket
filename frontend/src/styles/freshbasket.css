@@ -1,6 +1,4 @@
-/* ==========================================================================
-   VARIABLES DE DISEÑO (Colores, fuentes y transiciones)
-   ========================================================================== */
+
 :root {
   --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
@@ -30,9 +28,7 @@
   --transition: all 0.25s ease-in-out;
 }
 
-/* ==========================================================================
-   ENFOQUE MOBILE-FIRST: ESTILOS BASE (Móviles / Pantallas pequeñas)
-   ========================================================================== */
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -77,22 +73,24 @@ body {
 }
 
 .fb-sidebar-brand-icon {
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   color: var(--primary);
 }
 
 .fb-sidebar-brand-name {
+  margin-top: 0;
   font-size: 1.1rem;
   font-weight: 700;
   color: #ffffff;
-  letter-spacing: 0.5px;
+  letter-spacing: 2.8px;
 }
 
 .fb-sidebar-section {
-  display: none; /* Se oculta este separador en móviles para ahorrar espacio */
+  display: none;
+
 }
 
-/* Menú de navegación horizontal con scroll en móviles */
+
 .fb-nav {
   display: flex;
   flex-direction: row;
@@ -103,7 +101,7 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Ajuste de scrollbar invisible para la barra móvil */
+
 .fb-nav::-webkit-scrollbar {
   display: none;
 }
@@ -148,7 +146,6 @@ body {
   overflow: hidden;
 }
 
-/* 🌟 OPTIMIZADO: Cambiado a row en móviles para colocar Título a la izquierda y Perfil a la derecha */
 .fb-topbar {
   background-color: #ffffff;
   padding: 1rem;
@@ -172,7 +169,7 @@ body {
   margin-top: 0.1rem;
 }
 
-/* ✂️ ELIMINADO: Se removieron los anchos fijos del 100% que rompan el menú de Perfil */
+
 .fb-top-right {
   display: flex;
   justify-content: flex-end;
@@ -198,7 +195,7 @@ body {
   padding: 1.5rem;
   border-radius: var(--radius);
   display: flex;
-  flex-direction: column-reverse; /* El icono pasa arriba en móviles */
+  flex-direction: column-reverse;
   gap: 1rem;
   box-shadow: var(--shadow);
   margin-bottom: 1.5rem;
@@ -233,7 +230,7 @@ body {
   background-color: var(--bg-card);
   border-radius: var(--radius);
   border: 1px solid var(--border-color);
-  padding: 1.25rem;
+  padding: 5.25rem;
   box-shadow: var(--shadow);
   margin-bottom: 1rem;
 }
@@ -413,7 +410,6 @@ body {
   color: var(--text-muted);
 }
 
-/* 🌟 CORREGIDO: Se añadió el punto (.) que faltaba en el selector de clase */
 .fb-profile-container {
   position: relative;
 }
@@ -523,21 +519,32 @@ body {
 /* --- TABLETAS Y DISPOSITIVOS MEDIANOS --- */
 @media (min-width: 768px) {
   .fb-root {
-    flex-direction: row; /* El sidebar vuelve a la izquierda y el contenido a la derecha */
+    flex-direction: row;
   }
 
   .fb-sidebar {
     width: var(--sidebar-width);
-    height: 100%;
+    height: 100vh;
+    position: sticky;
+    top: 0;
   }
 
+  /* NUEVO: Compactamos el contenedor del logo reduciendo su padding vertical */
+  .fb-sidebar-brand {
+    padding: 0.6rem 1rem;
+  }
+
+  /* NUEVO: Reducimos el espacio superior de la palabra "MÓDULOS" */
   .fb-sidebar-section {
-    display: block; /* Se recuperan los títulos de secciones */
+    display: block;
+    padding: 0.75rem 1rem 0.25rem 1rem;
   }
 
+  /* CORREGIDO Y REDUCIDO: Se arregló el espacio 'padding 1 rem' que tenía un error de sintaxis */
   .fb-nav {
-    flex-direction: column; /* Menú vertical tradicional */
+    flex-direction: column;
     overflow-x: visible;
+    padding: 0.25rem 1rem 1rem 1rem; /* El 0.25rem de arriba pega los botones a "MÓDULOS" */
   }
 
   .fb-nav-item {
@@ -546,21 +553,20 @@ body {
     padding: 0.75rem 1rem;
   }
 
+  /* ... El resto de tus estilos dentro de la media query se mantienen exactamente igual ... */
   .fb-topbar {
-    flex-direction: row; /* Topbar en una sola línea horizontal */
+    flex-direction: row;
     padding: 1.25rem 2rem;
     justify-content: space-between;
     align-items: center;
   }
-
-  /* ✂️ OPTIMIZADO: Se eliminaron las reglas de ancho redundantes para .fb-top-right y sus botones */
 
   .fb-content {
     padding: 2rem;
   }
 
   .fb-welcome-card {
-    flex-direction: row; /* Bienvenida lado a lado */
+    flex-direction: row;
     padding: 2.5rem;
   }
 
@@ -573,15 +579,15 @@ body {
   }
 
   .fb-crud-grid {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Grilla dinámica de inputs */
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   }
 
   .fb-action-btn {
-    width: auto; /* El botón recupera su tamaño natural */
+    width: auto;
   }
 
   .fb-search-form {
-    flex-direction: row; /* Buscador en una línea input + botón */
+    flex-direction: row;
   }
 
   .fb-search-btn {
@@ -589,12 +595,12 @@ body {
   }
 
   .fb-section-header {
-    flex-direction: row; /* Título y registro alineados en extremos */
+    flex-direction: row;
     justify-content: space-between;
   }
 
   .fb-results-grid {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Tarjetas de usuarios en cuadrícula */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   }
 }
 

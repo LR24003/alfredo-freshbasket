@@ -1,99 +1,57 @@
-/* Reset */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-/* Contenedor principal */
-.register-container {
+.login-screen-container {
   min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%) !important;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #f8f9fa;
-  padding: 1rem;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  /* El padding aquí actúa como un colchón inflable para que la tarjeta nunca toque los bordes */
+  padding: 1.25rem !important;
+  box-sizing: border-box;
 }
 
-/* Card principal */
+/* Estilos por defecto para móviles (Pantallas pequeñas) */
 .register-card {
-  width: 100%;
-  max-width: 900px;
-  border-radius: 15px;
-  overflow: hidden;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-  display: flex;
-  flex-direction: column; /* mobile first */
+  width: 100% !important;
+  margin: 0 auto !important;
+  border-radius: 20px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* Panel lateral */
 .register-side {
-  background: #198754;
-  color: #fff;
-  text-align: center;
-  padding: 2rem;
+  padding: 2rem 1.5rem !important;
+  border-radius: 20px 20px 0 0 !important; /* Redondeado superior en móvil */
 }
 
-.register-side h3 { font-weight: bold; margin-bottom: 0.5rem; }
-.register-side p { font-size: 0.9rem; opacity: 0.8; }
-
-/* Panel formulario */
 .register-form {
-  background: #fff;
-  padding: 2rem;
+  padding: 0 !important; /* Dejamos que el card-body de Bootstrap controle el espacio interno */
 }
 
-.register-form h2 {
-  text-align: center;
-  color: #198754;
-  font-weight: bold;
-  margin-bottom: 1.5rem;
-}
+/* ==========================================================================
+   MEDIA QUERIES: RESPONSIVE PARA EL REGISTRO
+   ========================================================================== */
 
-/* Inputs */
-.register-form input {
-  width: 100%;
-  padding: 0.7rem;
-  margin-bottom: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: #f8f9fa;
-}
-
-/* Botón principal */
-.register-form button[type="submit"] {
-  background: #198754;
-  color: #fff;
-  font-weight: bold;
-  padding: 0.9rem;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  width: 100%;
-}
-
-.register-form button[type="submit"]:hover {
-  background: #157347;
-}
-
-/* Link de login */
-.register-form .btn-link {
-  background: none;
-  border: none;
-  color: #198754;
-  font-weight: bold;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.register-form .btn-link:hover {
-  text-decoration: underline;
-}
-
-/* Responsive */
 @media (min-width: 768px) {
-  .register-card { flex-direction: row; }
-  .register-side { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-  .register-form { flex: 2; padding: 3rem; }
-}
+  .login-screen-container {
+    padding: 2rem !important;
+  }
 
-@media (min-width: 1024px) {
-  .register-form h2 { font-size: 2rem; }
-  .register-side h3 { font-size: 1.8rem; }
+  .register-card {
+    flex-direction: row !important;
+    max-width: 650px !important;
+  }
+
+  .register-side {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    padding: 2.5rem !important;
+    border-radius: 20px 0 0 20px !important; /* Redondeado izquierdo en escritorio */
+  }
+
+  .register-form {
+    flex: 2 !important;
+  }
 }

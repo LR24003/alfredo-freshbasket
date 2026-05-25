@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { useState, useEffect } from "react";
 import HomeScreen from "./pages/home";
 import LoginScreen from "./pages/Login";
-import Dashboard from "./pages/dashboard"; //
+import Freshbasket from "./pages/freshbasket";
 import Register from './pages/register';
 import ForgotPassword from './pages/ForgotPassword';
 
@@ -39,8 +39,8 @@ function App() {
 
            {/* Rutas privadas, el usuario tiene que loguearse */}
           <Route
-            path="/dashboard"
-            element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
+            path="/freshbasket"
+            element={isAuthenticated ? <Freshbasket /> : <Navigate to="/login" />}
           >
             <Route path="productos" element={<Products />} />
             <Route path="usuarios" element={<Users />} />

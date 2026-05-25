@@ -15,7 +15,7 @@ function Suppliers() {
   const [activeTab, setActiveTab] = useState(localStorage.getItem("activeSupplierTab") || "all");
   const [showWelcome, setShowWelcome] = useState(true);
 
-  // Usaremos 'allSuppliers' de manera uniforme en todo el componente
+
   const [allSuppliers, setAllSuppliers] = useState([]);
   const [suppliersByName, setSuppliersByName] = useState([]);
   const [supplierById, setSupplierById] = useState(null);
@@ -35,7 +35,7 @@ function Suppliers() {
     countryName: "",
   });
 
-  // Función para cargar los proveedores (Declarada arriba para poder usarla en el useEffect)
+
   const loadSuppliers = async () => {
     try {
       const data = await getAllSuppliers();
@@ -93,7 +93,7 @@ function Suppliers() {
     }
   };
 
-  // Controla que cargue la lista de paises
+
   useEffect(() => {
     loadDependencies();
   }, []);
@@ -241,12 +241,13 @@ function Suppliers() {
 
       alert("¡Proveedor actualizado correctamente!");
       loadSuppliers();
+
+      } catch (error){
       console.error("Error completo en la consola:", error.response?.data);
       alert("Error al actualizar: " + (error.response?.data?.message || "Revisa los datos"));
     }
   };
 
-  // Validación de accesos (Asegúrate de tener definida la función tieneAcceso en tu archivo o importada)
   useEffect(() => {
     if (activeTab === "create" && typeof tieneAcceso === "function" && !tieneAcceso(userRole, "crear")) setActiveTab("all");
     if (activeTab === "update" && typeof tieneAcceso === "function" && !tieneAcceso(userRole, "actualizar")) setActiveTab("all");

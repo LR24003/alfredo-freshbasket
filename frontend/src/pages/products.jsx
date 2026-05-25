@@ -278,7 +278,7 @@ function Products() {
             <form onSubmit={handleSearchById} className="fb-search-form">
               <div className="fb-search-input-wrap">
                 <i className="bi bi-hash fb-search-icon" />
-                <input type="number" className="fb-search-input" placeholder="Ingrese ID numérico" value={searchId} onChange={e => setSearchId(e.target.value)} />
+                <input type="number" className="fb-search-input" placeholder="Ingrese ID" value={searchId} onChange={e => setSearchId(e.target.value)} />
               </div>
               <button type="submit" className="fb-search-btn"><i className="bi bi-search" /> Buscar producto</button>
             </form>
