@@ -19,7 +19,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE LOWER(TRIM(CONCAT(u.name, ' ', COALESCE(u.lastName, '')))) = LOWER(TRIM(:fullName))")
     Optional<User> findByFullNameIgnoreCase(@Param("fullName") String fullName);
 
-    Optional<User> findByName(String name);
-// o si tu campo clave se llama name: Optional<User> findByName(String name);
 
 }
