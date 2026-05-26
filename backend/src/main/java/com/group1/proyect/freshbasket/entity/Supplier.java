@@ -46,6 +46,9 @@ public class Supplier {
     @Column(nullable = false, length = 150)
     private String address;
 
+    @Column(name = "active", nullable = false)
+    private boolean active = true;
+
     //Relacion con paises ya que un pais tiene muchos proveedores
     @ManyToOne
     @JoinColumn(name = "country_id")

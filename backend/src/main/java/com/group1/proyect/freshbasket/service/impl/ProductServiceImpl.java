@@ -120,7 +120,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public List<ProductResponseDTO> getAllProducts() {
-        return productRepository.findAll()
+        return productRepository.findByActiveTrue()
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -130,8 +130,10 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public ProductResponseDTO getProductById(Long id) {
         return productRepository.findById(id)
+                .filter(Product::isActive)
                 .map(this::convertToDTO)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
+
     }
 
     @Override
@@ -202,8 +204,8 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado con ese ID: " + id));
 
-        productRepository.delete(product);
-        productRepository.flush();
+        product.setActive(false);
+
     }
 
     @Override
@@ -211,6 +213,7 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductResponseDTO> searchProductsByName(String name) {
         return productRepository.findByNameContainingIgnoreCase(name)
                 .stream()
+                .filter(Product::isActive)
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }

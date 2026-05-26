@@ -3,6 +3,7 @@ package com.group1.proyect.freshbasket.service.impl;
 import com.group1.proyect.freshbasket.dto.request.UserRequestDTO;
 import com.group1.proyect.freshbasket.dto.response.UserResponseDTO;
 import com.group1.proyect.freshbasket.entity.Country;
+import com.group1.proyect.freshbasket.entity.Product;
 import com.group1.proyect.freshbasket.entity.User;
 import com.group1.proyect.freshbasket.repository.CountryRepository;
 import com.group1.proyect.freshbasket.repository.UserRepository;
@@ -84,7 +85,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserResponseDTO> getAllUsers() {
-        return userRepository.findAll()
+        return userRepository.findByActiveTrue()
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -94,6 +95,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public UserResponseDTO getUserById(Long id) {
         return userRepository.findById(id)
+                .filter(User::isActive)
                 .map(this::convertToDTO)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ese ID: " + id));
     }
@@ -157,23 +159,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
     public void deleteUser(Long id) {
-        // Buscamos el usuario primero
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
 
-        // Borramos la entidad encontrada
-        userRepository.delete(user);
-
-        //sincronización inmediata
-        userRepository.flush();
+        user.setActive(false);
     }
 
     @Override
     public List<UserResponseDTO> searchUsersByName(String name) {
         return userRepository.findByNameContainingIgnoreCase(name)
                 .stream()
+                .filter(User::isActive)
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }

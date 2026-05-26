@@ -2,10 +2,7 @@ package com.group1.proyect.freshbasket.service.impl;
 
 import com.group1.proyect.freshbasket.dto.request.EntryRequestDTO;
 import com.group1.proyect.freshbasket.dto.response.EntryResponseDTO;
-import com.group1.proyect.freshbasket.entity.Entry;
-import com.group1.proyect.freshbasket.entity.Product;
-import com.group1.proyect.freshbasket.entity.Supplier;
-import com.group1.proyect.freshbasket.entity.User;
+import com.group1.proyect.freshbasket.entity.*;
 import com.group1.proyect.freshbasket.repository.EntryRepository;
 import com.group1.proyect.freshbasket.repository.ProductRepository;
 import com.group1.proyect.freshbasket.repository.SupplierRepository;
@@ -79,14 +76,16 @@ public class EntryServiceImpl implements EntryService {
     @Transactional (readOnly = true)
     public EntryResponseDTO getEntryById(Long id) {
         return entryRepository.findById(id)
+                .filter(Entry::isActive)
                 .map(this::convertToDTO)
                 .orElseThrow(() -> new RuntimeException("Entrada no encontrada con ID: " + id));
     }
 
     @Override
     public List<EntryResponseDTO> getAllEntries() {
-        return entryRepository.findAll()
+        return entryRepository.findByActiveTrue()
                 .stream()
+                .filter(Entry::isActive)
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -165,11 +164,8 @@ public class EntryServiceImpl implements EntryService {
             product.setCurrentStock(nuevoStock);
             productRepository.save(product);
         }
-        //Borramos la entidad encontrada
-        entryRepository.deleteById(id);
 
-        //sincronización inmediata
-        entryRepository.flush();
+        entry.setActive(false);
     }
 
 }

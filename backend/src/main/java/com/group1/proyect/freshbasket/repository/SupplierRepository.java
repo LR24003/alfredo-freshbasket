@@ -1,6 +1,7 @@
 package com.group1.proyect.freshbasket.repository;
 
 import com.group1.proyect.freshbasket.entity.Supplier;
+import com.group1.proyect.freshbasket.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,5 +19,5 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long> {
     @Query("SELECT s FROM Supplier s WHERE LOWER(TRIM(CONCAT(s.name, ' ', COALESCE(s.lastName, '')))) = LOWER(TRIM(:fullName))")
     Optional<Supplier> findByFullNameIgnoreCase(@Param("fullName") String fullName);
 
-
+    List<Supplier> findByActiveTrue();
 }

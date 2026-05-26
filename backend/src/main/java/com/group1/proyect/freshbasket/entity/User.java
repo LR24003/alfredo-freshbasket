@@ -48,6 +48,9 @@ public class User {
     @Column(nullable = false)
     private String role;
 
+    @Column(name = "active", nullable = false)
+    private boolean active = true;
+
     // Por esto (Relación Muchos a Uno):
     @ManyToOne(fetch = FetchType.EAGER) // EAGER para que cargue el país de inmediato
     @JoinColumn(name = "country_id", nullable = false) // Mantiene la columna country_id numérica en la BD

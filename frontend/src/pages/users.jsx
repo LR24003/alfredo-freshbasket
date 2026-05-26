@@ -13,8 +13,8 @@ function Users() {
   const userRole = localStorage.getItem("userRole") || "USUARIO";
 
   // Lee la opción elegida desde el menú desplegable de usuarios
-  const [activeTab, setActiveTab] = useState(localStorage.getItem("activeUserTab") || "all");
-  const [showWelcome, setShowWelcome] = useState(true);
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem("activeUserTab") || "home");
+  const [showWelcome, setShowWelcome] = useState(() => (localStorage.getItem("activeUserTab") || "home") === "home");
 
   const [allUsers, setAllUsers] = useState([]);
   const [usersByName, setUsersByName] = useState([]);
@@ -36,35 +36,34 @@ function Users() {
     countryName: "",
   });
 
-   // Controla que mostrar en el sub menu de usuario
+  // Controla los cambios en el sub menu de productos
    useEffect(() => {
-       localStorage.setItem("activeUserTab", "home");
-       setActiveTab("home");
-       setShowWelcome(true);
+     localStorage.setItem("activeUserTab", "home");
+     setActiveTab("home");
+     setShowWelcome(true);
 
-       const handleUserTabChange = () => {
-         const tab = localStorage.getItem("activeUserTab") || "home";
-         setActiveTab(tab);
+     const handleUserTabChange = () => {
+       const tab = localStorage.getItem("activeUserTab") || "home";
+       setActiveTab(tab);
 
-         if (tab === "home") {
-           setShowWelcome(true);
-         } else if (tab === "all") {
-           setShowWelcome(false);
-           if (typeof loadUsers === "function") {
-             loadUsers();
-           }
-         } else if (tab === "name" || tab === "id" || tab === "create" || tab === "update" || tab === "delete") {
-
-           setShowWelcome(false);
-         } else {
-           setShowWelcome(false);
+       if (tab === "home") {
+         setShowWelcome(true);
+       } else if (tab === "all") {
+         setShowWelcome(false);
+         if (typeof loadUsers === "function") {
+           loadUsers();
          }
-       };
-       window.addEventListener("userTabChanged", handleUserTabChange);
+       } else if (tab === "name" || tab === "id" || tab === "create" || tab === "update" || tab === "delete") {
 
-       return () => window.removeEventListener("userTabChanged", handleUserTabChange);
-     }, []);
+         setShowWelcome(false);
+       } else {
+         setShowWelcome(false);
+       }
+     };
+     window.addEventListener("userTabChanged", handleUserTabChange);
 
+     return () => window.removeEventListener("userTabChanged", handleUserTabChange);
+   }, []);
 
   // Carga dinámica de dependencias
   const loadDependencies = async () => {
@@ -100,7 +99,7 @@ function Users() {
     loadDependencies();
   }, []);
 
-  // Controla cuando se realiza una bùsqueda por nombre
+  // Controla cuando se realiza una búsqueda por nombre
   const handleSearch = async (e) => {
     e.preventDefault();
     if (search.trim() === "") { setUsersByName([]); return; }
@@ -108,7 +107,7 @@ function Users() {
     setUsersByName(data || []);
   };
 
-  // Controla cuando se realiza una bùsqueda por ID
+  // Controla cuando se realiza una búsqueda por ID
   const handleSearchById = async (e) => {
     e.preventDefault();
     if (searchId.trim() === "") { setUserById(null); return; }
@@ -120,11 +119,11 @@ function Users() {
     }
   };
 
-// Controla la creaciòn de un usuario
+  //Controla la creación de un usuario usando las variables correctas
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
-    const newSupplier = Object.fromEntries(fd.entries());
+    const newUser = Object.fromEntries(fd.entries());
 
     try {
       const token = localStorage.getItem("token");
@@ -139,17 +138,22 @@ function Users() {
 
       alert("¡Usuario creado con éxito!");
       e.target.reset();
-      loadSuppliers();
+      loadUsers();
     } catch (error) {
       console.error("Error completo:", error);
       alert("Error al crear usuario: " + (error.response?.data?.message || "No tienes permisos o verifique los datos"));
     }
   };
 
-  // Controla la busqueda de un usuario por ID
+
   const updateUserById = async (id, payload) => {
-    await updateUser(id, payload);
-    loadUsers();
+    try {
+      await updateUser(id, payload);
+      await loadUsers();
+    } catch (error) {
+      console.error("Error al actualizar usuario internamente:", error);
+      throw error;
+    }
   };
 
   // Rellena automaticamente el formulario de UPDATE
@@ -196,7 +200,7 @@ function Users() {
     }
   };
 
-  // Controla que el formulario se envie correctamente
+  // Controla que el formulario se envíe correctamente
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
     const { id, name, lastName, phone, email, password, role, countryName } = formData;
@@ -217,7 +221,6 @@ function Users() {
     try {
       await updateUserById(id, payload);
       alert("Usuario actualizado correctamente");
-      await loadUsers();
     } catch (error) {
       alert("Error al actualizar: " + (error.response?.data?.message || "Revisa los datos"));
     }
@@ -513,12 +516,12 @@ function Users() {
                   <i className="bi bi-trash3-fill" /> Introduzca el ID del usuario
                 </h3>
                 <p style={{ color: "#7a8694", fontSize: "0.9rem", marginBottom: "1.2rem" }}>
-                  ⚠️ Al eliminar el usuario se borrara permanentemente de su base de datos ⚠️
+                  ⚠️ Al eliminar el usuario se desactivará de su base de datos ⚠️
                 </p>
                 <form
                   onSubmit={async (e) => {
                     e.preventDefault();
-                    const idValue = e.target.id.value;
+                    const idValue = e.target.userId.value;
 
                     const confirmDelete = window.confirm(
                       `¿Está seguro de que desea eliminar el usuario con ese ID ${idValue}?`
@@ -527,11 +530,12 @@ function Users() {
                     if (!confirmDelete) return;
 
                     try {
-                      await deleteUserById(idValue);
+                      await deleteUser(idValue);
                       alert("Usuario eliminado correctamente");
                       e.target.reset();
                       loadUsers();
                     } catch (error) {
+                      console.error("Error capturado:", error);
                       alert("Error al eliminar usuario");
                     }
                   }}
@@ -541,7 +545,7 @@ function Users() {
                     <i className="bi bi-hash fb-search-icon" />
                     <input
                       type="number"
-                      name="id"
+                      name="userId"
                       className="fb-search-input"
                       placeholder="ID del usuario a eliminar"
                       required

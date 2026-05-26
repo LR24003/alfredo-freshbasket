@@ -1,6 +1,7 @@
 package com.group1.proyect.freshbasket.repository;
 
 import com.group1.proyect.freshbasket.entity.Category;
+import com.group1.proyect.freshbasket.entity.Exit;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,6 +15,8 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<Category> findByNameContainingIgnoreCase(String name);
 
     Optional<Category> findByNameIgnoreCase(String name);
+
+    List<Category> findByActiveTrue();
 
 
 }
