@@ -3,16 +3,15 @@ import axios from "axios";
 import { tieneAcceso } from "../config/permissions.js";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast"; // <-- ¡CORREGIDO!: Ahora sí importamos toast para disparar las alertas
 import {
   getAllProducts, getProductById, createProduct,
   updateProduct, deleteProduct, searchProductsByName
 } from "../services/productService.js";
 
-
 function Products() {
   const navigate = useNavigate();
   const userRole = localStorage.getItem("userRole") || "USUARIO";
-
 
   const [activeTab, setActiveTab] = useState(localStorage.getItem("activeProductTab") || "all");
   const [showWelcome, setShowWelcome] = useState(true);
@@ -35,168 +34,169 @@ function Products() {
 
   const [editSearchId, setEditSearchId] = useState("");
 
-
   // Controla los cambios en el sub menu de productos
    useEffect(() => {
-     localStorage.setItem("activeProductTab", "home");
-     setActiveTab("home");
-     setShowWelcome(true);
+      localStorage.setItem("activeProductTab", "home");
+      setActiveTab("home");
+      setShowWelcome(true);
 
-     const handleProductTabChange = () => {
-       const tab = localStorage.getItem("activeProductTab") || "home";
-       setActiveTab(tab);
+      const handleProductTabChange = () => {
+        const tab = localStorage.getItem("activeProductTab") || "home";
+        setActiveTab(tab);
 
-       if (tab === "home") {
-         setShowWelcome(true);
-       } else if (tab === "all") {
-         setShowWelcome(false);
-         if (typeof loadProducts === "function") {
-           loadProducts();
-         }
-       } else if (tab === "name" || tab === "id" || tab === "create" || tab === "update" || tab === "delete") {
+        if (tab === "home") {
+          setShowWelcome(true);
+        } else if (tab === "all") {
+          setShowWelcome(false);
+          if (typeof loadProducts === "function") {
+            loadProducts();
+          }
+        } else if (tab === "name" || tab === "id" || tab === "create" || tab === "update" || tab === "delete") {
+          setShowWelcome(false);
+        } else {
+          setShowWelcome(false);
+        }
+      };
+      window.addEventListener("productTabChanged", handleProductTabChange);
 
-         setShowWelcome(false);
-       } else {
-         setShowWelcome(false);
-       }
-     };
-     window.addEventListener("productTabChanged", handleProductTabChange);
+      return () => window.removeEventListener("productTabChanged", handleProductTabChange);
+    }, []);
 
-     return () => window.removeEventListener("productTabChanged", handleProductTabChange);
+   // Carga dinámica de dependencias con Token de autorización
+   const loadDependencies = async () => {
+     try {
+       const token = localStorage.getItem("token");
+       const authConfig = {
+         headers: { Authorization: token ? `Bearer ${token}` : "" }
+       };
+
+       const [resCat, resSup, resUser] = await Promise.all([
+         axios.get("http://192.168.1.60:8080/api/categories", authConfig),
+         axios.get("http://192.168.1.60:8080/api/suppliers", authConfig),
+         axios.get("http://192.168.1.60:8080/api/users", authConfig)
+       ]);
+
+       setCategoriesList(resCat.data || []);
+       setSuppliersList(resSup.data || []);
+       setUsersList(resUser.data || []);
+     } catch (error) {
+       toast.error("No se pudieron cargar las categorías, proveedores o usuarios.");
+     }
+   };
+
+   // Carga todos los productos registrados
+   const loadProducts = async () => {
+     try {
+       const data = await getAllProducts();
+       setAllProducts(data || []);
+     } catch (error) {
+       setAllProducts([]);
+       toast.error("Error al conectar con el servidor para obtener los productos.");
+     }
+   };
+
+   // Disparador inicial de datos estáticos
+   useEffect(() => {
+     loadDependencies();
    }, []);
 
-  // Carga dinámica de dependencias con Token de autorización
-  const loadDependencies = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const authConfig = {
-        headers: { Authorization: token ? `Bearer ${token}` : "" }
+   // Manejadores de Búsqueda
+   const handleSearch = async (e) => {
+     e.preventDefault();
+     if (search.trim() === "") {
+       setProductsByName([]);
+       return;
+     }
+     const data = await searchProductsByName(search);
+     setProductsByName(data || []);
+   };
+
+   const handleSearchById = async (e) => {
+     e.preventDefault();
+     if (searchId.trim() === "") {
+       setProductById(null);
+       return;
+     }
+     try {
+       const prod = await getProductById(searchId);
+       if (!prod) {
+         toast.error("Producto no encontrado por ID");
+       } else {
+         toast.success("Producto encontrado");
+       }
+       setProductById(prod || null);
+     } catch {
+       setProductById(null);
+       toast.error("Error al buscar el producto por ID");
+     }
+   };
+
+   // Manejador del cambio de inputs (Edición)
+   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+
+   // Rellena automáticamente el formulario UPDATE
+   const handleBlurId = async (e) => {
+     const targetValue = (e && e.target) ? e.target.value : e;
+     if (!targetValue || String(targetValue).trim() === "") {
+       toast.error("Por favor, ingresa un ID válido antes de cargar.");
+       return;
+     }
+
+     try {
+       const prod = await getProductById(targetValue);
+
+       if (prod) {
+         setFormData({
+           productId: prod.id || prod.productId || targetValue,
+           name: prod.name || "",
+           price: prod.price || "",
+           currentStock: prod.currentStock || prod.stock || "",
+           description: prod.description || "",
+           imageUrl: prod.imageUrl || "",
+           categoryName: prod.categoryName || "",
+           supplierName: prod.supplierName || "",
+           userName: prod.userName || ""
+         });
+         toast.success("¡Producto cargado con éxito!");
+       } else {
+         setFormData({
+           productId: targetValue, name: "", price: "", currentStock: "",
+           description: "", imageUrl: "", categoryName: "", supplierName: "", userName: ""
+         });
+         toast.error("No se encontró el producto con ese ID");
+       }
+     } catch (error) {
+       toast.error("Error al conectar con el servidor al consultar el ID.");
+     }
+   };
+
+   // Envío del formulario UPDATE
+      const handleUpdateSubmit = async (e) => {
+        if (e) e.preventDefault();
+        try {
+          await updateProduct(formData.productId, formData);
+          toast.success("Producto actualizado correctamente");
+          setFormData({
+            productId: "",
+            name: "",
+            price: "",
+            currentStock: "",
+            description: "",
+            imageUrl: "",
+            categoryName: "",
+            supplierName: "",
+            userName: ""
+          });
+
+          setEditSearchId("");
+
+          setTimeout(async () => {
+            await loadProducts();
+          }, 300);
+        } catch (error) {
+          toast.error("Error al actualizar producto");
+        }
       };
-
-      const [resCat, resSup, resUser] = await Promise.all([
-        axios.get("http://192.168.1.60:8080/api/categories", authConfig),
-        axios.get("http://192.168.1.60:8080/api/suppliers", authConfig),
-        axios.get("http://192.168.1.60:8080/api/users", authConfig)
-      ]);
-
-      setCategoriesList(resCat.data || []);
-      setSuppliersList(resSup.data || []);
-      setUsersList(resUser.data || []);
-    } catch (error) {
-      console.error("Error al cargar las dependencias de productos:", error);
-    }
-  };
-
-  // Carga todos los productos registrados
-  const loadProducts = async () => {
-    try {
-      const data = await getAllProducts();
-      setAllProducts(data || []);
-    } catch (error) {
-      console.error("Error al cargar todos los productos:", error);
-      setAllProducts([]);
-    }
-  };
-
-  // Disparador inicial de datos estáticos
-  useEffect(() => {
-    loadDependencies();
-  }, []);
-
-  // Manejadores de Búsqueda
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (search.trim() === "") { setProductsByName([]); return; }
-    const data = await searchProductsByName(search);
-    setProductsByName(data || []);
-  };
-
-  const handleSearchById = async (e) => {
-    e.preventDefault();
-    if (searchId.trim() === "") { setProductById(null); return; }
-    try {
-      const prod = await getProductById(searchId);
-      setProductById(prod || null);
-    } catch {
-      setProductById(null);
-    }
-  };
-
-  // Manejador del cambio de inputs (Edición)
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  // Rellena automáticamente el formulario UPDATE
-  const handleBlurId = async (e) => {
-    const targetValue = (e && e.target) ? e.target.value : e;
-    if (!targetValue || String(targetValue).trim() === "") {
-      alert("Por favor, ingresa un ID válido antes de cargar.");
-      return;
-    }
-
-    try {
-      const prod = await getProductById(targetValue);
-
-      if (prod) {
-        setFormData({
-          productId: prod.id || prod.productId || targetValue,
-          name: prod.name || "",
-          price: prod.price || "",
-          currentStock: prod.currentStock || prod.stock || "",
-          description: prod.description || "",
-          imageUrl: prod.imageUrl || "",
-          categoryName: prod.categoryName || "",
-          supplierName: prod.supplierName || "",
-          userName: prod.userName || ""
-        });
-        console.log("¡Producto cargado con éxito!", prod);
-      } else {
-        setFormData({
-          productId: targetValue, name: "", price: "", currentStock: "",
-          description: "", imageUrl: "", categoryName: "", supplierName: "", userName: ""
-        });
-        alert("No se encontró el producto con ese ID");
-      }
-    } catch (error) {
-      console.error("Error al consultar el producto en handleBlurId:", error);
-      alert("Error al conectar con el servidor al consultar el ID.");
-    }
-  };
-
-  // Envío del formulario UPDATE
-  const handleUpdateSubmit = async (e) => {
-    if (e) e.preventDefault();
-    try {
-      await updateProduct(formData.productId, formData);
-      alert("Producto actualizado correctamente");
-      await loadProducts();
-    } catch (error) {
-      alert("Error al actualizar producto");
-    }
-  };
-
-  // Envío del formulario CREATE
-  const handleCreateSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const form = e.target;
-      const newProduct = {
-        name: form.name.value,
-        price: form.price.value,
-        currentStock: form.currentStock.value,
-        description: form.description.value,
-        imageUrl: form.imageUrl.value,
-        categoryName: form.categoryName.value,
-        supplierName: form.supplierName.value,
-        userName: form.userName.value,
-      };
-      await createProduct(newProduct);
-      alert("Producto creado con éxito");
-      form.reset();
-      await loadProducts();
-    } catch (error) {
-      alert("Error al crear producto");
-    }
-  };
 
   // Redirección de seguridad si cambiamos de rol o pestaña
    useEffect(() => {
@@ -512,24 +512,64 @@ function Products() {
       {activeTab === "delete" && tieneAcceso(userRole, "eliminar") && (
         <div className="fb-form-section">
           <div className="fb-form-card" style={{ borderTop: "4px solid #dc3545" }}>
-            <h3 className="fb-form-title" style={{ color: "#dc3545" }}><i className="bi bi-trash3-fill" /> Eliminar producto de inventario</h3>
+            <h3 className="fb-form-title" style={{ color: "#dc3545" }}>
+              <i className="bi bi-trash3-fill" /> Eliminar producto de inventario
+            </h3>
             <p style={{ color: "#7a8694", fontSize: "0.9rem", marginBottom: "1.2rem" }}>
-                ⚠️ Al eliminar el producto se borrarán permanentemente de su inventario ⚠️.</p>
+              ⚠️ Al eliminar el producto se borrarán permanentemente de su inventario ⚠️.
+            </p>
             <form
-              onSubmit={async (e) => {
+              onSubmit={(e) => {
                 e.preventDefault();
-                const id = e.target.elements.id.value;
-                if (!id) return;
-                if (!window.confirm(`¿Seguro que deseas eliminar el producto con ID ${id}?`)) return;
-                try {
-                  await deleteProduct(id);
-                  alert("Producto eliminado del sistema.");
-                  e.target.reset();
-                  await loadProducts();
-                } catch (error) {
-                  console.error(error);
-                  alert("Error al eliminar producto.");
+                const form = e.target;
+                const id = form.elements.id.value;
+
+                if (!id || String(id).trim() === "") {
+                  toast.error("Por favor, ingresa un ID válido.");
+                  return;
                 }
+
+                // Desplegamos el toast de confirmación nativo e interactivo
+                toast((t) => (
+                  <div className="d-flex flex-column gap-2 text-center" style={{ minWidth: "250px" }}>
+                    <span className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
+                      ¿Seguro que deseas eliminar el producto con ID <strong>{id}</strong>?
+                    </span>
+                    <div className="d-flex justify-content-center gap-2 mt-1">
+                      <button
+                        className="btn btn-danger btn-sm px-3 fw-bold shadow-sm"
+                        style={{ borderRadius: "12px", fontSize: "0.85rem" }}
+                        onClick={async () => {
+                          toast.dismiss(t.id); // Cierra el toast de pregunta al instante
+
+                          try {
+                            await deleteProduct(id);
+                            toast.success(`Producto con ID ${id} eliminado del sistema.`);
+                            form.reset();
+
+                            setTimeout(async () => {
+                              await loadProducts();
+                            }, 300);
+                          } catch (error) {
+                            toast.error("Error al eliminar el producto. Verifica que el ID exista.");
+                          }
+                        }}
+                      >
+                        Eliminar
+                      </button>
+                      <button
+                        className="btn btn-light btn-sm px-3 border shadow-sm"
+                        style={{ borderRadius: "12px", fontSize: "0.85rem" }}
+                        onClick={() => toast.dismiss(t.id)} // Cierra el toast si cancela
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ), {
+                  duration: Infinity, // No se quita hasta que el usuario decida
+                  position: "top-center"
+                });
               }}
               className="fb-search-form"
             >
@@ -537,7 +577,9 @@ function Products() {
                 <i className="bi bi-hash fb-search-icon" />
                 <input type="number" name="id" className="fb-search-input" placeholder="ID del producto" required />
               </div>
-              <button type="submit" className="fb-search-btn" style={{ background: "#dc3545" }}><i className="bi bi-trash3" /> Eliminar</button>
+              <button type="submit" className="fb-search-btn" style={{ background: "#dc3545" }}>
+                <i className="bi bi-trash3" /> Eliminar
+              </button>
             </form>
           </div>
         </div>

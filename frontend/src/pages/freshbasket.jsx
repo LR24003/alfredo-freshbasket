@@ -18,6 +18,7 @@ function Freshbasket({ onLogout }) {
   const [isProductsOpen, setIsProductsOpen] = useState(false);
   const [isUsersOpen, setIsUsersOpen] = useState(false);
   const [isSuppliersOpen, setIsSuppliersOpen] = useState(false);
+  const [isEntriesOpen, setIsEntriesOpen] = useState(false);
 
   const profileRef = useRef(null);
 
@@ -46,7 +47,7 @@ function Freshbasket({ onLogout }) {
       return [
         { key: "home",         icon: "bi-house-fill",         label: "Inicio",      path: "/freshbasket" },
         { key: "productos",    icon: "bi-basket3-fill",       label: "Productos",    path: "/freshbasket/productos", hasSubmenu: true },
-        { key: "entradas",     icon: "bi-box-arrow-in-down",  label: "Entradas" },
+        { key: "entradas",     icon: "bi-box-arrow-in-down",  label: "Entradas" ,   path: "/freshbasket/entradas", hasSubmenu: true },
         { key: "salidas",      icon: "bi-box-arrow-up",       label: "Salidas" },
         { key: "proveedores",  icon: "bi-truck",              label: "Proveedores",  path: "/freshbasket/proveedores", hasSubmenu: true },
 
@@ -120,6 +121,25 @@ function Freshbasket({ onLogout }) {
          ];
        }, [userRole]);
 
+   // Sub menu de proveedores
+      const entrySubItems = React.useMemo(() => {
+            return [
+              ...(tieneAcceso(userRole, "verTabsConsulta") ? [
+                { key: "all",    icon: "bi-box-seam-fill",    label: "Todos las entradas" },
+                { key: "id",     icon: "bi-tag-fill",         label: "Buscar por ID" }
+              ] : []),
+              ...(tieneAcceso(userRole, "crear") ? [
+                { key: "create", icon: "bi-plus-circle-fill", label: "Registrar entrada" }
+              ] : []),
+              ...(tieneAcceso(userRole, "actualizar") ? [
+                { key: "update", icon: "bi-pencil-square",    label: "Actualizar entrada" }
+              ] : []),
+              ...(tieneAcceso(userRole, "eliminar") ? [
+                { key: "delete", icon: "bi-trash3-fill",      label: "Eliminar entrada" }
+              ] : [])
+            ];
+          }, [userRole]);
+
   return (
       <div className="fb-root">
         {/* SIDEBAR */}
@@ -139,6 +159,7 @@ function Freshbasket({ onLogout }) {
                 item.key === "productos" ? isProductsOpen :
                 item.key === "usuarios" ? isUsersOpen :
                 item.key === "proveedores" ? isSuppliersOpen :
+                item.key === "entradas" ? isEntriesOpen :
                 false;
 
               // Obtener los sub-ítems filtrados dinámicamente
@@ -146,6 +167,7 @@ function Freshbasket({ onLogout }) {
                 item.key === "productos" ? productSubItems :
                 item.key === "usuarios" ? userSubItems :
                 item.key === "proveedores" ? supplierSubItems :
+                item.key === "entradas" ? entrySubItems :
                 [];
 
               return (
@@ -157,16 +179,25 @@ function Freshbasket({ onLogout }) {
                         setIsProductsOpen(!isProductsOpen);
                         setIsUsersOpen(false);
                         setIsSuppliersOpen(false);
+                        setIsEntriesOpen(false);
                         navigate(item.path);
                       } else if (item.key === "usuarios") {
                         setIsUsersOpen(!isUsersOpen);
                         setIsProductsOpen(false);
                         setIsSuppliersOpen(false);
+                        setIsEntriesOpen(false);
                         navigate(item.path);
                       } else if (item.key === "proveedores") {
                         setIsSuppliersOpen(!isSuppliersOpen);
                         setIsProductsOpen(false);
                         setIsUsersOpen(false);
+                        setIsEntriesOpen(false);
+                        navigate(item.path);
+                      } else if (item.key === "entradas") {
+                        setIsEntriesOpen(!isEntriesOpen);
+                        setIsProductsOpen(false);
+                        setIsUsersOpen(false);
+                        setIsSuppliersOpen(false);
                         navigate(item.path);
                       } else if (item.path) {
                         setIsProductsOpen(false);
@@ -206,6 +237,10 @@ function Freshbasket({ onLogout }) {
                             else if (item.key === "proveedores") {
                               localStorage.setItem("activeSupplierTab", sub.key);
                               window.dispatchEvent(new Event("supplierTabChanged"));
+                            }
+                            else if (item.key === "entradas") {
+                            localStorage.setItem("activeEntryTab", sub.key);
+                            window.dispatchEvent(new Event("entryTabChanged"));
                             }
 
                             navigate(item.path);

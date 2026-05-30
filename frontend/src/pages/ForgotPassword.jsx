@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 function ForgotPassword() {
     const navigate = useNavigate();
@@ -9,7 +10,7 @@ function ForgotPassword() {
     const handleRecover = async (e) => {
         e.preventDefault();
         if (!email) {
-            alert("Por favor ingrese su correo electrónico");
+            toast.error("Por favor ingrese su correo electrónico");
             return;
         }
 
@@ -23,15 +24,24 @@ function ForgotPassword() {
             });
 
             if (response.ok) {
-                alert("Se ha enviado un enlace de recuperación a tu correo. (Revisa la consola del backend para ver la simulación).");
-                navigate("/login");
+                toast.success("Enlace enviado. ¡Revisa tu correo electrónico!");
+
+
+                setTimeout(() => {
+                    navigate("/login");
+                }, 1500);
             } else {
-                const errorData = await response.json().catch(() => ({}));
-                alert(errorData.message || "Error al procesar la solicitud.");
+                let errorMessage = "Error al procesar la solicitud.";
+                try {
+                    const errorData = await response.json();
+                    if (errorData?.message) errorMessage = errorData.message;
+                } catch (e) {
+
+                }
+                toast.error(errorMessage);
             }
         } catch (error) {
-            console.error(error);
-            alert("Error de conexión con el servidor.");
+            toast.error("Error de conexión con el servidor.");
         } finally {
             setLoading(false);
         }

@@ -85,7 +85,6 @@ public class CountryServiceImpl implements CountryService {
     @Override
     @Transactional // Importante: org.springframework.transaction.annotation.Transactional
     public void deleteCountry(Long id) {
-        // Buscamos el País primero
         Country country = countryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("País no encontrado con ese ID: " + id));
 

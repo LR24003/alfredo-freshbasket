@@ -18,10 +18,8 @@ export async function login(email, password) {
 
   const data = await response.json();
 
-  // Guardamos el token para habilitar el acceso a las rutas privadas
   localStorage.setItem("token", data.token);
 
-  // Decodificación segura de JWT para evitar crasheos
   try {
     const decoded = jwtDecode(data.token);
 

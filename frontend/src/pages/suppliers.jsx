@@ -3,6 +3,7 @@ import axios from "axios";
 import { tieneAcceso } from "../config/permissions.js";
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast"; // <-- Importamos toast
 import {
   getAllSuppliers, getSupplierById, createSupplier,
   updateSupplier, deleteSupplier, searchSuppliersByName
@@ -14,7 +15,6 @@ function Suppliers() {
 
   const [activeTab, setActiveTab] = useState(localStorage.getItem("activeSupplierTab") || "all");
   const [showWelcome, setShowWelcome] = useState(true);
-
 
   const [allSuppliers, setAllSuppliers] = useState([]);
   const [suppliersByName, setSuppliersByName] = useState([]);
@@ -35,45 +35,43 @@ function Suppliers() {
     countryName: "",
   });
 
-
   const loadSuppliers = async () => {
     try {
       const data = await getAllSuppliers();
       setAllSuppliers(data || []);
     } catch (error) {
-      console.error("Error al cargar todos los proveedores:", error);
       setAllSuppliers([]);
+      toast.error("Error al conectar con el servidor para obtener los proveedores.");
     }
   };
 
- // Controla los cambios en el sub menu de productos
- useEffect(() => {
-   localStorage.setItem("activeSupplierTab", "home");
-   setActiveTab("home");
-   setShowWelcome(true);
+  // Controla los cambios en el sub menu de productos
+  useEffect(() => {
+    localStorage.setItem("activeSupplierTab", "home");
+    setActiveTab("home");
+    setShowWelcome(true);
 
-   const handleSupplierTabChange = () => {
-     const tab = localStorage.getItem("activeSupplierTab") || "home";
-     setActiveTab(tab);
+    const handleSupplierTabChange = () => {
+      const tab = localStorage.getItem("activeSupplierTab") || "home";
+      setActiveTab(tab);
 
-     if (tab === "home") {
-       setShowWelcome(true);
-     } else if (tab === "all") {
-       setShowWelcome(false);
-       if (typeof loadSuppliers === "function") {
-         loadSuppliers();
-       }
-     } else if (tab === "name" || tab === "id" || tab === "create" || tab === "update" || tab === "delete") {
+      if (tab === "home") {
+        setShowWelcome(true);
+      } else if (tab === "all") {
+        setShowWelcome(false);
+        if (typeof loadSuppliers === "function") {
+          loadSuppliers();
+        }
+      } else if (tab === "name" || tab === "id" || tab === "create" || tab === "update" || tab === "delete") {
+        setShowWelcome(false);
+      } else {
+        setShowWelcome(false);
+      }
+    };
+    window.addEventListener("supplierTabChanged", handleSupplierTabChange);
 
-       setShowWelcome(false);
-     } else {
-       setShowWelcome(false);
-     }
-   };
-   window.addEventListener("supplierTabChanged", handleSupplierTabChange);
-
-   return () => window.removeEventListener("supplierTabChanged", handleSupplierTabChange);
- }, []);
+    return () => window.removeEventListener("supplierTabChanged", handleSupplierTabChange);
+  }, []);
 
   // Carga las dependencias del proveedor (pais)
   const loadDependencies = async () => {
@@ -89,10 +87,9 @@ function Suppliers() {
 
       setCountriesList(resCountry.data || []);
     } catch (error) {
-      console.error("Error al cargar las dependencias de proveedores:", error);
+      toast.error("No se pudo cargar la lista de países.");
     }
   };
-
 
   useEffect(() => {
     loadDependencies();
@@ -112,9 +109,13 @@ function Suppliers() {
     if (searchId.trim() === "") { setSupplierById(null); return; }
     try {
       const supplier = await getSupplierById(searchId);
+      if (!supplier) {
+        toast.error("Proveedor no encontrado con ese ID");
+      }
       setSupplierById(supplier || null);
     } catch {
       setSupplierById(null);
+      toast.error("Error al buscar el proveedor con ese ID");
     }
   };
 
@@ -129,7 +130,7 @@ function Suppliers() {
     );
 
     if (!countryFound) {
-      alert("Por favor, selecciona un país válido de la lista.");
+      toast.error("Por favor, selecciona un país válido de la lista.");
       return;
     }
 
@@ -149,13 +150,14 @@ function Suppliers() {
       };
 
       await createSupplier(payload, authConfig);
-
-      alert("¡Proveedor creado con éxito!");
+      toast.success("¡Proveedor creado con éxito!");
       e.target.reset();
-      loadSuppliers();
+
+      setTimeout(async () => {
+        await loadSuppliers();
+      }, 300);
     } catch (error) {
-      console.error("Error en la petición:", error.response?.data);
-      alert("Error al crear proveedor: " + (error.response?.data?.message || "Revisa los campos"));
+      toast.error("Error al crear proveedor: " + (error.response?.data?.message || "Revisa los campos"));
     }
   };
 
@@ -171,7 +173,7 @@ function Suppliers() {
   const handleBlurId = async (e) => {
     const targetValue = (e && e.target) ? e.target.value : e;
     if (!targetValue || String(targetValue).trim() === "") {
-      alert("Por favor, ingresa un ID válido antes de cargar.");
+      toast.error("Por favor, ingresa un ID válido antes de cargar.");
       return;
     }
 
@@ -196,13 +198,12 @@ function Suppliers() {
           address: supplier.address || "",
           countryName: countryCorrespondiente ? countryCorrespondiente.name : (uCountryName || ""),
         });
-        console.log("¡proveedor cargado con éxito!", supplier);
+        toast.success("¡Proveedor cargado con éxito!");
       } else {
-        alert("No se encontró el proveedor con ese ID");
+        toast.error("No se encontró el proveedor con ese ID");
       }
     } catch (error) {
-      console.error(error);
-      alert("Error al consultar el proveedor");
+      toast.error("Error al consultar el proveedor");
     }
   };
 
@@ -210,24 +211,24 @@ function Suppliers() {
   const handleUpdateSubmit = async (e) => {
     if (e) e.preventDefault();
 
-  const formElements = e.target.elements;
-  const supplierId = formElements.id?.value || formData.id || formData.productId;
+    const formElements = e.target.elements;
+    const supplierId = formElements.id?.value || formData.id || formData.productId;
 
     if (!supplierId || String(supplierId).trim() === "") {
-      alert("Error: El ID del proveedor no puede estar vacío. Por favor, cargue un proveedor válido.");
+      toast.error("Error: El ID del proveedor no puede estar vacío.");
       return;
     }
 
-  const countryFound = Array.isArray(countriesList) && countriesList.find(
+    const countryFound = Array.isArray(countriesList) && countriesList.find(
       (c) => c.name?.toLowerCase() === formData.countryName?.trim().toLowerCase()
     );
 
     if (!countryFound) {
-      alert("Por favor, selecciona un país válido de la lista antes de actualizar.");
+      toast.error("Por favor, selecciona un país válido de la lista antes de actualizar.");
       return;
     }
 
-  const payload = {
+    const payload = {
       name: formData.name,
       lastName: formData.lastName,
       phone: formData.phone,
@@ -238,13 +239,25 @@ function Suppliers() {
 
     try {
       await updateSupplier(supplierId, payload);
+      toast.success("¡Proveedor actualizado correctamente!");
 
-      alert("¡Proveedor actualizado correctamente!");
-      loadSuppliers();
+      setFormData({
+        id: "",
+        name: "",
+        lastName: "",
+        phone: "",
+        email: "",
+        address: "",
+        countryName: "",
+      });
 
-      } catch (error){
-      console.error("Error completo en la consola:", error.response?.data);
-      alert("Error al actualizar: " + (error.response?.data?.message || "Revisa los datos"));
+      setEditSearchId("");
+
+      setTimeout(async () => {
+        await loadSuppliers();
+      }, 300);
+    } catch (error) {
+      toast.error("Error al actualizar: " + (error.response?.data?.message || "Revisa los datos"));
     }
   };
 
@@ -329,7 +342,7 @@ function Suppliers() {
               <form onSubmit={handleSearch} className="fb-search-form">
                 <div className="fb-search-input-wrap">
                   <i className="bi bi-person fb-search-icon" />
-                  <input type="text" className="fb-search-input" placeholder="Ej: Martin Antonio"
+                  <input type="text" className="fb-search-input" placeholder="Ej: Distribuidora"
                     value={search} onChange={e => setSearch(e.target.value)} />
                 </div>
                 <button type="submit" className="fb-search-btn">
@@ -577,24 +590,57 @@ function Suppliers() {
             ⚠️ Al eliminar el proveedor se borrará permanentemente de su base de datos ⚠️
           </p>
           <form
-            onSubmit={async (e) => {
+            onSubmit={(e) => {
               e.preventDefault();
-              const idValue = e.target.id.value;
+              const form = e.target;
+              const idValue = form.id.value;
 
-              const confirmDelete = window.confirm(
-                `¿Está seguro de que desea eliminar el proveedor con el ID ${idValue}?`
-              );
-
-              if (!confirmDelete) return;
-
-              try {
-                await deleteSupplier(idValue);
-                alert("Proveedor eliminado correctamente");
-                e.target.reset();
-                loadSuppliers();
-              } catch (error) {
-                alert("Error al eliminar proveedor");
+              if (!idValue || String(idValue).trim() === "") {
+                toast.error("Por favor, ingresa un ID válido.");
+                return;
               }
+
+              // Lanzamos el toast interactivo con diseño integrado en Bootstrap
+              toast((t) => (
+                <div className="d-flex flex-column gap-2 text-center" style={{ minWidth: "250px" }}>
+                  <span className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
+                    ¿Está seguro de que desea eliminar el proveedor con el ID <strong>{idValue}</strong>?
+                  </span>
+                  <div className="d-flex justify-content-center gap-2 mt-1">
+                    <button
+                      className="btn btn-danger btn-sm px-3 fw-bold shadow-sm"
+                      style={{ borderRadius: "12px", fontSize: "0.85rem" }}
+                      onClick={async () => {
+                        toast.dismiss(t.id); // Cerramos el cuadro de diálogo inmediatamente
+
+                        try {
+                          await deleteSupplier(idValue);
+                          toast.success(`Proveedor con ID ${idValue} eliminado correctamente.`);
+                          form.reset();
+
+                          setTimeout(async () => {
+                            await loadSuppliers();
+                          }, 300);
+                        } catch (error) {
+                          toast.error("Error al eliminar el proveedor. Verifica que el ID exista.");
+                        }
+                      }}
+                    >
+                      Eliminar
+                    </button>
+                    <button
+                      className="btn btn-light btn-sm px-3 border shadow-sm"
+                      style={{ borderRadius: "12px", fontSize: "0.85rem" }}
+                      onClick={() => toast.dismiss(t.id)} // Cancela la acción cerrando el diálogo
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ), {
+                duration: Infinity, // Se mantiene abierto hasta que elijan una opción
+                position: "top-center"
+              });
             }}
             className="fb-search-form"
           >

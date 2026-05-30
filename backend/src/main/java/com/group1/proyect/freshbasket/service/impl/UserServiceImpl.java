@@ -3,7 +3,6 @@ package com.group1.proyect.freshbasket.service.impl;
 import com.group1.proyect.freshbasket.dto.request.UserRequestDTO;
 import com.group1.proyect.freshbasket.dto.response.UserResponseDTO;
 import com.group1.proyect.freshbasket.entity.Country;
-import com.group1.proyect.freshbasket.entity.Product;
 import com.group1.proyect.freshbasket.entity.User;
 import com.group1.proyect.freshbasket.repository.CountryRepository;
 import com.group1.proyect.freshbasket.repository.UserRepository;

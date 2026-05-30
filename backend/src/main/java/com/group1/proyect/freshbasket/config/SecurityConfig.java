@@ -46,6 +46,7 @@ public class SecurityConfig {
                                 "/webjars/**"
                         ).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/countries/**").permitAll()
 
 
                         // Rutas para products y detalles de permisos

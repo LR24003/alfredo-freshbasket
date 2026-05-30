@@ -3,6 +3,7 @@ import axios from "axios";
 import { tieneAcceso } from "../config/permissions.js";
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import {
   getAllUsers, getUserById, createUser,
   updateUser, deleteUser, searchUsersByName
@@ -36,7 +37,7 @@ function Users() {
     countryName: "",
   });
 
-  // Controla los cambios en el sub menu de productos
+  // Controla los cambios en el sub menu de usuarios
    useEffect(() => {
      localStorage.setItem("activeUserTab", "home");
      setActiveTab("home");
@@ -54,7 +55,6 @@ function Users() {
            loadUsers();
          }
        } else if (tab === "name" || tab === "id" || tab === "create" || tab === "update" || tab === "delete") {
-
          setShowWelcome(false);
        } else {
          setShowWelcome(false);
@@ -79,7 +79,7 @@ function Users() {
 
       setCountriesList(resCountry.data || []);
     } catch (error) {
-      console.error("Error al cargar las dependencias de usuarios:", error);
+      toast.error("No se pudo cargar la lista de países.");
     }
   };
 
@@ -89,8 +89,8 @@ function Users() {
       const data = await getAllUsers();
       setAllUsers(data || []);
     } catch (error) {
-      console.error("Error al cargar todos los usuarios:", error);
       setAllUsers([]);
+      toast.error("Error al conectar con el servidor para obtener los usuarios.");
     }
   };
 
@@ -113,13 +113,17 @@ function Users() {
     if (searchId.trim() === "") { setUserById(null); return; }
     try {
       const user = await getUserById(searchId);
+      if (!user) {
+        toast.error("Usuario no encontrado por ID");
+      }
       setUserById(user || null);
     } catch {
       setUserById(null);
+      toast.error("Error al buscar el usuario por ID");
     }
   };
 
-  //Controla la creación de un usuario usando las variables correctas
+  // Controla la creación de un usuario usando las variables correctas
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
@@ -136,35 +140,30 @@ function Users() {
         countryName: newUser.countryName?.trim()
       }, authConfig);
 
-      alert("¡Usuario creado con éxito!");
+      toast.success("¡Usuario creado con éxito!");
       e.target.reset();
-      loadUsers();
+
+      setTimeout(async () => {
+        await loadUsers();
+      }, 300);
     } catch (error) {
-      console.error("Error completo:", error);
-      alert("Error al crear usuario: " + (error.response?.data?.message || "No tienes permisos o verifique los datos"));
+      toast.error("Error al crear usuario: " + (error.response?.data?.message || "Verifique los datos de acceso"));
     }
   };
 
-
   const updateUserById = async (id, payload) => {
-    try {
-      await updateUser(id, payload);
-      await loadUsers();
-    } catch (error) {
-      console.error("Error al actualizar usuario internamente:", error);
-      throw error;
-    }
+    await updateUser(id, payload);
+    await loadUsers();
   };
 
   // Rellena automaticamente el formulario de UPDATE
-  const handleChange = (e) => setFormData({
-      ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   // Controla que se actualice uno o todos los campos de UPDATE
   const handleBlurId = async (e) => {
     const targetValue = (e && e.target) ? e.target.value : e;
     if (!targetValue || String(targetValue).trim() === "") {
-      alert("Por favor, ingresa un ID válido antes de cargar.");
+      toast.error("Por favor, ingresa un ID válido antes de cargar.");
       return;
     }
 
@@ -190,13 +189,12 @@ function Users() {
           role: user.role || "",
           countryName: paisCorrespondiente ? paisCorrespondiente.name : (uCountryName || ""),
         });
-        console.log("¡Usuario cargado con éxito!", user);
+        toast.success("¡Usuario cargado con éxito!");
       } else {
-        alert("No se encontró el usuario con ese ID");
+        toast.error("No se encontró el usuario con ese ID");
       }
     } catch (error) {
-      console.error(error);
-      alert("Error al consultar usuario");
+      toast.error("Error al consultar usuario");
     }
   };
 
@@ -220,9 +218,23 @@ function Users() {
 
     try {
       await updateUserById(id, payload);
-      alert("Usuario actualizado correctamente");
+      toast.success("Usuario actualizado correctamente");
+
+      setFormData({
+        id: "",
+        name: "",
+        lastName: "",
+        phone: "",
+        email: "",
+        password: "",
+        role: "",
+        countryName: "",
+      });
+
+      setEditSearchId("");
+
     } catch (error) {
-      alert("Error al actualizar: " + (error.response?.data?.message || "Revisa los datos"));
+      toast.error("Error al actualizar: " + (error.response?.data?.message || "Revisa los datos"));
     }
   };
 
@@ -508,59 +520,88 @@ function Users() {
             </div>
           )}
 
-          {/* DELETE USER*/}
-          {activeTab === "delete" && (
-            <div className="fb-form-section">
-              <div className="fb-form-card" style={{ borderTop: "4px solid #dc3545" }}>
-                <h3 className="fb-form-title" style={{ color: "#dc3545" }}>
-                  <i className="bi bi-trash3-fill" /> Introduzca el ID del usuario
-                </h3>
-                <p style={{ color: "#7a8694", fontSize: "0.9rem", marginBottom: "1.2rem" }}>
-                  ⚠️ Al eliminar el usuario se desactivará de su base de datos ⚠️
-                </p>
-                <form
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    const idValue = e.target.userId.value;
+         {/* DELETE USER */}
+         {activeTab === "delete" && (
+           <div className="fb-form-section">
+             <div className="fb-form-card" style={{ borderTop: "4px solid #dc3545" }}>
+               <h3 className="fb-form-title" style={{ color: "#dc3545" }}>
+                 <i className="bi bi-trash3-fill" /> Introduzca el ID del usuario
+               </h3>
+               <p style={{ color: "#7a8694", fontSize: "0.9rem", marginBottom: "1.2rem" }}>
+                 ⚠️ Al eliminar el usuario se desactivará de su base de datos ⚠️
+               </p>
+               <form
+                 onSubmit={(e) => {
+                   e.preventDefault();
+                   const form = e.target;
+                   const idValue = form.userId.value;
 
-                    const confirmDelete = window.confirm(
-                      `¿Está seguro de que desea eliminar el usuario con ese ID ${idValue}?`
-                    );
+                   if (!idValue || String(idValue).trim() === "") {
+                     toast.error("Por favor, ingresa un ID válido.");
+                     return;
+                   }
 
-                    if (!confirmDelete) return;
+                   toast((t) => (
+                     <div className="d-flex flex-column gap-2 text-center" style={{ minWidth: "250px" }}>
+                       <span className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
+                         ¿Está seguro de que desea eliminar el usuario con el ID <strong>{idValue}</strong>?
+                       </span>
+                       <div className="d-flex justify-content-center gap-2 mt-1">
+                         <button
+                           className="btn btn-danger btn-sm px-3 fw-bold shadow-sm"
+                           style={{ borderRadius: "12px", fontSize: "0.85rem" }}
+                           onClick={async () => {
+                             toast.dismiss(t.id);
 
-                    try {
-                      await deleteUser(idValue);
-                      alert("Usuario eliminado correctamente");
-                      e.target.reset();
-                      loadUsers();
-                    } catch (error) {
-                      console.error("Error capturado:", error);
-                      alert("Error al eliminar usuario");
-                    }
-                  }}
-                  className="fb-search-form"
-                >
-                  <div className="fb-search-input-wrap">
-                    <i className="bi bi-hash fb-search-icon" />
-                    <input
-                      type="number"
-                      name="userId"
-                      className="fb-search-input"
-                      placeholder="ID del usuario a eliminar"
-                      required
-                    />
-                  </div>
-                  <button type="submit" className="fb-search-btn" style={{ background: "#dc3545" }}>
-                    <i className="bi bi-trash3" /> Eliminar usuario
-                  </button>
-                </form>
-              </div>
-            </div>
-          )}
+                             try {
+                               await deleteUser(idValue);
+                               toast.success(`Usuario con ID ${idValue} eliminado correctamente.`);
+                               form.reset();
 
-         </div>
-
+                               setTimeout(async () => {
+                                 await loadUsers();
+                               }, 300);
+                             } catch (error) {
+                               toast.error("Error al eliminar usuario. Verifica los permisos o el ID.");
+                             }
+                           }}
+                         >
+                           Eliminar
+                         </button>
+                         <button
+                           className="btn btn-light btn-sm px-3 border shadow-sm"
+                           style={{ borderRadius: "12px", fontSize: "0.85rem" }}
+                           onClick={() => toast.dismiss(t.id)}
+                         >
+                           Cancelar
+                         </button>
+                       </div>
+                     </div>
+                   ), {
+                     duration: Infinity,
+                     position: "top-center"
+                   });
+                 }}
+                 className="fb-search-form"
+               >
+                 <div className="fb-search-input-wrap">
+                   <i className="bi bi-hash fb-search-icon" />
+                   <input
+                     type="number"
+                     name="userId"
+                     className="fb-search-input"
+                     placeholder="ID del usuario a eliminar"
+                     required
+                   />
+                 </div>
+                 <button type="submit" className="fb-search-btn" style={{ background: "#dc3545" }}>
+                   <i className="bi bi-trash3" /> Eliminar usuario
+                 </button>
+               </form>
+             </div>
+           </div>
+         )}
+    </div>
    );
  }
 

@@ -79,6 +79,8 @@ public class ProductServiceImpl implements ProductService {
         if (product.getCategory() != null) {
             dto.setCategoryId(product.getCategory().getId());
             dto.setCategoryName(product.getCategory().getName());
+        } else {
+            dto.setCategoryName("Sin categoría asignada");
         }
 
         if (product.getSupplier() != null) {
@@ -91,7 +93,7 @@ public class ProductServiceImpl implements ProductService {
             if (!sFullName.isEmpty()) {
                 dto.setSupplierName(sFullName);
             } else {
-                dto.setSupplierName("Proveedor" + product.getSupplier().getId());
+                dto.setSupplierName("Proveedor " + product.getSupplier().getId()); // Corregido: añadido espacio
             }
         } else {
             dto.setSupplierName("Sin proveedor asignado");
@@ -107,8 +109,7 @@ public class ProductServiceImpl implements ProductService {
             if (!uFullName.isEmpty()) {
                 dto.setUserName(uFullName);
             } else {
-                // Plan de respaldo si no hay datos de nombre en el usuario
-                dto.setUserName("Usuario" + product.getUser().getId());
+                dto.setUserName("Usuario " + product.getUser().getId());
             }
         } else {
             dto.setUserName("Sin usuario asignado");

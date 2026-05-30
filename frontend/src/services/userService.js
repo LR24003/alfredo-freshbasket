@@ -33,6 +33,13 @@ export const createUser = async (userData) => {
   return res.data;
 };
 
+export const registerUserPublic = async (userData) => {
+  // Realiza el POST limpio sin pasarle la función getAuthHeaders()
+  const res = await axios.post(`${API_URL}/register`, userData); // <-- Ajusta la URL si tu endpoint público es diferente (ej: API_URL.replace('/users', '/auth/register'))
+  return res.data;
+};
+
+
 // UPDATE user
 export const updateUser = async (userId, userData) => {
   const res = await axios.put(`${API_URL}/${userId}`, userData, getAuthHeaders());

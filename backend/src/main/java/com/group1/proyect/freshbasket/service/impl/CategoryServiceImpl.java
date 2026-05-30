@@ -3,7 +3,6 @@ package com.group1.proyect.freshbasket.service.impl;
 import com.group1.proyect.freshbasket.dto.request.CategoryRequestDTO;
 import com.group1.proyect.freshbasket.dto.response.CategoryResponseDTO;
 import com.group1.proyect.freshbasket.entity.Category;
-import com.group1.proyect.freshbasket.entity.Country;
 import com.group1.proyect.freshbasket.repository.CategoryRepository;
 import com.group1.proyect.freshbasket.service.CategoryService;
 import org.springframework.stereotype.Service;

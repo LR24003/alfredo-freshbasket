@@ -1,4 +1,4 @@
-package com.group1.proyect.freshbasket.config; //
+package com.group1.proyect.freshbasket.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
