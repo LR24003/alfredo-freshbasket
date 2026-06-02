@@ -1,7 +1,7 @@
 import "../styles/login.css";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
+import { login } from "../services/authService.js";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -13,47 +13,22 @@ function Login() {
     e.preventDefault();
     setLoading(true);
 
-    const BACKEND_URL = "http://192.168.1.60:8080/api/auth/login";
-
     try {
-      const response = await fetch(BACKEND_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const data = await login(email, password);
 
-      if (response.ok) {
-        const data = await response.json();
+      localStorage.setItem("userEmail", data.email);
 
-        // Se guarda el token JWT entregado por el backend
-        localStorage.setItem("token", data.token);
-        const rolDesdeBackend = data.role || data.rol || data.userRole;
-        localStorage.setItem("userEmail", data.email);
-
-        if (rolDesdeBackend) {
-          localStorage.setItem("userRole", rolDesdeBackend);
-        }
-
-        toast.success("¡Login correcto! Redirigiendo...");
-
-        setTimeout(() => {
-          window.location.href = "/freshbasket";
-        }, 1000);
-
-      } else {
-        let errorMessage = "Credenciales incorrectas o acceso denegado";
-
-        try {
-          const errorData = await response.json();
-          if (errorData?.message) errorMessage = errorData.message;
-        } catch (e) {
-
-        }
-
-        toast.error(`Error (${response.status}): ${errorMessage}`);
+      const rolDesdeBackend = data.role || data.rol || data.userRole;
+      if (rolDesdeBackend) {
+        localStorage.setItem("userRole", rolDesdeBackend);
       }
+
+      setTimeout(() => {
+        navigate("/freshbasket");
+      }, 1500);
+
     } catch (error) {
-      toast.error("No se pudo conectar con el servidor. Verifica que Spring Boot esté encendido.");
+      console.error("Error en el flujo de inicio de sesión:", error.message);
     } finally {
       setLoading(false);
     }

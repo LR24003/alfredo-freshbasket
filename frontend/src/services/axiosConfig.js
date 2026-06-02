@@ -1,19 +1,55 @@
 import axios from "axios";
+import toast from "react-hot-toast";
+
 
 axios.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
+    (config) => {
+        const token = localStorage.getItem("token");
 
-    if (token) {
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
 
-      config.headers.Authorization = `Bearer ${token}`;
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
     }
+);
 
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
+axios.interceptors.response.use(
+    (response) => {
+        return response;
+    },
+    (error) => {
+        if (error.response) {
+            const status = error.response.status;
+            const serverMessage = error.response.data?.message;
+
+            switch (status) {
+                case 401:
+                    toast.error("Sesión expirada o no válida. Por favor, inicia sesión de nuevo.");
+                    break;
+                case 403:
+                    toast.error("No tienes los permisos necesarios para realizar esta acción.");
+                    break;
+                case 404:
+                    toast.error(serverMessage || "El recurso solicitado no fue encontrado.");
+                    break;
+                case 500:
+                    toast.error("Error interno en el servidor. Inténtalo más tarde.");
+                    break;
+                default:
+                    toast.error(serverMessage || "Ocurrió un error inesperado.");
+            }
+        } else if (error.request) {
+            toast.error("No se pudo conectar con el servidor. Verifica tu conexión.");
+        } else {
+            toast.error("Error al procesar la solicitud.");
+        }
+
+        return Promise.reject(error);
+    }
 );
 
 export default axios;

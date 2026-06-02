@@ -1,9 +1,10 @@
 import "../styles/forms.css";
-import axios from "axios";
+
+import axios from "../services/axiosConfig.js";
 import { tieneAcceso } from "../config/permissions.js";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast"; // <-- Importamos toast para manejar las alertas
+import toast from "react-hot-toast";
 import {
   getAllEntries, getEntryById, createEntry,
   updateEntry, deleteEntry
@@ -16,7 +17,6 @@ function Entries () {
   const [activeTab, setActiveTab] = useState(localStorage.getItem("activeEntryTab") || "all");
   const [showWelcome, setShowWelcome] = useState(true);
 
-  const [search, setSearch] = useState("");
   const [searchId, setSearchId] = useState("");
   const [entryById, setEntryById] = useState(null);
   const [allEntries, setAllEntries] = useState([]);
@@ -34,63 +34,57 @@ function Entries () {
   const [editSearchId, setEditSearchId] = useState("");
 
   // Controla los cambios en el sub menu de entradas
-   useEffect(() => {
-     localStorage.setItem("activeEntryTab", "home");
-     setActiveTab("home");
-     setShowWelcome(true);
+  useEffect(() => {
+    localStorage.setItem("activeEntryTab", "home");
+    setActiveTab("home");
+    setShowWelcome(true);
 
-     const handleEntryTabChange = () => {
-       const tab = localStorage.getItem("activeEntryTab") || "home";
-       setActiveTab(tab);
+    const handleEntryTabChange = () => {
+      const tab = localStorage.getItem("activeEntryTab") || "home";
+      setActiveTab(tab);
 
-       if (tab === "home") {
-         setShowWelcome(true);
-       } else if (tab === "all") {
-         setShowWelcome(false);
-         if (typeof loadEntries === "function") {
-           loadEntries();
-         }
-       } else if ( tab === "id" || tab === "create" || tab === "update" || tab === "delete") {
-         setShowWelcome(false);
-       } else {
-         setShowWelcome(false);
-       }
-     };
-     window.addEventListener("entryTabChanged", handleEntryTabChange);
+      if (tab === "home") {
+        setShowWelcome(true);
+      } else if (tab === "all") {
+        setShowWelcome(false);
+        if (typeof loadEntries === "function") {
+          loadEntries();
+        }
+      } else if ( tab === "id" || tab === "create" || tab === "update" || tab === "delete") {
+        setShowWelcome(false);
+      } else {
+        setShowWelcome(false);
+      }
+    };
+    window.addEventListener("entryTabChanged", handleEntryTabChange);
 
-     return () => window.removeEventListener("entryTabChanged", handleEntryTabChange);
-   }, []);
+    return () => window.removeEventListener("entryTabChanged", handleEntryTabChange);
+  }, []);
 
-  // Carga dinámica de dependencias con Token de autorización
+
   const loadDependencies = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const authConfig = {
-        headers: { Authorization: token ? `Bearer ${token}` : "" }
-      };
-
       const [resProd, resSup, resUser] = await Promise.all([
-        axios.get("http://192.168.1.60:8080/api/products", authConfig),
-        axios.get("http://192.168.1.60:8080/api/suppliers", authConfig),
-        axios.get("http://192.168.1.60:8080/api/users", authConfig)
+        axios.get("http://192.168.1.60:8080/api/products"),
+        axios.get("http://192.168.1.60:8080/api/suppliers"),
+        axios.get("http://192.168.1.60:8080/api/users")
       ]);
 
       setProductsList(resProd.data || []);
       setSuppliersList(resSup.data || []);
       setUsersList(resUser.data || []);
     } catch (error) {
-      toast.error("No se pudieron cargar los productos, proveedores o usuarios de base.");
+
     }
   };
 
-  // Carga todas los entradas registradas
+
   const loadEntries = async () => {
     try {
       const data = await getAllEntries();
       setAllEntries(data || []);
     } catch (error) {
       setAllEntries([]);
-      toast.error("Error al conectar con el servidor para obtener las entradas.");
     }
   };
 
@@ -99,7 +93,7 @@ function Entries () {
     loadDependencies();
   }, []);
 
-  // Manejadores de Búsqueda
+
   const handleSearchById = async (e) => {
     e.preventDefault();
     if (searchId.trim() === "") { setEntryById(null); return; }
@@ -111,52 +105,51 @@ function Entries () {
       setEntryById(entry || null);
     } catch {
       setEntryById(null);
-      toast.error("Error al buscar la entrada por ID");
     }
   };
 
   // Manejador del cambio de inputs (Edición)
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  // Rellena automáticamente el formulario UPDATE
- const handleBlurId = async (e) => {
-   const targetValue = (e && e.target) ? e.target.value : e;
 
-   if (!targetValue || String(targetValue).trim() === "") {
-     setFormData({
-       entryId: "", entryDate: "", unitCost: "", quantity: "", productName: "",
-       supplierName: "", userName: ""
-     });
-     return;
-   }
+  const handleBlurId = async (e) => {
+    const targetValue = (e && e.target) ? e.target.value : e;
 
-   try {
-     const entry = await getEntryById(targetValue);
+    if (!targetValue || String(targetValue).trim() === "") {
+      setFormData({
+        entryId: "", entryDate: "", unitCost: "", quantity: "", productName: "",
+        supplierName: "", userName: ""
+      });
+      return;
+    }
 
-     if (entry) {
-       setFormData({
-         entryId: entry.id || entry.entryId || targetValue,
-         entryDate: entry.entryDate || "",
-         unitCost: entry.unitCost || "",
-         quantity: entry.quantity || "",
-         productName: entry.productName || "",
-         supplierName: entry.supplierName || "",
-         userName: entry.userName || ""
-       });
-       toast.success("¡Entrada cargada con éxito!");
-     } else {
-       setFormData({
-         entryId: targetValue, entryDate: "", unitCost: "", quantity: "",
-         productName: "", supplierName: "", userName: ""
-       });
-       toast.error("No se encontró una entrada con ese ID");
-     }
-   } catch (error) {
-     toast.error("Error al conectar con el servidor al consultar el ID.");
-   }
- };
+    try {
+      const entry = await getEntryById(targetValue);
 
-  // Envío del formulario UPDATE
+      if (entry) {
+        setFormData({
+          entryId: entry.id || entry.entryId || targetValue,
+          entryDate: entry.entryDate || "",
+          unitCost: entry.unitCost || "",
+          quantity: entry.quantity || "",
+          productName: entry.productName || "",
+          supplierName: entry.supplierName || "",
+          userName: entry.userName || ""
+        });
+        toast.success("¡Entrada cargada con éxito!");
+      } else {
+        setFormData({
+          entryId: targetValue, entryDate: "", unitCost: "", quantity: "",
+          productName: "", supplierName: "", userName: ""
+        });
+        toast.error("No se encontró una entrada con ese ID");
+      }
+    } catch (error) {
+
+    }
+  };
+
+
   const handleUpdateSubmit = async (e) => {
     if (e) e.preventDefault();
     try {
@@ -164,13 +157,8 @@ function Entries () {
       toast.success("Entrada actualizada correctamente");
 
       setFormData({
-        entryId: "",
-        entryDate: "",
-        unitCost: "",
-        quantity: "",
-        productName: "",
-        supplierName: "",
-        userName: ""
+        entryId: "", entryDate: "", unitCost: "", quantity: "", productName: "",
+        supplierName: "", userName: ""
       });
 
       setEditSearchId("");
@@ -179,11 +167,11 @@ function Entries () {
         await loadEntries();
       }, 300);
     } catch (error) {
-      toast.error("Error al actualizar la entrada");
+
     }
   };
 
-  // Envío del formulario CREATE
+
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -203,7 +191,7 @@ function Entries () {
         await loadEntries();
       }, 300);
     } catch (error) {
-      toast.error("Error al crear la entrada");
+
     }
   };
 

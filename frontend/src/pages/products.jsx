@@ -1,9 +1,9 @@
 import "../styles/forms.css";
-import axios from "axios";
+import axios from "../services/axiosConfig.js";
 import { tieneAcceso } from "../config/permissions.js";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast"; // <-- ¡CORREGIDO!: Ahora sí importamos toast para disparar las alertas
+import toast from "react-hot-toast";
 import {
   getAllProducts, getProductById, createProduct,
   updateProduct, deleteProduct, searchProductsByName
@@ -35,168 +35,183 @@ function Products() {
   const [editSearchId, setEditSearchId] = useState("");
 
   // Controla los cambios en el sub menu de productos
-   useEffect(() => {
-      localStorage.setItem("activeProductTab", "home");
-      setActiveTab("home");
-      setShowWelcome(true);
+  useEffect(() => {
+    localStorage.setItem("activeProductTab", "home");
+    setActiveTab("home");
+    setShowWelcome(true);
 
-      const handleProductTabChange = () => {
-        const tab = localStorage.getItem("activeProductTab") || "home";
-        setActiveTab(tab);
+    const handleProductTabChange = () => {
+      const tab = localStorage.getItem("activeProductTab") || "home";
+      setActiveTab(tab);
 
-        if (tab === "home") {
-          setShowWelcome(true);
-        } else if (tab === "all") {
-          setShowWelcome(false);
-          if (typeof loadProducts === "function") {
-            loadProducts();
-          }
-        } else if (tab === "name" || tab === "id" || tab === "create" || tab === "update" || tab === "delete") {
-          setShowWelcome(false);
-        } else {
-          setShowWelcome(false);
+      if (tab === "home") {
+        setShowWelcome(true);
+      } else if (tab === "all") {
+        setShowWelcome(false);
+        if (typeof loadProducts === "function") {
+          loadProducts();
         }
-      };
-      window.addEventListener("productTabChanged", handleProductTabChange);
+      } else if (tab === "name" || tab === "id" || tab === "create" || tab === "update" || tab === "delete") {
+        setShowWelcome(false);
+      } else {
+        setShowWelcome(false);
+      }
+    };
+    window.addEventListener("productTabChanged", handleProductTabChange);
 
-      return () => window.removeEventListener("productTabChanged", handleProductTabChange);
-    }, []);
+    return () => window.removeEventListener("productTabChanged", handleProductTabChange);
+  }, []);
 
-   // Carga dinámica de dependencias con Token de autorización
-   const loadDependencies = async () => {
-     try {
-       const token = localStorage.getItem("token");
-       const authConfig = {
-         headers: { Authorization: token ? `Bearer ${token}` : "" }
-       };
 
-       const [resCat, resSup, resUser] = await Promise.all([
-         axios.get("http://192.168.1.60:8080/api/categories", authConfig),
-         axios.get("http://192.168.1.60:8080/api/suppliers", authConfig),
-         axios.get("http://192.168.1.60:8080/api/users", authConfig)
-       ]);
+  const loadDependencies = async () => {
+    try {
+      const [resCat, resSup, resUser] = await Promise.all([
+        axios.get("http://192.168.1.60:8080/api/categories"),
+        axios.get("http://192.168.1.60:8080/api/suppliers"),
+        axios.get("http://192.168.1.60:8080/api/users")
+      ]);
 
-       setCategoriesList(resCat.data || []);
-       setSuppliersList(resSup.data || []);
-       setUsersList(resUser.data || []);
-     } catch (error) {
-       toast.error("No se pudieron cargar las categorías, proveedores o usuarios.");
-     }
-   };
+      setCategoriesList(resCat.data || []);
+      setSuppliersList(resSup.data || []);
+      setUsersList(resUser.data || []);
+    } catch (error) {
 
-   // Carga todos los productos registrados
-   const loadProducts = async () => {
-     try {
-       const data = await getAllProducts();
-       setAllProducts(data || []);
-     } catch (error) {
-       setAllProducts([]);
-       toast.error("Error al conectar con el servidor para obtener los productos.");
-     }
-   };
+    }
+  };
 
-   // Disparador inicial de datos estáticos
-   useEffect(() => {
-     loadDependencies();
-   }, []);
+  const loadProducts = async () => {
+    try {
+      const data = await getAllProducts();
+      setAllProducts(data || []);
+    } catch (error) {
+      setAllProducts([]);
+    }
+  };
 
-   // Manejadores de Búsqueda
-   const handleSearch = async (e) => {
-     e.preventDefault();
-     if (search.trim() === "") {
-       setProductsByName([]);
-       return;
-     }
-     const data = await searchProductsByName(search);
-     setProductsByName(data || []);
-   };
+  // Disparador inicial de datos estáticos
+  useEffect(() => {
+    loadDependencies();
+  }, []);
 
-   const handleSearchById = async (e) => {
-     e.preventDefault();
-     if (searchId.trim() === "") {
-       setProductById(null);
-       return;
-     }
-     try {
-       const prod = await getProductById(searchId);
-       if (!prod) {
-         toast.error("Producto no encontrado por ID");
-       } else {
-         toast.success("Producto encontrado");
-       }
-       setProductById(prod || null);
-     } catch {
-       setProductById(null);
-       toast.error("Error al buscar el producto por ID");
-     }
-   };
+  // manejadores de Búsqueda
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (search.trim() === "") {
+      setProductsByName([]);
+      return;
+    }
+    const data = await searchProductsByName(search);
+    setProductsByName(data || []);
+  };
 
-   // Manejador del cambio de inputs (Edición)
-   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-   // Rellena automáticamente el formulario UPDATE
-   const handleBlurId = async (e) => {
-     const targetValue = (e && e.target) ? e.target.value : e;
-     if (!targetValue || String(targetValue).trim() === "") {
-       toast.error("Por favor, ingresa un ID válido antes de cargar.");
-       return;
-     }
+  const handleSearchById = async (e) => {
+    e.preventDefault();
+    if (searchId.trim() === "") {
+      setProductById(null);
+      return;
+    }
+    try {
+      const prod = await getProductById(searchId);
+      if (!prod) {
+        toast.error("Producto no encontrado con ese ID");
+      } else {
+        toast.success("Producto encontrado");
+      }
+      setProductById(prod || null);
+    } catch {
+      setProductById(null);
+    }
+  };
 
-     try {
-       const prod = await getProductById(targetValue);
+  // Manejador del cambio de inputs (Edición)
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-       if (prod) {
-         setFormData({
-           productId: prod.id || prod.productId || targetValue,
-           name: prod.name || "",
-           price: prod.price || "",
-           currentStock: prod.currentStock || prod.stock || "",
-           description: prod.description || "",
-           imageUrl: prod.imageUrl || "",
-           categoryName: prod.categoryName || "",
-           supplierName: prod.supplierName || "",
-           userName: prod.userName || ""
-         });
-         toast.success("¡Producto cargado con éxito!");
-       } else {
-         setFormData({
-           productId: targetValue, name: "", price: "", currentStock: "",
-           description: "", imageUrl: "", categoryName: "", supplierName: "", userName: ""
-         });
-         toast.error("No se encontró el producto con ese ID");
-       }
-     } catch (error) {
-       toast.error("Error al conectar con el servidor al consultar el ID.");
-     }
-   };
+  const handleBlurId = async (e) => {
+    const targetValue = (e && e.target) ? e.target.value : e;
+    if (!targetValue || String(targetValue).trim() === "") {
+      toast.error("Por favor, ingresa un ID válido antes de cargar.");
+      return;
+    }
 
-   // Envío del formulario UPDATE
-      const handleUpdateSubmit = async (e) => {
-        if (e) e.preventDefault();
-        try {
-          await updateProduct(formData.productId, formData);
-          toast.success("Producto actualizado correctamente");
-          setFormData({
-            productId: "",
-            name: "",
-            price: "",
-            currentStock: "",
-            description: "",
-            imageUrl: "",
-            categoryName: "",
-            supplierName: "",
-            userName: ""
-          });
+    try {
+      const prod = await getProductById(targetValue);
 
-          setEditSearchId("");
+      if (prod) {
+        setFormData({
+          productId: prod.id || prod.productId || targetValue,
+          name: prod.name || "",
+          price: prod.price || "",
+          currentStock: prod.currentStock || prod.stock || "",
+          description: prod.description || "",
+          imageUrl: prod.imageUrl || "",
+          categoryName: prod.categoryName || "",
+          supplierName: prod.supplierName || "",
+          userName: prod.userName || ""
+        });
+        toast.success("¡Producto cargado con éxito!");
+      } else {
+        setFormData({
+          productId: targetValue, name: "", price: "", currentStock: "",
+          description: "", imageUrl: "", categoryName: "", supplierName: "", userName: ""
+        });
+        toast.error("No se encontró el producto con ese ID");
+      }
+    } catch (error) {
 
-          setTimeout(async () => {
-            await loadProducts();
-          }, 300);
-        } catch (error) {
-          toast.error("Error al actualizar producto");
-        }
-      };
+    }
+  };
+
+
+  const handleCreateSubmit = async (e) => {
+    if (e) e.preventDefault();
+    try {
+      const sendData = { ...formData };
+      if (!sendData.productId || String(sendData.productId).trim() === "") {
+        delete sendData.productId;
+      }
+
+      await createProduct(sendData);
+      toast.success("¡Producto creado con éxito!");
+
+      setFormData({
+        productId: "", name: "", price: "", currentStock: "",
+        description: "", imageUrl: "", categoryName: "", supplierName: "", userName: ""
+      });
+
+      await loadProducts();
+    } catch (err) {
+      console.error("Error al crear producto:", err);
+    }
+  };
+
+  // Forumulario de actualizacion UPDATE
+  const handleUpdateSubmit = async (e) => {
+    if (e) e.preventDefault();
+    try {
+      await updateProduct(formData.productId, formData);
+      toast.success("Producto actualizado correctamente");
+      setFormData({
+        productId: "",
+        name: "",
+        price: "",
+        currentStock: "",
+        description: "",
+        imageUrl: "",
+        categoryName: "",
+        supplierName: "",
+        userName: ""
+      });
+
+      setEditSearchId("");
+
+      setTimeout(async () => {
+        await loadProducts();
+      }, 300);
+    } catch (error) {
+
+    }
+  };
 
   // Redirección de seguridad si cambiamos de rol o pestaña
    useEffect(() => {
