@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -63,6 +65,14 @@ public class Product {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Entry> entries = new ArrayList<>();
+
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Exit> exits = new ArrayList<>();
 }
 
     

@@ -1,7 +1,7 @@
 import "../styles/forms.css";
-import axios from "axios";
+import axios from "../services/axiosConfig.js";
 import { tieneAcceso } from "../config/permissions.js";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
@@ -37,49 +37,43 @@ function Users() {
     countryName: "",
   });
 
-  // Controla los cambios en el sub menu de usuarios
-   useEffect(() => {
-     localStorage.setItem("activeUserTab", "home");
-     setActiveTab("home");
-     setShowWelcome(true);
+  // Controla los cambios en el sub menú de usuarios
+  useEffect(() => {
+    localStorage.setItem("activeUserTab", "home");
+    setActiveTab("home");
+    setShowWelcome(true);
 
-     const handleUserTabChange = () => {
-       const tab = localStorage.getItem("activeUserTab") || "home";
-       setActiveTab(tab);
+    const handleUserTabChange = () => {
+      const tab = localStorage.getItem("activeUserTab") || "home";
+      setActiveTab(tab);
 
-       if (tab === "home") {
-         setShowWelcome(true);
-       } else if (tab === "all") {
-         setShowWelcome(false);
-         if (typeof loadUsers === "function") {
-           loadUsers();
-         }
-       } else if (tab === "name" || tab === "id" || tab === "create" || tab === "update" || tab === "delete") {
-         setShowWelcome(false);
-       } else {
-         setShowWelcome(false);
-       }
-     };
-     window.addEventListener("userTabChanged", handleUserTabChange);
+      if (tab === "home") {
+        setShowWelcome(true);
+      } else if (tab === "all") {
+        setShowWelcome(false);
+        if (typeof loadUsers === "function") {
+          loadUsers();
+        }
+      } else if (tab === "name" || tab === "id" || tab === "create" || tab === "update" || tab === "delete") {
+        setShowWelcome(false);
+      } else {
+        setShowWelcome(false);
+      }
+    };
+    window.addEventListener("userTabChanged", handleUserTabChange);
 
-     return () => window.removeEventListener("userTabChanged", handleUserTabChange);
-   }, []);
+    return () => window.removeEventListener("userTabChanged", handleUserTabChange);
+  }, []);
 
   // Carga dinámica de dependencias
   const loadDependencies = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const authConfig = {
-        headers: { Authorization: token ? `Bearer ${token}` : "" }
-      };
-
       const [resCountry] = await Promise.all([
-        axios.get("http://192.168.1.60:8080/api/countries", authConfig)
+        axios.get("http://192.168.1.60:8080/api/countries")
       ]);
-
       setCountriesList(resCountry.data || []);
     } catch (error) {
-      toast.error("No se pudo cargar la lista de países.");
+
     }
   };
 
@@ -90,7 +84,6 @@ function Users() {
       setAllUsers(data || []);
     } catch (error) {
       setAllUsers([]);
-      toast.error("Error al conectar con el servidor para obtener los usuarios.");
     }
   };
 
@@ -102,52 +95,72 @@ function Users() {
   // Controla cuando se realiza una búsqueda por nombre
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (search.trim() === "") { setUsersByName([]); return; }
-    const data = await searchUsersByName(search);
-    setUsersByName(data || []);
+
+    if (search.trim() === "") {
+      setUsersByName([]);
+      return;
+    }
+
+    try {
+      const data = await searchUsersByName(search);
+
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        toast.error("No se encontró ningún usuario con ese nombre.");
+        setUsersByName([]);
+      } else {
+        setUsersByName(data);
+      }
+    } catch (error) {
+      setUsersByName([]);
+    }
   };
+
 
   // Controla cuando se realiza una búsqueda por ID
   const handleSearchById = async (e) => {
     e.preventDefault();
-    if (searchId.trim() === "") { setUserById(null); return; }
+
+    if (searchId.trim() === "") {
+      setUserById(null);
+      return;
+    }
     try {
       const user = await getUserById(searchId);
+
       if (!user) {
-        toast.error("Usuario no encontrado por ID");
+        toast.error("El usuario con ese ID no existe.");
+        setUserById(null);
+      } else {
+        setUserById(user);
       }
-      setUserById(user || null);
-    } catch {
+    } catch (error) {
+
       setUserById(null);
-      toast.error("Error al buscar el usuario por ID");
+      toast.error("No se encontró el usuario con ese ID.");
     }
   };
 
-  // Controla la creación de un usuario usando las variables correctas
+  // Controla la creación de un usuario
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
     const newUser = Object.fromEntries(fd.entries());
 
     try {
-      const token = localStorage.getItem("token");
-      const authConfig = {
-        headers: { Authorization: token ? `Bearer ${token}` : "" }
-      };
-
       await createUser({
         ...newUser,
         countryName: newUser.countryName?.trim()
-      }, authConfig);
+      });
 
       toast.success("¡Usuario creado con éxito!");
       e.target.reset();
 
       setTimeout(async () => {
-        await loadUsers();
+        if (typeof loadUsers === "function") {
+          await loadUsers();
+        }
       }, 300);
     } catch (error) {
-      toast.error("Error al crear usuario: " + (error.response?.data?.message || "Verifique los datos de acceso"));
     }
   };
 
@@ -156,16 +169,13 @@ function Users() {
     await loadUsers();
   };
 
-  // Rellena automaticamente el formulario de UPDATE
+  // Rellena automáticamente el formulario de UPDATE
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  // Controla que se actualice uno o todos los campos de UPDATE
+  // Controla la precarga de datos al salir del input ID en UPDATE
   const handleBlurId = async (e) => {
     const targetValue = (e && e.target) ? e.target.value : e;
-    if (!targetValue || String(targetValue).trim() === "") {
-      toast.error("Por favor, ingresa un ID válido antes de cargar.");
-      return;
-    }
+    if (!targetValue || String(targetValue).trim() === "") return;
 
     try {
       const user = await getUserById(targetValue);
@@ -176,7 +186,7 @@ function Users() {
         const uCountryName = user.countryName ?? user.country_name ?? user.country?.name;
 
         const paisCorrespondiente = countriesList.find(
-          (c) => (c.id === uCountryId || c.country_id === uCountryId || c.name === uCountryName)
+            (c) => (c.id === uCountryId || c.country_id === uCountryId || c.name === uCountryName)
         );
 
         setFormData({
@@ -191,14 +201,18 @@ function Users() {
         });
         toast.success("¡Usuario cargado con éxito!");
       } else {
-        toast.error("No se encontró el usuario con ese ID");
+        toast.error("El usuario con ese ID no existe.");
       }
     } catch (error) {
-      toast.error("Error al consultar usuario");
+      setFormData({
+        id: "", name: "", lastName: "", phone: "", email: "",
+        password: "", role: "", countryName: ""
+      });
+      toast.error("No se encontró ningún usuario con el ID especificado.");
     }
   };
 
-  // Controla que el formulario se envíe correctamente
+  // Controla el envío de la actualización
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
     const { id, name, lastName, phone, email, password, role, countryName } = formData;
@@ -221,20 +235,12 @@ function Users() {
       toast.success("Usuario actualizado correctamente");
 
       setFormData({
-        id: "",
-        name: "",
-        lastName: "",
-        phone: "",
-        email: "",
-        password: "",
-        role: "",
-        countryName: "",
+        id: "", name: "", lastName: "", phone: "", email: "",
+        password: "", role: "", countryName: "",
       });
-
       setEditSearchId("");
-
     } catch (error) {
-      toast.error("Error al actualizar: " + (error.response?.data?.message || "Revisa los datos"));
+
     }
   };
 
@@ -337,9 +343,6 @@ function Users() {
                   ))}
                 </div>
               )}
-              {search.trim() !== "" && usersByName.length === 0 && (
-                <div className="fb-empty"><i className="bi bi-search" style={{ fontSize: "2rem" }} /><p>No se encontraron usuarios con ese nombre</p></div>
-              )}
             </div>
           )}
 
@@ -372,12 +375,6 @@ function Users() {
                       </div>
                     </div>
                   )}
-                  {!userById && searchId && (
-                    <div className="fb-empty">
-                      <i className="bi bi-search" style={{ fontSize: "2rem" }} />
-                      <p>No se encontró usuario con ese ID</p>
-                    </div>
-                    )}
                 </div>
               )}
 
@@ -520,87 +517,103 @@ function Users() {
             </div>
           )}
 
-         {/* DELETE USER */}
-         {activeTab === "delete" && (
-           <div className="fb-form-section">
-             <div className="fb-form-card" style={{ borderTop: "4px solid #dc3545" }}>
-               <h3 className="fb-form-title" style={{ color: "#dc3545" }}>
-                 <i className="bi bi-trash3-fill" /> Introduzca el ID del usuario
-               </h3>
-               <p style={{ color: "#7a8694", fontSize: "0.9rem", marginBottom: "1.2rem" }}>
-                 ⚠️ Al eliminar el usuario se desactivará de su base de datos ⚠️
-               </p>
-               <form
-                 onSubmit={(e) => {
-                   e.preventDefault();
-                   const form = e.target;
-                   const idValue = form.userId.value;
+      {/* DELETE USER */}
+      {activeTab === "delete" && (
+          <div className="fb-form-section">
+            <div className="fb-form-card" style={{ borderTop: "4px solid #dc3545" }}>
+              <h3 className="fb-form-title" style={{ color: "#dc3545" }}>
+                <i className="bi bi-trash3-fill" /> Introduzca el ID del usuario
+              </h3>
+              <p style={{ color: "#7a8694", fontSize: "0.9rem", marginBottom: "1.2rem" }}>
+                ⚠️ Al eliminar el usuario se desactivará de su base de datos ⚠️
+              </p>
+              <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const formElement = e.currentTarget;
+                    const idValue = formElement.userId.value;
 
-                   if (!idValue || String(idValue).trim() === "") {
-                     toast.error("Por favor, ingresa un ID válido.");
-                     return;
-                   }
+                    if (!idValue || String(idValue).trim() === "") {
+                      toast.error("Por favor, ingresa un ID válido.");
+                      return;
+                    }
 
-                   toast((t) => (
-                     <div className="d-flex flex-column gap-2 text-center" style={{ minWidth: "250px" }}>
-                       <span className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
-                         ¿Está seguro de que desea eliminar el usuario con el ID <strong>{idValue}</strong>?
-                       </span>
-                       <div className="d-flex justify-content-center gap-2 mt-1">
-                         <button
-                           className="btn btn-danger btn-sm px-3 fw-bold shadow-sm"
-                           style={{ borderRadius: "12px", fontSize: "0.85rem" }}
-                           onClick={async () => {
-                             toast.dismiss(t.id);
+                    try {
+                      const user = await getUserById(idValue);
 
-                             try {
-                               await deleteUser(idValue);
-                               toast.success(`Usuario con ID ${idValue} eliminado correctamente.`);
-                               form.reset();
+                      // 🛠️ STEP 2: Si el servidor responde vacío o no encuentra al usuario
+                      if (!user) {
+                        toast.error(`No se puede eliminar: El usuario con ID ${idValue} no existe.`);
+                        return;
+                      }
 
-                               setTimeout(async () => {
-                                 await loadUsers();
-                               }, 300);
-                             } catch (error) {
-                               toast.error("Error al eliminar usuario. Verifica los permisos o el ID.");
-                             }
-                           }}
-                         >
-                           Eliminar
-                         </button>
-                         <button
-                           className="btn btn-light btn-sm px-3 border shadow-sm"
-                           style={{ borderRadius: "12px", fontSize: "0.85rem" }}
-                           onClick={() => toast.dismiss(t.id)}
-                         >
-                           Cancelar
-                         </button>
-                       </div>
-                     </div>
-                   ), {
-                     duration: Infinity,
-                     position: "top-center"
-                   });
-                 }}
-                 className="fb-search-form"
-               >
-                 <div className="fb-search-input-wrap">
-                   <i className="bi bi-hash fb-search-icon" />
-                   <input
-                     type="number"
-                     name="userId"
-                     className="fb-search-input"
-                     placeholder="ID del usuario a eliminar"
-                     required
-                   />
-                 </div>
-                 <button type="submit" className="fb-search-btn" style={{ background: "#dc3545" }}>
-                   <i className="bi bi-trash3" /> Eliminar usuario
-                 </button>
-               </form>
-             </div>
-           </div>
-         )}
+                      toast((t) => (
+                          <div className="d-flex flex-column gap-2 text-center" style={{ minWidth: "250px" }}>
+                          <span className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
+                           ¿Está seguro de que desea eliminar al usuario <strong>{user.name ? `${user.name} ${user.lastName || ""}` : idValue}</strong>?
+                            </span>
+                            <div className="d-flex justify-content-center gap-2 mt-1">
+                              <button
+                                  className="btn btn-danger btn-sm px-3 fw-bold shadow-sm"
+                                  style={{ borderRadius: "12px", fontSize: "0.85rem" }}
+                                  onClick={async () => {
+                                    toast.dismiss(t.id);
+
+                                    try {
+                                      await deleteUser(idValue);
+                                      toast.success(`Usuario con ID ${idValue} eliminado correctamente.`);
+
+                                      if (formElement) formElement.reset();
+
+                                      setTimeout(async () => {
+                                        if (typeof loadUsers === "function") {
+                                          await loadUsers();
+                                        }
+                                      }, 300);
+                                    } catch (error) {
+                                      toast.error("Error al ejecutar la eliminación en el servidor.");
+                                    }
+                                  }}
+                              >
+                                Eliminar
+                              </button>
+                              <button
+                                  className="btn btn-light btn-sm px-3 border shadow-sm"
+                                  style={{ borderRadius: "12px", fontSize: "0.85rem" }}
+                                  onClick={() => toast.dismiss(t.id)}
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          </div>
+                      ), {
+                        duration: Infinity,
+                        position: "top-center"
+                      });
+
+                    } catch (error) {
+                      toast.error(`El usuario con ID ${idValue} no existe o no se pudo verificar.`);
+                    }
+                  }}
+                  className="fb-search-form"
+              >
+                <div className="fb-search-input-wrap">
+                  <i className="bi bi-hash fb-search-icon" />
+                  <input
+                      type="number"
+                      name="userId"
+                      className="fb-search-input"
+                      placeholder="ID del usuario a eliminar"
+                      required
+                  />
+                </div>
+                <button type="submit" className="fb-search-btn" style={{ background: "#dc3545" }}>
+                  <i className="bi bi-trash3" /> Eliminar usuario
+                </button>
+              </form>
+            </div>
+          </div>
+      )}
     </div>
    );
  }

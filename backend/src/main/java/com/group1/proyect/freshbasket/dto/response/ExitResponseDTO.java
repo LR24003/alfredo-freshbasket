@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "DTO para enviar datos del USUARIO (con ID y relaciones)")
+@Schema(description = "DTO para enviar datos de una salida (con ID y relaciones)")
 public class ExitResponseDTO {
 
     @Schema(description = "ID de la salida", example = "1")
@@ -24,6 +24,12 @@ public class ExitResponseDTO {
     @Schema(description = "ID del producto", example = "1")
     private Long productId;
 
+    @Schema(description = "Nombre del producto", example = "Pollo indio")
+    private String productName;
+
     @Schema(description = "ID del usuario", example = "1")
     private Long userId;
+
+    @Schema(description = "Nombre del usuario", example = "Juan Martinez")
+    private String userName;
 }

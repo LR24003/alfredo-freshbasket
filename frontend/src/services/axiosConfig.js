@@ -1,7 +1,6 @@
 import axios from "axios";
 import toast from "react-hot-toast";
 
-
 axios.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem("token");
@@ -25,13 +24,32 @@ axios.interceptors.response.use(
         if (error.response) {
             const status = error.response.status;
             const serverMessage = error.response.data?.message;
+            const method = error.config.method?.toLowerCase();
+            const url = error.config.url || "";
+
+            if (status === 403 && (url.includes("/api/users") || url.includes("/users"))) {
+                console.log(`[Axios Interceptor] 403 bloqueado en silencio para el endpoint: ${url}`);
+                return Promise.reject(error);
+            }
+
+            const isIdRequest = /\/\d+$/.test(url);
+
+            if (isIdRequest && (status === 403 || status === 404)) {
+                return Promise.reject(error);
+            }
 
             switch (status) {
                 case 401:
-                    toast.error("Sesión expirada o no válida. Por favor, inicia sesión de nuevo.");
+                    toast.error(serverMessage || "Sesión expirada o no válida. Por favor, inicia sesión de nuevo.");
+
+                    localStorage.removeItem("token");
+                    setTimeout(() => {
+                        window.location.href = "/login";
+                    }, 1500);
+
                     break;
                 case 403:
-                    toast.error("No tienes los permisos necesarios para realizar esta acción.");
+                    toast.error(serverMessage || "No tienes los permisos necesarios para realizar esta acción.");
                     break;
                 case 404:
                     toast.error(serverMessage || "El recurso solicitado no fue encontrado.");

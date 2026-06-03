@@ -34,7 +34,7 @@ function App() {
         <nav className="menu-grid"></nav>
 
         <Routes>
-          {/* Rutas publicas, cualquier persona puede ingresar */}
+          {/* Rutas públicas, cualquier persona puede ingresar */}
           <Route path="/" element={<HomeScreen />} />
           <Route path="/login" element={<LoginScreen setIsAuthenticated={setIsAuthenticated} />} />
           <Route path="/register" element={<Register />} />

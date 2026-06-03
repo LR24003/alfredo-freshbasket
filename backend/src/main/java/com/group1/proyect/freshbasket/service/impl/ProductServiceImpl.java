@@ -93,7 +93,7 @@ public class ProductServiceImpl implements ProductService {
             if (!sFullName.isEmpty()) {
                 dto.setSupplierName(sFullName);
             } else {
-                dto.setSupplierName("Proveedor " + product.getSupplier().getId()); // Corregido: añadido espacio
+                dto.setSupplierName("Proveedor " + product.getSupplier().getId());
             }
         } else {
             dto.setSupplierName("Sin proveedor asignado");

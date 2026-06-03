@@ -52,15 +52,15 @@ public class User {
     private boolean active = true;
 
     // Por esto (Relación Muchos a Uno):
-    @ManyToOne(fetch = FetchType.EAGER) // EAGER para que cargue el país de inmediato
-    @JoinColumn(name = "country_id", nullable = false) // Mantiene la columna country_id numérica en la BD
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "country_id", nullable = false)
     private Country country;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY) 
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Entry> entries = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY) 
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Exit> exits = new ArrayList<>();
 }

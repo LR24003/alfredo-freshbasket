@@ -1,4 +1,4 @@
-// Servicio con el que conectamos todas nuestras peticiones
+// servicio con el que conectamos todas nuestras peticiones
 // de ENTRIES desde el Backend
 
 import axios from "../services/axiosConfig.js";

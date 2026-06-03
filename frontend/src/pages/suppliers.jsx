@@ -1,9 +1,9 @@
 import "../styles/forms.css";
-import axios from "axios";
+import axios from "../services/axiosConfig.js";
 import { tieneAcceso } from "../config/permissions.js";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect} from "react";
 import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast"; // <-- Importamos toast
+import toast from "react-hot-toast";
 import {
   getAllSuppliers, getSupplierById, createSupplier,
   updateSupplier, deleteSupplier, searchSuppliersByName
@@ -41,7 +41,6 @@ function Suppliers() {
       setAllSuppliers(data || []);
     } catch (error) {
       setAllSuppliers([]);
-      toast.error("Error al conectar con el servidor para obtener los proveedores.");
     }
   };
 
@@ -73,21 +72,15 @@ function Suppliers() {
     return () => window.removeEventListener("supplierTabChanged", handleSupplierTabChange);
   }, []);
 
-  // Carga las dependencias del proveedor (pais)
+
   const loadDependencies = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const authConfig = {
-        headers: { Authorization: token ? `Bearer ${token}` : "" }
-      };
-
       const [resCountry] = await Promise.all([
-        axios.get("http://192.168.1.60:8080/api/countries", authConfig)
+        axios.get("http://192.168.1.60:8080/api/countries")
       ]);
 
       setCountriesList(resCountry.data || []);
     } catch (error) {
-      toast.error("No se pudo cargar la lista de países.");
     }
   };
 
@@ -98,24 +91,46 @@ function Suppliers() {
   // Se busca un proveedor por nombre
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (search.trim() === "") { setSuppliersByName([]); return; }
-    const data = await searchSuppliersByName(search);
-    setSuppliersByName(data || []);
+
+    if (search.trim() === "") {
+      setSuppliersByName([]);
+      return;
+    }
+
+    try {
+      const data = await searchSuppliersByName(search);
+
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        toast.error("No se encontró ningún proveedor con ese nombre.");
+        setSuppliersByName([]);
+      } else {
+        setSuppliersByName(data);
+      }
+    } catch (error) {
+      setSuppliersByName([]);
+    }
   };
 
-  // Se busca un proveedor por ID
   const handleSearchById = async (e) => {
     e.preventDefault();
-    if (searchId.trim() === "") { setSupplierById(null); return; }
+
+    if (searchId.trim() === "") {
+      setSupplierById(null);
+      return;
+    }
     try {
       const supplier = await getSupplierById(searchId);
+
       if (!supplier) {
-        toast.error("Proveedor no encontrado con ese ID");
+        toast.error("El proveedor con ese ID no existe.");
+        setSupplierById(null);
+      } else {
+        setSupplierById(supplier);
       }
-      setSupplierById(supplier || null);
-    } catch {
+    } catch (error) {
+
       setSupplierById(null);
-      toast.error("Error al buscar el proveedor con ese ID");
+      toast.error("No se encontró el proveedor con ese ID.");
     }
   };
 
@@ -126,7 +141,7 @@ function Suppliers() {
     const newSupplier = Object.fromEntries(fd.entries());
 
     const countryFound = countriesList.find(
-      (c) => c.name.toLowerCase() === newSupplier.countryName?.trim().toLowerCase()
+        (c) => c.name.toLowerCase() === newSupplier.countryName?.trim().toLowerCase()
     );
 
     if (!countryFound) {
@@ -144,12 +159,7 @@ function Suppliers() {
     };
 
     try {
-      const token = localStorage.getItem("token");
-      const authConfig = {
-        headers: { Authorization: token ? `Bearer ${token}` : "" }
-      };
-
-      await createSupplier(payload, authConfig);
+      await createSupplier(payload);
       toast.success("¡Proveedor creado con éxito!");
       e.target.reset();
 
@@ -157,7 +167,6 @@ function Suppliers() {
         await loadSuppliers();
       }, 300);
     } catch (error) {
-      toast.error("Error al crear proveedor: " + (error.response?.data?.message || "Revisa los campos"));
     }
   };
 
@@ -169,7 +178,7 @@ function Suppliers() {
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  // Controla la carga automatica del formulario de actualización
+  // Controla la carga automática del formulario de actualización
   const handleBlurId = async (e) => {
     const targetValue = (e && e.target) ? e.target.value : e;
     if (!targetValue || String(targetValue).trim() === "") {
@@ -179,6 +188,7 @@ function Suppliers() {
 
     try {
       const supplier = await getSupplierById(targetValue);
+
       if (supplier) {
         const uId = supplier.id ?? supplier.supplier_id;
         const uLastName = supplier.lastName ?? supplier.last_name;
@@ -186,7 +196,7 @@ function Suppliers() {
         const uCountryName = supplier.countryName ?? supplier.country_name ?? supplier.country?.name;
 
         const countryCorrespondiente = countriesList.find(
-          (c) => (c.id === uCountryId || c.country_id === uCountryId || c.name === uCountryName)
+            (c) => (c.id === uCountryId || c.country_id === uCountryId || c.name === uCountryName)
         );
 
         setFormData({
@@ -203,7 +213,7 @@ function Suppliers() {
         toast.error("No se encontró el proveedor con ese ID");
       }
     } catch (error) {
-      toast.error("Error al consultar el proveedor");
+      toast.error("No se encontró el proveedor con ese ID.");
     }
   };
 
@@ -220,7 +230,7 @@ function Suppliers() {
     }
 
     const countryFound = Array.isArray(countriesList) && countriesList.find(
-      (c) => c.name?.toLowerCase() === formData.countryName?.trim().toLowerCase()
+        (c) => c.name?.toLowerCase() === formData.countryName?.trim().toLowerCase()
     );
 
     if (!countryFound) {
@@ -257,9 +267,9 @@ function Suppliers() {
         await loadSuppliers();
       }, 300);
     } catch (error) {
-      toast.error("Error al actualizar: " + (error.response?.data?.message || "Revisa los datos"));
     }
   };
+
 
   useEffect(() => {
     if (activeTab === "create" && typeof tieneAcceso === "function" && !tieneAcceso(userRole, "crear")) setActiveTab("all");
@@ -375,13 +385,6 @@ function Suppliers() {
                 })}
               </div>
             )}
-
-            {search.trim() !== "" && suppliersByName.length === 0 && (
-              <div className="fb-empty">
-                <i className="bi bi-search" style={{ fontSize: "2rem" }} />
-                <p>No se encontraron proveedores con ese nombre</p>
-              </div>
-            )}
           </div>
         )}
 
@@ -432,13 +435,6 @@ function Suppliers() {
                 </div>
               );
             })()}
-
-            {!supplierById && searchId && (
-              <div className="fb-empty">
-                <i className="bi bi-search" style={{ fontSize: "2rem" }} />
-                <p>No se encontró proveedor con ese ID</p>
-              </div>
-            )}
           </div>
         )}
 
@@ -579,88 +575,99 @@ function Suppliers() {
           </div>
         )}
 
-    {/* DELETE SUPPLIER */}
-    {activeTab === "delete" && !showWelcome && (
-      <div className="fb-form-section">
-        <div className="fb-form-card" style={{ borderTop: "4px solid #dc3545" }}>
-          <h3 className="fb-form-title" style={{ color: "#dc3545" }}>
-            <i className="bi bi-trash3-fill" /> Introduzca el ID del proveedor
-          </h3>
-          <p style={{ color: "#7a8694", fontSize: "0.9rem", marginBottom: "1.2rem" }}>
-            ⚠️ Al eliminar el proveedor se borrará permanentemente de su base de datos ⚠️
-          </p>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const form = e.target;
-              const idValue = form.id.value;
+      {/* DELETE SUPPLIER */}
+      {activeTab === "delete" && !showWelcome && (
+          <div className="fb-form-section">
+            <div className="fb-form-card" style={{ borderTop: "4px solid #dc3545" }}>
+              <h3 className="fb-form-title" style={{ color: "#dc3545" }}>
+                <i className="bi bi-trash3-fill" /> Introduzca el ID del proveedor
+              </h3>
+              <p style={{ color: "#7a8694", fontSize: "0.9rem", marginBottom: "1.2rem" }}>
+                ⚠️ Al eliminar el proveedor se borrará permanentemente de su base de datos ⚠️
+              </p>
+              <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const form = e.target;
+                    const idValue = form.id.value;
 
-              if (!idValue || String(idValue).trim() === "") {
-                toast.error("Por favor, ingresa un ID válido.");
-                return;
-              }
+                    if (!idValue || String(idValue).trim() === "") {
+                      toast.error("Por favor, ingresa un ID válido.");
+                      return;
+                    }
 
-              // Lanzamos el toast interactivo con diseño integrado en Bootstrap
-              toast((t) => (
-                <div className="d-flex flex-column gap-2 text-center" style={{ minWidth: "250px" }}>
-                  <span className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
-                    ¿Está seguro de que desea eliminar el proveedor con el ID <strong>{idValue}</strong>?
-                  </span>
-                  <div className="d-flex justify-content-center gap-2 mt-1">
-                    <button
-                      className="btn btn-danger btn-sm px-3 fw-bold shadow-sm"
-                      style={{ borderRadius: "12px", fontSize: "0.85rem" }}
-                      onClick={async () => {
-                        toast.dismiss(t.id); // Cerramos el cuadro de diálogo inmediatamente
+                    try {
+                      const supplier = await getSupplierById(idValue);
 
-                        try {
-                          await deleteSupplier(idValue);
-                          toast.success(`Proveedor con ID ${idValue} eliminado correctamente.`);
-                          form.reset();
+                      if (!supplier) {
+                        toast.error(`No se puede eliminar el proveedor con ID ${idValue}.`);
+                        return;
+                      }
 
-                          setTimeout(async () => {
-                            await loadSuppliers();
-                          }, 300);
-                        } catch (error) {
-                          toast.error("Error al eliminar el proveedor. Verifica que el ID exista.");
-                        }
-                      }}
-                    >
-                      Eliminar
-                    </button>
-                    <button
-                      className="btn btn-light btn-sm px-3 border shadow-sm"
-                      style={{ borderRadius: "12px", fontSize: "0.85rem" }}
-                      onClick={() => toast.dismiss(t.id)} // Cancela la acción cerrando el diálogo
-                    >
-                      Cancelar
-                    </button>
-                  </div>
+                      toast((t) => (
+                          <div className="d-flex flex-column gap-2 text-center" style={{ minWidth: "250px" }}>
+                <span className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
+                  ¿Está seguro de que desea eliminar el proveedor con el ID <strong>{idValue}</strong>?
+                </span>
+                            <div className="d-flex justify-content-center gap-2 mt-1">
+                              <button
+                                  className="btn btn-danger btn-sm px-3 fw-bold shadow-sm"
+                                  style={{ borderRadius: "12px", fontSize: "0.85rem" }}
+                                  onClick={async () => {
+                                    toast.dismiss(t.id);
+
+                                    try {
+                                      await deleteSupplier(idValue);
+                                      toast.success(`Proveedor con ID ${idValue} eliminado correctamente.`);
+                                      form.reset();
+
+                                      setTimeout(async () => {
+                                        await loadSuppliers();
+                                      }, 300);
+                                    } catch (error) {
+                                      toast.error("Hubo un problema al ejecutar la eliminación.");
+                                    }
+                                  }}
+                              >
+                                Eliminar
+                              </button>
+                              <button
+                                  className="btn btn-light btn-sm px-3 border shadow-sm"
+                                  style={{ borderRadius: "12px", fontSize: "0.85rem" }}
+                                  onClick={() => toast.dismiss(t.id)}
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          </div>
+                      ), {
+                        duration: Infinity,
+                        position: "top-center"
+                      });
+
+                    } catch (error) {
+                      toast.error(`No se encontró el proveedor con ID ${idValue}.`);
+                    }
+                  }}
+                  className="fb-search-form"
+              >
+                <div className="fb-search-input-wrap">
+                  <i className="bi bi-hash fb-search-icon" />
+                  <input
+                      type="number"
+                      name="id"
+                      className="fb-search-input"
+                      placeholder="ID del proveedor a eliminar"
+                      required
+                  />
                 </div>
-              ), {
-                duration: Infinity, // Se mantiene abierto hasta que elijan una opción
-                position: "top-center"
-              });
-            }}
-            className="fb-search-form"
-          >
-            <div className="fb-search-input-wrap">
-              <i className="bi bi-hash fb-search-icon" />
-              <input
-                type="number"
-                name="id"
-                className="fb-search-input"
-                placeholder="ID del proveedor a eliminar"
-                required
-              />
+                <button type="submit" className="fb-search-btn" style={{ background: "#dc3545" }}>
+                  <i className="bi bi-trash3" /> Eliminar proveedor
+                </button>
+              </form>
             </div>
-            <button type="submit" className="fb-search-btn" style={{ background: "#dc3545" }}>
-              <i className="bi bi-trash3" /> Eliminar proveedor
-            </button>
-          </form>
-        </div>
-      </div>
-    )}
+          </div>
+      )}
     </div>
   );
 }

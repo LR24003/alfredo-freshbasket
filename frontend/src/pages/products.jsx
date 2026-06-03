@@ -13,6 +13,8 @@ function Products() {
   const navigate = useNavigate();
   const userRole = localStorage.getItem("userRole") || "USUARIO";
 
+  const userLogin = localStorage.getItem("userName") || localStorage.getItem("userEmail") || "";
+
   const [activeTab, setActiveTab] = useState(localStorage.getItem("activeProductTab") || "all");
   const [showWelcome, setShowWelcome] = useState(true);
 
@@ -27,9 +29,10 @@ function Products() {
   const [suppliersList, setSuppliersList] = useState([]);
   const [usersList, setUsersList] = useState([]);
 
+
   const [formData, setFormData] = useState({
     productId: "", name: "", price: "", currentStock: "", description: "", imageUrl: "",
-    categoryName: "", supplierName: "", userName: ""
+    categoryName: "", supplierName: "", userName: userLogin
   });
 
   const [editSearchId, setEditSearchId] = useState("");
@@ -65,17 +68,30 @@ function Products() {
 
   const loadDependencies = async () => {
     try {
-      const [resCat, resSup, resUser] = await Promise.all([
+
+      const esAdminOSoporte = ["ADMINISTRADOR", "ADMIN", "SOPORTE"].includes(userRole.toUpperCase());
+
+      // Lanzamos en paralelo solo Categorías y Proveedores
+      const promesas = [
         axios.get("http://192.168.1.60:8080/api/categories"),
-        axios.get("http://192.168.1.60:8080/api/suppliers"),
-        axios.get("http://192.168.1.60:8080/api/users")
-      ]);
+        axios.get("http://192.168.1.60:8080/api/suppliers")
+      ];
 
-      setCategoriesList(resCat.data || []);
-      setSuppliersList(resSup.data || []);
-      setUsersList(resUser.data || []);
+      // Si tiene permisos, agregamos la petición de usuarios a la cola
+      if (esAdminOSoporte) {
+        promesas.push(axios.get("http://192.168.1.60:8080/api/users"));
+      }
+
+      const resultados = await Promise.all(promesas);
+
+      setCategoriesList(resultados[0].data || []);
+      setSuppliersList(resultados[1].data || []);
+
+      if (esAdminOSoporte && resultados[2]) {
+        setUsersList(resultados[2].data || []);
+      }
     } catch (error) {
-
+      console.error("Error al cargar dependencias:", error);
     }
   };
 
@@ -93,18 +109,28 @@ function Products() {
     loadDependencies();
   }, []);
 
-  // manejadores de Búsqueda
+  // Busqueda de un producto por Nombre
   const handleSearch = async (e) => {
     e.preventDefault();
     if (search.trim() === "") {
       setProductsByName([]);
       return;
     }
-    const data = await searchProductsByName(search);
-    setProductsByName(data || []);
+    try {
+      const data = await searchProductsByName(search);
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        toast.error("No se encontró ningún producto con ese nombre.");
+        setProductsByName([]);
+      } else {
+        setProductsByName(data); // Éxito silencioso
+      }
+    } catch (error) {
+      setProductsByName([]);
+      toast.error("Hubo un problema al buscar el producto por nombre.");
+    }
   };
 
-
+  // Busqueda de un producto por ID
   const handleSearchById = async (e) => {
     e.preventDefault();
     if (searchId.trim() === "") {
@@ -114,19 +140,21 @@ function Products() {
     try {
       const prod = await getProductById(searchId);
       if (!prod) {
-        toast.error("Producto no encontrado con ese ID");
+        toast.error("El producto con ese ID no existe.");
+        setProductById(null);
       } else {
-        toast.success("Producto encontrado");
+        setProductById(prod);
       }
-      setProductById(prod || null);
-    } catch {
+    } catch (error) {
       setProductById(null);
+      toast.error("El producto con ese ID no existe.");
     }
   };
 
   // Manejador del cambio de inputs (Edición)
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
+  // Busqueda de un producto por su ID en el campo de actualizar
   const handleBlurId = async (e) => {
     const targetValue = (e && e.target) ? e.target.value : e;
     if (!targetValue || String(targetValue).trim() === "") {
@@ -147,69 +175,101 @@ function Products() {
           imageUrl: prod.imageUrl || "",
           categoryName: prod.categoryName || "",
           supplierName: prod.supplierName || "",
-          userName: prod.userName || ""
+          userName: prod.userName || userLogin
         });
         toast.success("¡Producto cargado con éxito!");
       } else {
         setFormData({
           productId: targetValue, name: "", price: "", currentStock: "",
-          description: "", imageUrl: "", categoryName: "", supplierName: "", userName: ""
+          description: "", imageUrl: "", categoryName: "", supplierName: "", userName: userLogin
         });
         toast.error("No se encontró el producto con ese ID");
       }
     } catch (error) {
-
+      setFormData({
+        productId: targetValue, name: "", price: "", currentStock: "",
+        description: "", imageUrl: "", categoryName: "", supplierName: "", userName: userLogin
+      });
+      toast.error("No se encontró el producto con ese ID.");
     }
   };
 
-
   const handleCreateSubmit = async (e) => {
-    if (e) e.preventDefault();
+    e.preventDefault();
     try {
-      const sendData = { ...formData };
-      if (!sendData.productId || String(sendData.productId).trim() === "") {
-        delete sendData.productId;
-      }
+      const form = e.target;
 
-      await createProduct(sendData);
+      const newProduct = {
+        name: form.name.value,
+        price: form.price.value ? parseFloat(form.price.value) : 0.0,
+        currentStock: form.currentStock.value ? parseInt(form.currentStock.value, 10) : 0,
+        description: form.description.value,
+        imageUrl: form.imageUrl.value,
+        categoryName: form.categoryName.value,
+        supplierName: form.supplierName.value,
+        userName: userLogin
+      };
+
+      await createProduct(newProduct);
       toast.success("¡Producto creado con éxito!");
+
+      form.reset();
 
       setFormData({
         productId: "", name: "", price: "", currentStock: "",
-        description: "", imageUrl: "", categoryName: "", supplierName: "", userName: ""
+        description: "", imageUrl: "", categoryName: "", supplierName: "", userName: userLogin
       });
-
-      await loadProducts();
-    } catch (err) {
-      console.error("Error al crear producto:", err);
-    }
-  };
-
-  // Forumulario de actualizacion UPDATE
-  const handleUpdateSubmit = async (e) => {
-    if (e) e.preventDefault();
-    try {
-      await updateProduct(formData.productId, formData);
-      toast.success("Producto actualizado correctamente");
-      setFormData({
-        productId: "",
-        name: "",
-        price: "",
-        currentStock: "",
-        description: "",
-        imageUrl: "",
-        categoryName: "",
-        supplierName: "",
-        userName: ""
-      });
-
-      setEditSearchId("");
 
       setTimeout(async () => {
         await loadProducts();
       }, 300);
-    } catch (error) {
 
+    } catch (error) {
+      console.error("Error al registrar el producto:", error);
+    }
+  };
+
+  // Función para actualizar un producto existente
+  const handleUpdateSubmit = async (e) => {
+    if (e) e.preventDefault();
+
+    if (!formData.productId || String(formData.productId).trim() === "") {
+      toast.error("Por favor, carga un producto válido antes de actualizar.");
+      return;
+    }
+
+    try {
+      const productCheck = await getProductById(formData.productId);
+
+      if (!productCheck) {
+        toast.error(`No se puede actualizar: El producto con ID ${formData.productId} no existe.`);
+        return;
+      }
+
+      const updatedData = {
+        ...formData,
+        userName: userLogin,
+        price: formData.price ? parseFloat(formData.price) : 0.0,
+        currentStock: formData.currentStock ? parseInt(formData.currentStock, 10) : 0
+      };
+
+      await updateProduct(formData.productId, updatedData);
+      toast.success("Producto actualizado correctamente");
+
+      setFormData({
+        productId: "", name: "", price: "", currentStock: "", description: "",
+        imageUrl: "", categoryName: "", supplierName: "", userName: userLogin
+      });
+
+      setEditSearchId("");
+      setTimeout(async () => {
+        if (typeof loadProducts === "function") {
+          await loadProducts();
+        }
+      }, 300);
+
+    } catch (error) {
+      toast.error(`No se pudo actualizar: El producto con ID ${formData.productId}.`);
     }
   };
 
@@ -276,12 +336,6 @@ function Products() {
               ))}
             </div>
           )}
-          {search.trim() !== "" && productsByName.length === 0 && (
-            <div className="fb-empty">
-              <i className="bi bi-search" style={{ fontSize: "2rem" }} />
-              <p>No se encontraron productos coincidentes</p>
-            </div>
-          )}
         </div>
       )}
 
@@ -301,12 +355,6 @@ function Products() {
           {productById && (
             <div className="fb-results-grid fb-users-cards-margin" style={{ marginTop: "1.5rem" }}>
               <ProductCard p={productById} />
-            </div>
-          )}
-          {!productById && searchId.trim() !== "" && (
-            <div className="fb-empty">
-              <i className="bi bi-x-circle" style={{ fontSize: "2rem" }} />
-              <p>No se encontró ningún producto con ese ID</p>
             </div>
           )}
         </div>
@@ -378,10 +426,16 @@ function Products() {
                   <label className="fb-crud-label">Usuario que registra</label>
                   <div className="fb-crud-input-wrap">
                     <i className="bi bi-person-badge fb-crud-input-icon" />
-                    <input type="text" name="userName" list="users-options" className="fb-crud-input" placeholder="Seleccione" required autoComplete="off" />
-                    <datalist id="users-options">
-                      {usersList.map((u, i) => <option key={i} value={`${u.name || ""} ${u.lastName || ""}`.trim() || u.username} />)}
-                    </datalist>
+                    <input
+                        type="text"
+                        name="userName"
+                        className="fb-crud-input"
+                        style={{ backgroundColor: "#f8f9fa", cursor: "not-allowed", fontWeight: "bold" }} // Le da el toque grisáceo de bloqueado
+                        value={userLogin}
+                        disabled
+                        readOnly
+                        required
+                    />
                   </div>
                 </div>
               </div>
@@ -495,7 +549,7 @@ function Products() {
                 </div>
 
                 <div className="fb-crud-field">
-                  <label className="fb-crud-label">Registrado por (Usuario)</label>
+                  <label className="fb-crud-label">Registrado por</label>
                   <div className="fb-crud-input-wrap">
                     <i className="bi bi-person-badge fb-crud-input-icon" />
                     <input type="text" name="userName" list="update-users-options" className="fb-crud-input" value={formData.userName || ""} onChange={handleChange} required autoComplete="off" />
@@ -523,82 +577,95 @@ function Products() {
         </div>
       )}
 
-      {/* DELETE PRODUCT */}
-      {activeTab === "delete" && tieneAcceso(userRole, "eliminar") && (
-        <div className="fb-form-section">
-          <div className="fb-form-card" style={{ borderTop: "4px solid #dc3545" }}>
-            <h3 className="fb-form-title" style={{ color: "#dc3545" }}>
-              <i className="bi bi-trash3-fill" /> Eliminar producto de inventario
-            </h3>
-            <p style={{ color: "#7a8694", fontSize: "0.9rem", marginBottom: "1.2rem" }}>
-              ⚠️ Al eliminar el producto se borrarán permanentemente de su inventario ⚠️.
-            </p>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const form = e.target;
-                const id = form.elements.id.value;
+        {/* DELETE PRODUCT */}
+        {activeTab === "delete" && tieneAcceso(userRole, "eliminar") && (
+            <div className="fb-form-section">
+              <div className="fb-form-card" style={{ borderTop: "4px solid #dc3545" }}>
+                <h3 className="fb-form-title" style={{ color: "#dc3545" }}>
+                  <i className="bi bi-trash3-fill" /> Eliminar producto de inventario
+                </h3>
+                <p style={{ color: "#7a8694", fontSize: "0.9rem", marginBottom: "1.2rem" }}>
+                  ⚠️ Al eliminar el producto se borrarán permanentemente de su inventario ⚠️.
+                </p>
+                <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      const form = e.target;
+                      const id = form.elements.id.value;
 
-                if (!id || String(id).trim() === "") {
-                  toast.error("Por favor, ingresa un ID válido.");
-                  return;
-                }
+                      if (!id || String(id).trim() === "") {
+                        toast.error("Por favor, ingresa un ID válido.");
+                        return;
+                      }
 
-                // Desplegamos el toast de confirmación nativo e interactivo
-                toast((t) => (
-                  <div className="d-flex flex-column gap-2 text-center" style={{ minWidth: "250px" }}>
-                    <span className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
-                      ¿Seguro que deseas eliminar el producto con ID <strong>{id}</strong>?
-                    </span>
-                    <div className="d-flex justify-content-center gap-2 mt-1">
-                      <button
-                        className="btn btn-danger btn-sm px-3 fw-bold shadow-sm"
-                        style={{ borderRadius: "12px", fontSize: "0.85rem" }}
-                        onClick={async () => {
-                          toast.dismiss(t.id); // Cierra el toast de pregunta al instante
+                      try {
+                        const product = await getProductById(id);
 
-                          try {
-                            await deleteProduct(id);
-                            toast.success(`Producto con ID ${id} eliminado del sistema.`);
-                            form.reset();
+                        if (!product) {
+                          toast.error(`No se puede eliminar: El producto con ID ${id} no existe.`);
+                          return; // Detiene la ejecución por completo y no pregunta nada
+                        }
 
-                            setTimeout(async () => {
-                              await loadProducts();
-                            }, 300);
-                          } catch (error) {
-                            toast.error("Error al eliminar el producto. Verifica que el ID exista.");
-                          }
-                        }}
-                      >
-                        Eliminar
-                      </button>
-                      <button
-                        className="btn btn-light btn-sm px-3 border shadow-sm"
-                        style={{ borderRadius: "12px", fontSize: "0.85rem" }}
-                        onClick={() => toast.dismiss(t.id)} // Cierra el toast si cancela
-                      >
-                        Cancelar
-                      </button>
-                    </div>
+                        toast((t) => (
+                            <div className="d-flex flex-column gap-2 text-center" style={{ minWidth: "250px" }}>
+                <span className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
+                  ¿Seguro que deseas eliminar el producto con ID <strong>{id}</strong>?
+                </span>
+                              <div className="d-flex justify-content-center gap-2 mt-1">
+                                <button
+                                    className="btn btn-danger btn-sm px-3 fw-bold shadow-sm"
+                                    style={{ borderRadius: "12px", fontSize: "0.85rem" }}
+                                    onClick={async () => {
+                                      toast.dismiss(t.id);
+
+                                      try {
+                                        await deleteProduct(id);
+                                        toast.success(`Producto con ID ${id} eliminado del sistema.`);
+                                        form.reset();
+
+                                        setTimeout(async () => {
+                                          if (typeof loadProducts === "function") {
+                                            await loadProducts();
+                                          }
+                                        }, 300);
+                                      } catch (error) {
+                                        toast.error("Hubo un problema al ejecutar la eliminación.");
+                                      }
+                                    }}
+                                >
+                                  Eliminar
+                                </button>
+                                <button
+                                    className="btn btn-light btn-sm px-3 border shadow-sm"
+                                    style={{ borderRadius: "12px", fontSize: "0.85rem" }}
+                                    onClick={() => toast.dismiss(t.id)}
+                                >
+                                  Cancelar
+                                </button>
+                              </div>
+                            </div>
+                        ), {
+                          duration: Infinity,
+                          position: "top-center"
+                        });
+
+                      } catch (error) {
+                        toast.error(`No se encontró el producto con ID ${id}.`);
+                      }
+                    }}
+                    className="fb-search-form"
+                >
+                  <div className="fb-search-input-wrap">
+                    <i className="bi bi-hash fb-search-icon" />
+                    <input type="number" name="id" className="fb-search-input" placeholder="ID del producto" required />
                   </div>
-                ), {
-                  duration: Infinity, // No se quita hasta que el usuario decida
-                  position: "top-center"
-                });
-              }}
-              className="fb-search-form"
-            >
-              <div className="fb-search-input-wrap">
-                <i className="bi bi-hash fb-search-icon" />
-                <input type="number" name="id" className="fb-search-input" placeholder="ID del producto" required />
+                  <button type="submit" className="fb-search-btn" style={{ background: "#dc3545" }}>
+                    <i className="bi bi-trash3" /> Eliminar
+                  </button>
+                </form>
               </div>
-              <button type="submit" className="fb-search-btn" style={{ background: "#dc3545" }}>
-                <i className="bi bi-trash3" /> Eliminar
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+            </div>
+        )}
     </div>
   );
 }

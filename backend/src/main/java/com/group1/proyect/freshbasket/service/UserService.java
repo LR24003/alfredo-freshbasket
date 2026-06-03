@@ -3,9 +3,11 @@ package com.group1.proyect.freshbasket.service;
 
 import com.group1.proyect.freshbasket.dto.request.UserRequestDTO;
 import com.group1.proyect.freshbasket.dto.response.UserResponseDTO;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public interface UserService {
     List<UserResponseDTO> getAllUsers();
 
