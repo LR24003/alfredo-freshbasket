@@ -1,5 +1,7 @@
-// servicio con el que conectamos todas nuestras peticiones
-// de PRODUCTS desde el Backend
+/*
+ Servicio con el que conectamos todas nuestras peticiones
+ de PRODUCTS desde el Backend
+*/
 
 import axios from "../services/axiosConfig.js";
 

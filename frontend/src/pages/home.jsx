@@ -1,7 +1,7 @@
 import "../styles/home.css";
 import { Link } from "react-router-dom";
 
-function HomeScreen() {
+function Home() {
   return (
     <div className="home-container">
       {/* Imagen de fondo */}
@@ -21,4 +21,4 @@ function HomeScreen() {
   );
 }
 
-export default HomeScreen;
+export default Home;

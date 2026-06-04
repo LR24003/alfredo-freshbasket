@@ -195,7 +195,7 @@ function Users() {
           lastName: uLastName || "",
           phone: user.phone || "",
           email: user.email || "",
-          password: "",
+          password: "DUMMY_PASSWORD_NOT_CHANGED",
           role: user.role || "",
           countryName: paisCorrespondiente ? paisCorrespondiente.name : (uCountryName || ""),
         });
@@ -217,30 +217,52 @@ function Users() {
     e.preventDefault();
     const { id, name, lastName, phone, email, password, role, countryName } = formData;
 
-    const payload = {
-      name,
-      lastName,
-      phone,
-      email,
-      role,
-      countryName: countryName?.trim()
-    };
-
-    if (password && password.trim() !== "") {
-      payload.password = password;
+    //
+    if (
+        !id ||
+        !name?.trim() ||
+        !lastName?.trim() ||
+        !phone?.trim() ||
+        !email?.trim() ||
+        !password?.trim() ||
+        !role?.trim() ||
+        !countryName?.trim()
+    ) {
+      toast.error("Por favor, rellena todos los campos obligatorios.");
+      return;
     }
+
+    const payload = {
+      name: name.trim(),
+      lastName: lastName.trim(),
+      phone: phone.trim(),
+      email: email.trim(),
+      role: role.trim(),
+      countryName: countryName.trim(),
+      password: password.trim()
+    };
 
     try {
       await updateUserById(id, payload);
       toast.success("Usuario actualizado correctamente");
 
-      setFormData({
-        id: "", name: "", lastName: "", phone: "", email: "",
-        password: "", role: "", countryName: "",
-      });
-      setEditSearchId("");
-    } catch (error) {
 
+      setFormData({
+        id: "",
+        name: "",
+        lastName: "",
+        phone: "",
+        email: "",
+        password: "",
+        role: "",
+        countryName: "",
+      });
+
+      if (typeof setEditSearchId === "function") {
+        setEditSearchId("");
+      }
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -472,8 +494,8 @@ function Users() {
                       { label: "Apellido", name: "lastName", icon: "bi-person", placeholder: "Apellido" },
                       { label: "Teléfono", name: "phone", icon: "bi-telephone", placeholder: "Teléfono" },
                       { label: "Email", name: "email", icon: "bi-envelope", type: "email", placeholder: "Email" },
-                      { label: "Contraseña", name: "password", icon: "bi-lock", type: "password" },
-                      { label: "Credenciales", name: "role", icon: "bi-person" },
+                      { label: "Contraseña", name: "password", icon: "bi-lock", type: "password", placeholder: "••••••••", disabled: true },
+                      { label: "Credenciales", name: "role", icon: "bi-person", placeholder: "Rol asignado" },
                     ].map((f) => (
                       <div key={f.name} className="fb-crud-field">
                         <label className="fb-crud-label">{f.label}</label>
@@ -481,7 +503,7 @@ function Users() {
                           <i className={`bi ${f.icon} fb-crud-input-icon`} />
                           <input type={f.type || "text"} name={f.name} className="fb-crud-input"
                             placeholder={f.placeholder} value={formData[f.name] || ""}
-                            onChange={handleChange} required={f.name !== "password"} />
+                            onChange={handleChange} required disabled={f.disabled} />
                         </div>
                       </div>
                     ))}
@@ -519,97 +541,88 @@ function Users() {
 
       {/* DELETE USER */}
       {activeTab === "delete" && (
-          <div className="fb-form-section">
-            <div className="fb-form-card" style={{ borderTop: "4px solid #dc3545" }}>
-              <h3 className="fb-form-title" style={{ color: "#dc3545" }}>
-                <i className="bi bi-trash3-fill" /> Introduzca el ID del usuario
-              </h3>
-              <p style={{ color: "#7a8694", fontSize: "0.9rem", marginBottom: "1.2rem" }}>
-                ⚠️ Al eliminar el usuario se desactivará de su base de datos ⚠️
-              </p>
+        <div className="fb-form-section">
+         <div className="fb-form-card" style={{ borderTop: "4px solid #dc3545" }}>
+          <h3 className="fb-form-title" style={{ color: "#dc3545" }}>
+           <i className="bi bi-trash3-fill" /> Introduzca el ID del usuario
+            </h3>
+            <p style={{ color: "#7a8694", fontSize: "0.9rem", marginBottom: "1.2rem" }}>
+             ⚠️ Al eliminar el usuario se desactivará de su base de datos ⚠️
+             </p>
               <form
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    const formElement = e.currentTarget;
-                    const idValue = formElement.userId.value;
-
-                    if (!idValue || String(idValue).trim() === "") {
-                      toast.error("Por favor, ingresa un ID válido.");
-                      return;
-                    }
-
-                    try {
-                      const user = await getUserById(idValue);
-
-                      // 🛠️ STEP 2: Si el servidor responde vacío o no encuentra al usuario
-                      if (!user) {
-                        toast.error(`No se puede eliminar: El usuario con ID ${idValue} no existe.`);
-                        return;
-                      }
-
-                      toast((t) => (
-                          <div className="d-flex flex-column gap-2 text-center" style={{ minWidth: "250px" }}>
-                          <span className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
-                           ¿Está seguro de que desea eliminar al usuario <strong>{user.name ? `${user.name} ${user.lastName || ""}` : idValue}</strong>?
-                            </span>
-                            <div className="d-flex justify-content-center gap-2 mt-1">
-                              <button
-                                  className="btn btn-danger btn-sm px-3 fw-bold shadow-sm"
-                                  style={{ borderRadius: "12px", fontSize: "0.85rem" }}
-                                  onClick={async () => {
-                                    toast.dismiss(t.id);
-
-                                    try {
-                                      await deleteUser(idValue);
-                                      toast.success(`Usuario con ID ${idValue} eliminado correctamente.`);
-
-                                      if (formElement) formElement.reset();
-
-                                      setTimeout(async () => {
-                                        if (typeof loadUsers === "function") {
-                                          await loadUsers();
-                                        }
-                                      }, 300);
-                                    } catch (error) {
-                                      toast.error("Error al ejecutar la eliminación en el servidor.");
-                                    }
-                                  }}
-                              >
-                                Eliminar
-                              </button>
-                              <button
-                                  className="btn btn-light btn-sm px-3 border shadow-sm"
-                                  style={{ borderRadius: "12px", fontSize: "0.85rem" }}
-                                  onClick={() => toast.dismiss(t.id)}
-                              >
-                                Cancelar
-                              </button>
-                            </div>
-                          </div>
-                      ), {
-                        duration: Infinity,
-                        position: "top-center"
-                      });
-
-                    } catch (error) {
-                      toast.error(`El usuario con ID ${idValue} no existe o no se pudo verificar.`);
-                    }
-                  }}
-                  className="fb-search-form"
-              >
-                <div className="fb-search-input-wrap">
-                  <i className="bi bi-hash fb-search-icon" />
-                  <input
-                      type="number"
-                      name="userId"
-                      className="fb-search-input"
-                      placeholder="ID del usuario a eliminar"
-                      required
-                  />
-                </div>
-                <button type="submit" className="fb-search-btn" style={{ background: "#dc3545" }}>
-                  <i className="bi bi-trash3" /> Eliminar usuario
+              onSubmit={async (e) => {
+              e.preventDefault();
+               const formElement = e.currentTarget;
+               const idValue = formElement.userId.value;
+              if (!idValue || String(idValue).trim() === "") {
+             toast.error("Por favor, ingresa un ID válido.");
+             return;
+             }
+             try {
+                 const user = await getUserById(idValue);
+                  if (!user) {
+                   toast.error(`No se puede eliminar: El usuario con ID ${idValue} no existe.`);
+             return;
+            }
+              toast((t) => (
+                <div className="d-flex flex-column gap-2 text-center" style={{ minWidth: "250px" }}>
+                 <span className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
+                  ¿Está seguro de que desea eliminar al usuario <strong>{user.name ? `${user.name} ${user.lastName || ""}` : idValue}</strong>?
+                    </span>
+                      <div className="d-flex justify-content-center gap-2 mt-1">
+                       <button
+                        className="btn btn-danger btn-sm px-3 fw-bold shadow-sm"
+                         style={{ borderRadius: "12px", fontSize: "0.85rem" }}
+                        onClick={async () => {
+                        toast.dismiss(t.id);
+                        try {
+                       await deleteUser(idValue);
+                      toast.success(`Usuario con ID ${idValue} eliminado correctamente.`);
+                     if (formElement) formElement.reset();
+                    setTimeout(async () => {
+                   if (typeof loadUsers === "function") {
+                  await loadUsers();
+                  }
+                 }, 300);
+                 } catch (error) {
+                 toast.error("Error al ejecutar la eliminación en el servidor.");
+                 }
+                 }}
+                 >
+               Eliminar
                 </button>
+               <button
+                 className="btn btn-light btn-sm px-3 border shadow-sm"
+                style={{ borderRadius: "12px", fontSize: "0.85rem" }}
+                onClick={() => toast.dismiss(t.id)}
+                >
+                Cancelar
+                </button>
+               </div>
+              </div>
+             ), {
+                duration: Infinity,
+                position: "top-center"
+             });
+             } catch (error) {
+              toast.error(`El usuario con ID ${idValue} no existe o no se pudo verificar.`);
+             }
+            }}
+            className="fb-search-form"
+            >
+            <div className="fb-search-input-wrap">
+            <i className="bi bi-hash fb-search-icon" />
+             <input
+              type="number"
+               name="userId"
+               className="fb-search-input"
+               placeholder="ID del usuario a eliminar"
+               required
+               />
+              </div>
+              <button type="submit" className="fb-search-btn" style={{ background: "#dc3545" }}>
+               <i className="bi bi-trash3" /> Eliminar usuario
+              </button>
               </form>
             </div>
           </div>

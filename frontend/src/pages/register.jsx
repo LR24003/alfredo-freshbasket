@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios"; // Usamos axios para todo de forma directa
+import axios from "axios";
 import toast from "react-hot-toast";
 import "../styles/register.css";
+import { registerUserPublic } from "../services/userService.js";
 
-function RegisterScreen() {
+function Register() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [countriesList, setCountriesList] = useState([]);
@@ -201,4 +202,4 @@ function RegisterScreen() {
   );
 }
 
-export default RegisterScreen;
+export default Register;

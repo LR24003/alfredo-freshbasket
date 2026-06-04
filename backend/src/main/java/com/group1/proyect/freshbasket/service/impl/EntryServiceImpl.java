@@ -157,6 +157,8 @@ public class EntryServiceImpl implements EntryService {
             productRepository.save(product);
         }
 
+        entry.setEntryDate(java.time.LocalDateTime.now());
+
         Entry savedEntry = entryRepository.save(entry);
         return convertToDTO(savedEntry);
     }
@@ -199,7 +201,6 @@ public class EntryServiceImpl implements EntryService {
         productRepository.save(product);
 
         // Actualizar datos de la entrada
-        entry.setEntryDate(requestDTO.getEntryDate());
         entry.setQuantity(cantidadNueva);
         entry.setUnitCost(requestDTO.getUnitCost());
         entry.setProduct(product);

@@ -1,5 +1,7 @@
-// servicio con el que conectamos todas nuestras peticiones
-// de EXITS desde el Backend
+/*
+ servicio con el que conectamos todas nuestras peticiones
+ de EXITS desde el Backend
+*/
 
 import axios from "../services/axiosConfig.js";
 

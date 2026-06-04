@@ -11,7 +11,7 @@ import {
 
 function Products() {
   const navigate = useNavigate();
-  const userRole = localStorage.getItem("userRole") || "USUARIO";
+  const userRole = localStorage.getItem("userRole") || "CLIENTE";
 
   const userLogin = localStorage.getItem("userName") || localStorage.getItem("userEmail") || "";
 
@@ -569,7 +569,7 @@ function Products() {
                   </div>
                 </div>
               </div>
-              <button type="submit" className="fb-action-btn" style={{ background: "linear-gradient(135deg,#b45309,#fd7e14)", marginTop: "1.5rem" }}>
+              <button type="submit" className="fb-action-btn" style={{ background: "linear-gradient(135deg,#1a6b3a,#2ecc71)", marginTop: "1.5rem" }}>
                 <i className="bi bi-check-circle-fill" /> Guardar cambios
               </button>
             </form>
@@ -588,83 +588,76 @@ function Products() {
                   ⚠️ Al eliminar el producto se borrarán permanentemente de su inventario ⚠️.
                 </p>
                 <form
-                    onSubmit={async (e) => {
-                      e.preventDefault();
-                      const form = e.target;
-                      const id = form.elements.id.value;
-
-                      if (!id || String(id).trim() === "") {
-                        toast.error("Por favor, ingresa un ID válido.");
-                        return;
-                      }
-
-                      try {
-                        const product = await getProductById(id);
-
-                        if (!product) {
-                          toast.error(`No se puede eliminar: El producto con ID ${id} no existe.`);
-                          return; // Detiene la ejecución por completo y no pregunta nada
-                        }
-
-                        toast((t) => (
-                            <div className="d-flex flex-column gap-2 text-center" style={{ minWidth: "250px" }}>
-                <span className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
+                 onSubmit={async (e) => {
+                 e.preventDefault();
+                 const form = e.target;
+                 const id = form.elements.id.value;
+                 if (!id || String(id).trim() === "") {
+                   toast.error("Por favor, ingresa un ID válido.");
+                   return;
+                 }
+                 try {
+                   const product = await getProductById(id);
+                   if (!product) {
+                     toast.error(`No se puede eliminar: El producto con ID ${id} no existe.`);
+                     return; // Detiene la ejecución por completo y no pregunta nada
+                   }
+                   toast((t) => (
+                       <div className="d-flex flex-column gap-2 text-center" style={{ minWidth: "250px" }}>
+                      <span className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
                   ¿Seguro que deseas eliminar el producto con ID <strong>{id}</strong>?
                 </span>
-                              <div className="d-flex justify-content-center gap-2 mt-1">
-                                <button
-                                    className="btn btn-danger btn-sm px-3 fw-bold shadow-sm"
-                                    style={{ borderRadius: "12px", fontSize: "0.85rem" }}
-                                    onClick={async () => {
-                                      toast.dismiss(t.id);
-
-                                      try {
-                                        await deleteProduct(id);
-                                        toast.success(`Producto con ID ${id} eliminado del sistema.`);
-                                        form.reset();
-
-                                        setTimeout(async () => {
-                                          if (typeof loadProducts === "function") {
-                                            await loadProducts();
-                                          }
-                                        }, 300);
-                                      } catch (error) {
-                                        toast.error("Hubo un problema al ejecutar la eliminación.");
-                                      }
-                                    }}
-                                >
-                                  Eliminar
-                                </button>
-                                <button
-                                    className="btn btn-light btn-sm px-3 border shadow-sm"
-                                    style={{ borderRadius: "12px", fontSize: "0.85rem" }}
-                                    onClick={() => toast.dismiss(t.id)}
-                                >
-                                  Cancelar
-                                </button>
-                              </div>
-                            </div>
-                        ), {
-                          duration: Infinity,
-                          position: "top-center"
-                        });
-
-                      } catch (error) {
-                        toast.error(`No se encontró el producto con ID ${id}.`);
-                      }
-                    }}
-                    className="fb-search-form"
-                >
-                  <div className="fb-search-input-wrap">
-                    <i className="bi bi-hash fb-search-icon" />
-                    <input type="number" name="id" className="fb-search-input" placeholder="ID del producto" required />
-                  </div>
-                  <button type="submit" className="fb-search-btn" style={{ background: "#dc3545" }}>
-                    <i className="bi bi-trash3" /> Eliminar
+                <div className="d-flex justify-content-center gap-2 mt-1">
+                  <button
+                      className="btn btn-danger btn-sm px-3 fw-bold shadow-sm"
+                      style={{ borderRadius: "12px", fontSize: "0.85rem" }}
+                      onClick={async () => {
+                        toast.dismiss(t.id);
+                     try {
+                       await deleteProduct(id);
+                       toast.success(`Producto con ID ${id} eliminado del sistema.`);
+                       form.reset();
+                       setTimeout(async () => {
+                         if (typeof loadProducts === "function") {
+                           await loadProducts();
+                         }
+                         }, 300);
+                     } catch (error) {
+                       toast.error("Hubo un problema al ejecutar la eliminación.");
+                     }
+                      }}
+                  >
+                    Eliminar
                   </button>
-                </form>
-              </div>
-            </div>
+                  <button
+                      className="btn btn-light btn-sm px-3 border shadow-sm"
+                      style={{ borderRadius: "12px", fontSize: "0.85rem" }}
+                      onClick={() => toast.dismiss(t.id)}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+               </div>
+              ), {
+             duration: Infinity,
+             position: "top-center"
+            });
+                 } catch (error) {
+                   toast.error(`No se encontró el producto con ID ${id}.`);
+                 }
+                 }}
+                 className="fb-search-form"
+                >
+               <div className="fb-search-input-wrap">
+              <i className="bi bi-hash fb-search-icon" />
+              <input type="number" name="id" className="fb-search-input" placeholder="ID del producto" required />
+               </div>
+             <button type="submit" className="fb-search-btn" style={{ background: "#dc3545" }}>
+             <i className="bi bi-trash3" /> Eliminar
+             </button>
+            </form>
+           </div>
+          </div>
         )}
     </div>
   );
@@ -682,7 +675,7 @@ function ProductCard({ p }) {
         <span className="fb-card-user-id">ID: {p.id || p.productId}</span>
       </div>
 
-      {/* Imagen del producto usando las nuevas clases CSS */}
+      {/* Imagen del producto */}
       <div className="fb-product-card-image-wrap">
         {p.imageUrl ? (
           <img

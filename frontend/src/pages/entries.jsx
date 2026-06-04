@@ -84,7 +84,7 @@ function Entries () {
       setProductsList(productsActives);
       setSuppliersList(resultados[1].data || []);
 
-      if (esAdminOSoporte && resultados[2]) {
+      if (isAdminOrSupport && resultados[2]) {
         setUsersList(resultados[2].data || []);
       }
     } catch (error) {
@@ -268,7 +268,9 @@ function Entries () {
       });
 
       setTimeout(async () => {
-        await loadEntries();
+        if (typeof loadEntries === "function") {
+          await loadEntries();
+        }
       }, 300);
 
     } catch (error) {
@@ -307,7 +309,6 @@ return (
              </h3>
              <span className="fb-badge">{allEntries.length} registros</span>
            </div>
-
            <div className="fb-results-grid fb-users-cards-margin">
              {Array.isArray(allEntries) && allEntries.length > 0 ? (
                allEntries.map((entry) => (
@@ -381,7 +382,7 @@ return (
            )}
 
        {/* CREATE ENTRY */}
-       {activeTab === "create" && (
+        {activeTab === "create" && (
          <div className="fb-form-section fb-tab-create">
            <div className="fb-form-card">
              <h3 className="fb-form-title">
@@ -465,7 +466,7 @@ return (
                          name="userName"
                          className="fb-crud-input"
                          placeholder="Usuario que registra"
-                         value={userLogin}
+                         defaultValue={userLogin}
                          readOnly
                          style={{ backgroundColor: "#f8f9fa", cursor: "not-allowed", fontWeight: "bold" }}
                          required
@@ -482,6 +483,7 @@ return (
            </div>
          </div>
        )}
+
        {/* UPDATE ENTRY */}
        {activeTab === "update" && (
          <div className="fb-form-section fb-tab-update">
@@ -619,119 +621,106 @@ return (
        )}
 
         {/* DELETE ENTRY */}
-        {activeTab === "delete" && (
-            <div className="fb-form-section">
-              <div className="fb-form-card" style={{ borderTop: "4px solid #dc3545" }}>
-                <h3 className="fb-form-title" style={{ color: "#dc3545" }}>
-                  <i className="bi bi-trash3-fill" /> Introduzca el ID de la entrada
-                </h3>
-                <p style={{ color: "#7a8694", fontSize: "0.9rem", marginBottom: "1.2rem" }}>
-                  ⚠️ Al eliminar la entrada se removerá permanentemente de su base de datos ⚠️
-                </p>
-                <form
-                    onSubmit={async (e) => {
-                      e.preventDefault();
-                      const form = e.target;
-                      const idValue = form.entryId.value;
-
-                      if (!idValue || String(idValue).trim() === "") {
-                        toast.error("Por favor, ingresa un ID válido.");
-                        return;
+      {activeTab === "delete" && (
+      <div className="fb-form-section">
+        <div className="fb-form-card" style={{ borderTop: "4px solid #dc3545" }}>
+            <h3 className="fb-form-title" style={{ color: "#dc3545" }}>
+                <i className="bi bi-trash3-fill" /> Introduzca el ID de la entrada
+            </h3>
+            <p style={{ color: "#7a8694", fontSize: "0.9rem", marginBottom: "1.2rem" }}>
+                ⚠️ Al eliminar la entrada se removerá permanentemente de su base de datos ⚠️
+            </p>
+            <form
+             onSubmit={async (e) => {
+              e.preventDefault();
+              const form = e.target;
+              const idValue = form.entryId.value;
+               if (!idValue || String(idValue).trim() === "") {
+               toast.error("Por favor, ingresa un ID válido.");
+               return;
+               }
+               try {
+                const entry = await getEntryById(idValue);
+                 if (!entry) {
+                 toast.error(`No se puede eliminar la entrada con ID ${idValue}.`);
+                  return;
+                   }
+                   const nombreProducto = entry.productName;
+                   const estaActivo = productsList.some((p) => p.name === nombreProducto);
+                    if (!estaActivo) {
+                     toast.error("No se puede eliminar esta entrada, pertenece a un producto eliminado.");
+                      return;
                       }
-
-                      try {
-                        const entry = await getEntryById(idValue);
-
-                        if (!entry) {
-                          toast.error(`No se puede eliminar la entrada con ID ${idValue}.`);
-                          return;
-                        }
-
-                        const nombreProducto = entry.productName;
-
-                        const estaActivo = productsList.some((p) => p.name === nombreProducto);
-
-                        if (!estaActivo) {
-                          toast.error("No se puede eliminar esta entrada, pertenece a un producto eliminado.");
-                          return;
-                        }
-
-                        toast((t) => (
-                            <div className="d-flex flex-column gap-2 text-center" style={{ minWidth: "250px" }}>
-                            <span className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
-                             ¿Está seguro de que desea eliminar la entrada con el ID <strong>{idValue}</strong>?
-                              </span>
-                              <div className="d-flex justify-content-center gap-2 mt-1">
-                                <button
-                                    className="btn btn-danger btn-sm px-3 fw-bold shadow-sm"
-                                    style={{ borderRadius: "12px", fontSize: "0.85rem" }}
-                                    onClick={async () => {
-                                      toast.dismiss(t.id);
-
-                                      try {
-                                        await deleteEntry(idValue);
-                                        toast.success(`Entrada con ID ${idValue} eliminada correctamente.`);
-
-                                        form.reset();
-
-                                        if (typeof setFormData === "function") {
-                                          setFormData({
-                                            entryId: "", entryDate: "", unitCost: "", quantity: "",
-                                            productName: "", supplierName: "", userName: ""
-                                          });
-                                        }
-
-                                        setTimeout(async () => {
-                                          if (typeof loadEntries === "function") {
-                                            await loadEntries();
-                                          }
-                                        }, 300);
-
-                                      } catch (error) {
-                                        toast.error("Hubo un problema al ejecutar la eliminación.");
-                                      }
-                                    }}
-                                >
-                                  Eliminar
-                                </button>
-                                <button
-                                    className="btn btn-light btn-sm px-3 border shadow-sm"
-                                    style={{ borderRadius: "12px", fontSize: "0.85rem" }}
-                                    onClick={() => toast.dismiss(t.id)}
-                                >
-                                  Cancelar
-                                </button>
-                              </div>
-                            </div>
-                        ), {
-                          duration: Infinity,
-                          position: "top-center"
-                        });
-
-                      } catch (error) {
-                        toast.error(`No se encontró la entrada con ID ${idValue}.`);
-                      }
-                    }}
-                    className="fb-search-form"
-                >
-                  <div className="fb-search-input-wrap">
+                      toast((t) => (
+                       <div className="d-flex flex-column gap-2 text-center" style={{ minWidth: "250px" }}>
+                        <span className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
+                         ¿Está seguro de que desea eliminar la entrada con el ID <strong>{idValue}</strong>?
+                          </span>
+                            <div className="d-flex justify-content-center gap-2 mt-1">
+                              <button
+                                className="btn btn-danger btn-sm px-3 fw-bold shadow-sm"
+                                 style={{ borderRadius: "12px", fontSize: "0.85rem" }}
+                                  onClick={async () => {
+                                   toast.dismiss(t.id);
+                                   try {
+                                  await deleteEntry(idValue);
+                                  toast.success(`Entrada con ID ${idValue} eliminada correctamente.`);
+                                 form.reset();
+                                if (typeof setFormData === "function") {
+                               setFormData({
+                               entryId: "", entryDate: "", unitCost: "", quantity: "",
+                               productName: "", supplierName: "", userName: ""
+                              });
+                              }
+                             setTimeout(async () => {
+                            if (typeof loadEntries === "function") {
+                           await loadEntries();
+                           }
+                           }, 300);
+                           } catch (error) {
+                          toast.error("Hubo un problema al ejecutar la eliminación.");
+                           }
+                            }}
+                           >
+                            Eliminar
+                            </button>
+                            <button
+                           className="btn btn-light btn-sm px-3 border shadow-sm"
+                         style={{ borderRadius: "12px", fontSize: "0.85rem" }}
+                        onClick={() => toast.dismiss(t.id)}
+                         >
+                         Cancelar
+                        </button>
+                        </div>
+                      </div>
+                     ), {
+                   duration: Infinity,
+                  position: "top-center"
+                  });
+                  } catch (error) {
+                   toast.error(`No se encontró la entrada con ID ${idValue}.`);
+                   }
+                }}
+                className="fb-search-form"
+            >
+                <div className="fb-search-input-wrap">
                     <i className="bi bi-hash fb-search-icon" />
                     <input
-                        type="number"
-                        name="entryId"
-                        className="fb-search-input"
-                        placeholder="ID de la entrada a eliminar"
-                        required
+                    type="number"
+                    name="entryId"
+                    className="fb-search-input"
+                    placeholder="ID de la entrada a eliminar"
+                    required
                     />
-                  </div>
-                  <button type="submit" className="fb-search-btn" style={{ background: "#dc3545" }}>
+                </div>
+                <button type="submit" className="fb-search-btn" style={{ background: "#dc3545" }}>
                     <i className="bi bi-trash3" /> Eliminar entrada
-                  </button>
-                </form>
-              </div>
-            </div>
-        )}
-   </div>
+                </button>
+            </form>
+        </div>
+    </div>
+)}
+</div>
 );
 }
 

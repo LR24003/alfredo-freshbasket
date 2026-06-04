@@ -20,4 +20,8 @@ public interface UserService {
     void deleteUser(Long id);
 
     List<UserResponseDTO> searchUsersByName(String name);
+
+    UserResponseDTO getUserProfileByEmail(String email);
+
+    UserResponseDTO updateUserProfileByEmail(String email, UserRequestDTO requestDTO);
 }

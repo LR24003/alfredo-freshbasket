@@ -486,12 +486,12 @@ function Suppliers() {
                 </div>
 
                 <button type="submit" className="fb-action-btn" style={{ background: "linear-gradient(135deg,#1a6b3a,#2ecc71)" }}>
-                  <i className="bi bi-person-check-fill" /> Crear proveedor
-                </button>
-              </form>
-            </div>
+               <i className="bi bi-person-check-fill" /> Crear proveedor
+             </button>
+            </form>
           </div>
-        )}
+        </div>
+       )}
 
         {/* UPDATE SUPPLIER */}
         {activeTab === "update" && !showWelcome && (
@@ -577,93 +577,86 @@ function Suppliers() {
 
       {/* DELETE SUPPLIER */}
       {activeTab === "delete" && !showWelcome && (
-          <div className="fb-form-section">
-            <div className="fb-form-card" style={{ borderTop: "4px solid #dc3545" }}>
-              <h3 className="fb-form-title" style={{ color: "#dc3545" }}>
-                <i className="bi bi-trash3-fill" /> Introduzca el ID del proveedor
-              </h3>
-              <p style={{ color: "#7a8694", fontSize: "0.9rem", marginBottom: "1.2rem" }}>
-                ⚠️ Al eliminar el proveedor se borrará permanentemente de su base de datos ⚠️
-              </p>
-              <form
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    const form = e.target;
-                    const idValue = form.id.value;
-
-                    if (!idValue || String(idValue).trim() === "") {
-                      toast.error("Por favor, ingresa un ID válido.");
-                      return;
-                    }
-
-                    try {
-                      const supplier = await getSupplierById(idValue);
-
-                      if (!supplier) {
-                        toast.error(`No se puede eliminar el proveedor con ID ${idValue}.`);
-                        return;
-                      }
-
-                      toast((t) => (
-                          <div className="d-flex flex-column gap-2 text-center" style={{ minWidth: "250px" }}>
+       <div className="fb-form-section">
+        <div className="fb-form-card" style={{ borderTop: "4px solid #dc3545" }}>
+         <h3 className="fb-form-title" style={{ color: "#dc3545" }}>
+          <i className="bi bi-trash3-fill" /> Introduzca el ID del proveedor
+           </h3>
+            <p style={{ color: "#7a8694", fontSize: "0.9rem", marginBottom: "1.2rem" }}>
+             ⚠️ Al eliminar el proveedor se borrará permanentemente de su base de datos ⚠️
+             </p>
+             <form
+              onSubmit={async (e) => {
+               e.preventDefault();
+                const form = e.target;
+                  const idValue = form.id.value;
+                   if (!idValue || String(idValue).trim() === "") {
+                   toast.error("Por favor, ingresa un ID válido.");
+                  return;
+                  }
+                  try {
+                  const supplier = await getSupplierById(idValue);
+                   if (!supplier) {
+                   toast.error(`No se puede eliminar el proveedor con ID ${idValue}.`);
+                  return;
+                  }
+                  toast((t) => (
+                  <div className="d-flex flex-column gap-2 text-center" style={{ minWidth: "250px" }}>
                 <span className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
-                  ¿Está seguro de que desea eliminar el proveedor con el ID <strong>{idValue}</strong>?
-                </span>
-                            <div className="d-flex justify-content-center gap-2 mt-1">
-                              <button
-                                  className="btn btn-danger btn-sm px-3 fw-bold shadow-sm"
-                                  style={{ borderRadius: "12px", fontSize: "0.85rem" }}
-                                  onClick={async () => {
-                                    toast.dismiss(t.id);
-
-                                    try {
-                                      await deleteSupplier(idValue);
-                                      toast.success(`Proveedor con ID ${idValue} eliminado correctamente.`);
-                                      form.reset();
-
-                                      setTimeout(async () => {
-                                        await loadSuppliers();
-                                      }, 300);
-                                    } catch (error) {
-                                      toast.error("Hubo un problema al ejecutar la eliminación.");
-                                    }
-                                  }}
-                              >
-                                Eliminar
-                              </button>
-                              <button
-                                  className="btn btn-light btn-sm px-3 border shadow-sm"
-                                  style={{ borderRadius: "12px", fontSize: "0.85rem" }}
-                                  onClick={() => toast.dismiss(t.id)}
-                              >
-                                Cancelar
-                              </button>
-                            </div>
-                          </div>
-                      ), {
-                        duration: Infinity,
-                        position: "top-center"
-                      });
-
-                    } catch (error) {
-                      toast.error(`No se encontró el proveedor con ID ${idValue}.`);
+                ¿Está seguro de que desea eliminar el proveedor con el ID <strong>{idValue}</strong>?
+               </span>
+               <div className="d-flex justify-content-center gap-2 mt-1">
+               <button
+               className="btn btn-danger btn-sm px-3 fw-bold shadow-sm"
+                style={{ borderRadius: "12px", fontSize: "0.85rem" }}
+                 onClick={async () => {
+                  toast.dismiss(t.id);
+                   try {
+                       await deleteSupplier(idValue);
+                        toast.success(`Proveedor con ID ${idValue} eliminado correctamente.`);
+                         form.reset();
+                        setTimeout(async () => {
+                       await loadSuppliers();
+                   }, 300);
+                   } catch (error) {
+                     toast.error("Hubo un problema al ejecutar la eliminación.");
                     }
-                  }}
-                  className="fb-search-form"
-              >
-                <div className="fb-search-input-wrap">
-                  <i className="bi bi-hash fb-search-icon" />
-                  <input
-                      type="number"
-                      name="id"
-                      className="fb-search-input"
-                      placeholder="ID del proveedor a eliminar"
-                      required
-                  />
-                </div>
-                <button type="submit" className="fb-search-btn" style={{ background: "#dc3545" }}>
-                  <i className="bi bi-trash3" /> Eliminar proveedor
-                </button>
+                 }}
+                 >
+              Eliminar
+               </button>
+                <button
+                className="btn btn-light btn-sm px-3 border shadow-sm"
+                 style={{ borderRadius: "12px", fontSize: "0.85rem" }}
+                  onClick={() => toast.dismiss(t.id)}
+                   >
+                Cancelar
+             </button>
+           </div>
+          </div>
+          ), {
+          duration: Infinity,
+          position: "top-center"
+          });
+           } catch (error) {
+               toast.error(`No se encontró el proveedor con ID ${idValue}.`);
+           }
+           }}
+          className="fb-search-form"
+          >
+           <div className="fb-search-input-wrap">
+             <i className="bi bi-hash fb-search-icon" />
+               <input
+                type="number"
+                name="id"
+                 className="fb-search-input"
+                 placeholder="ID del proveedor a eliminar"
+                 required
+                 />
+              </div>
+              <button type="submit" className="fb-search-btn" style={{ background: "#dc3545" }}>
+               <i className="bi bi-trash3" /> Eliminar proveedor
+              </button>
               </form>
             </div>
           </div>

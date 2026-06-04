@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -128,4 +129,21 @@ public class UserController {
         return ResponseEntity.ok(userService.searchUsersByName(name));
     }
 
+    // 📡 GET /api/users/me -> Devuelve los datos exactos del usuario logueado
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDTO> getMyProfile(Principal principal) {
+        String email = principal.getName();
+        UserResponseDTO userProfile = userService.getUserProfileByEmail(email);
+        return ResponseEntity.ok(userProfile);
+    }
+
+
+    @PutMapping("/me")
+    public ResponseEntity<UserResponseDTO> updateMyProfile(Principal principal, @RequestBody UserRequestDTO requestDTO) {
+        String email = principal.getName();
+        UserResponseDTO updatedUser = userService.updateUserProfileByEmail(email, requestDTO);
+        return ResponseEntity.ok(updatedUser);
+    }
 }
+
+

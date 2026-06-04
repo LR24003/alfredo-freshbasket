@@ -35,6 +35,8 @@ public class ExitServiceImpl implements ExitService {
     // DTO → Entity
     private Exit convertToEntity(ExitRequestDTO dto) {
         Exit exit = new Exit();
+        exit.setExitDate(java.time.LocalDateTime.now());
+        exit.setQuantity(dto.getQuantity());
 
         String cleanProductName = dto.getProductName() != null ? dto.getProductName().trim() : "";
         Product product = productRepository.findByNameIgnoreCase(cleanProductName)
@@ -44,8 +46,6 @@ public class ExitServiceImpl implements ExitService {
         User user = userRepository.findByFullNameIgnoreCase(cleanUserName)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con el nombre completo: " + dto.getUserName()));
 
-        exit.setExitDate(dto.getExitDate());
-        exit.setQuantity(dto.getQuantity());
         exit.setProduct(product);
         exit.setUser(user);
 
@@ -119,6 +119,8 @@ public class ExitServiceImpl implements ExitService {
             productRepository.save(product);
         }
 
+        exit.setExitDate(java.time.LocalDateTime.now());
+
         Exit savedExit = exitRepository.save(exit);
         return convertToDTO(savedExit);
     }
@@ -149,7 +151,6 @@ public class ExitServiceImpl implements ExitService {
         productRepository.save(product);
 
         // Se actualizan los datos de la salida
-        exit.setExitDate(requestDTO.getExitDate());
         exit.setQuantity(cantidadNueva);
         exit.setProduct(product);
         exit.setUser(user);
