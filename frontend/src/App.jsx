@@ -14,6 +14,8 @@ import Suppliers from "./pages/suppliers";
 import Users from "./pages/users";
 import Entries from "./pages/entries";
 import Exits from "./pages/exits";
+import Categories from "./pages/categories";
+import Countries from "./pages/countries";
 
 
 function App() {
@@ -53,6 +55,9 @@ function App() {
               <Route path="proveedores" element={<Suppliers />} />
               <Route path="entradas" element={<Entries />} />
               <Route path="salidas" element={<Exits />} />
+              <Route path="categorias" element={<Categories />} />
+              <Route path="paises" element={<Countries />} />
+
 
               <Route
                   path="my-profile"
