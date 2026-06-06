@@ -1,13 +1,11 @@
-# Etapa 1: Build
-FROM node:22-alpine AS build
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
+FROM nginx:1.31.1-alpine
 
-# Etapa 2: Servidor Nginx
-FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
+# Copiar los archivos estáticos (Esto ya funciona)
+COPY ./dist /usr/share/nginx/html
+
+# CAMBIO AQUÍ: Apuntamos solo a la carpeta terminando con una barra "/"
+COPY nginx.conf /etc/nginx/conf.d/
+
 EXPOSE 80
+
 CMD ["nginx", "-g", "daemon off;"]

@@ -117,9 +117,12 @@ public class SecurityConfig {
                 "http://192.168.1.60:5173",
                 "http://localhost",
                 "http://127.0.0.1",
+                "http://192.168.1.60",
                 "http://localhost:3000"
         ));
+
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Cache-Control"));
         configuration.setAllowCredentials(true);
 
