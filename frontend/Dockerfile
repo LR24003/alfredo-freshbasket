@@ -1,10 +1,25 @@
-FROM nginx:1.31.1-alpine
 
-# Copiar los archivos estáticos (Esto ya funciona)
-COPY ./dist /usr/share/nginx/html
+FROM node:20-alpine AS build_stage
+WORKDIR /app
 
-# CAMBIO AQUÍ: Apuntamos solo a la carpeta terminando con una barra "/"
-COPY nginx.conf /etc/nginx/conf.d/
+
+COPY package*.json ./
+RUN npm install
+
+
+COPY . .
+RUN npm run build
+
+
+FROM nginx:1.25-alpine
+
+
+RUN rm -rf /usr/share/nginx/html/*
+
+
+COPY --from=build_stage /app/dist /usr/share/nginx/html
+
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 

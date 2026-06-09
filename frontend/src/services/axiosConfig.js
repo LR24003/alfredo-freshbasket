@@ -32,6 +32,10 @@ api.interceptors.response.use(
             const serverMessage = error.response.data?.message;
             const url = error.config.url || "";
 
+            if ((status === 403 || status === 400 || status === 401) && url.includes("/auth/login")) {
+                return Promise.reject(error);
+            }
+
             if (status === 403 && (url.includes("/api/users") || url.includes("/users"))) {
                 return Promise.reject(error);
             }
