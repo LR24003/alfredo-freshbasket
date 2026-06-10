@@ -5,7 +5,7 @@
 
 import axios from "../services/axiosConfig.js";
 
-const API_URL = "http://localhost:8080/api/products";
+const API_URL = "/api/products";
 
 // GET all products
 export const getAllProducts = async () => {

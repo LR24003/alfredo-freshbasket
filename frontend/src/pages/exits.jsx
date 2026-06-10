@@ -67,11 +67,11 @@ function Exits () {
         try {
 
             const promesas = [
-               axios.get("http://localhost:8080/api/products"),
+               axios.get("/api/products"),
             ];
 
             if (isAdminOrSupport) {
-                promesas.push(axios.get("http://localhost:8080/api/users"));
+                promesas.push(axios.get("/api/users"));
             }
 
             const resultados = await Promise.all(promesas);

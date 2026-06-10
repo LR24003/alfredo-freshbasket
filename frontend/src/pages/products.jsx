@@ -73,13 +73,13 @@ function Products() {
 
       // Lanzamos en paralelo solo Categorías y Proveedores
       const promesas = [
-        axios.get("http://localhost:8080/api/categories"),
-        axios.get("http://localhost:8080/api/suppliers")
+        axios.get("/api/categories"),
+        axios.get("/api/suppliers")
       ];
 
       // Si tiene permisos, agregamos la petición de usuarios a la cola
       if (esAdminOSoporte) {
-        promesas.push(axios.get("http://localhost:8080/api/users"));
+        promesas.push(axios.get("/api/users"));
       }
 
       const resultados = await Promise.all(promesas);

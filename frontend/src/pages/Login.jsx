@@ -14,7 +14,7 @@ function Login() {
         e.preventDefault();
         setLoading(true);
 
-    const BACKEND_URL = "http://localhost:8080/api/auth/login";
+    const BACKEND_URL = "/api/auth/login";
    try {
     const response = await axios.post(BACKEND_URL, { email, password });
      if (response.data) {

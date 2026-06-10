@@ -5,7 +5,7 @@
 
 import axios from "../services/axiosConfig.js";
 
-const API_URL = "http://localhost:8080/api/exits";
+const API_URL = "/api/exits";
 
 // GET all exits
 export const getAllExits = async () => {

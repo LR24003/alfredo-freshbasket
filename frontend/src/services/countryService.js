@@ -1,7 +1,7 @@
 import axios from "../services/axiosConfig.js";
 
 // Conexión con el backend
-const API_URL = "http://localhost:8080/api/countries";
+const API_URL = "/api/countries";
 
 // GET all Countries
 export const getAllCountries = async () => {

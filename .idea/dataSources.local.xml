@@ -6,5 +6,10 @@
       <user-name>postgres</user-name>
       <schema-mapping />
     </data-source>
+    <data-source name="Freshbasket_BD@database" uuid="ee1a5857-8756-4e39-9a3a-a5787b9ed171">
+      <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="POSTGRES" />
+      <auth-provider>no-auth</auth-provider>
+      <schema-mapping />
+    </data-source>
   </component>
 </project>

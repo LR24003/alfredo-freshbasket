@@ -77,7 +77,7 @@ function Suppliers() {
   const loadDependencies = async () => {
     try {
       const [resCountry] = await Promise.all([
-        axios.get("http://localhost:8080/api/countries")
+        axios.get("/api/countries")
       ]);
 
       setCountriesList(resCountry.data || []);

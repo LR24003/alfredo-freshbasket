@@ -6,7 +6,7 @@
 import axios from "../services/axiosConfig.js";
 
 // Conexión con el backend
-const API_URL = "http://localhost:8080/api/suppliers";
+const API_URL = "/api/suppliers";
 
 // GET all suppliers
 export const getAllSuppliers = async () => {

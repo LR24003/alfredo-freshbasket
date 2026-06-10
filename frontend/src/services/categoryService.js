@@ -6,7 +6,7 @@
 import axios from "../services/axiosConfig.js";
 
 // Conexión con el backend
-const API_URL = "http://localhost:8080/api/categories";
+const API_URL = "/api/categories";
 
 // GET all categories
 export const getAllCategories = async () => {
