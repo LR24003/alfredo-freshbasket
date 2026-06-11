@@ -175,20 +175,25 @@ function Products() {
           imageUrl: prod.imageUrl || "",
           categoryName: prod.categoryName || "",
           supplierName: prod.supplierName || "",
-          userName: prod.userName || userLogin
+
+          createdBy: prod.createdBy || prod.userName || "Sistema / Desconocido",
+
+          userName: userLogin
         });
         toast.success("¡Producto cargado con éxito!");
       } else {
         setFormData({
           productId: targetValue, name: "", price: "", currentStock: "",
-          description: "", imageUrl: "", categoryName: "", supplierName: "", userName: userLogin
+          description: "", imageUrl: "", categoryName: "", supplierName: "",
+          createdBy: "", userName: userLogin
         });
         toast.error("No se encontró el producto con ese ID");
       }
     } catch (error) {
       setFormData({
         productId: targetValue, name: "", price: "", currentStock: "",
-        description: "", imageUrl: "", categoryName: "", supplierName: "", userName: userLogin
+        description: "", imageUrl: "", categoryName: "", supplierName: "",
+        createdBy: "", userName: userLogin
       });
       toast.error("No se encontró el producto con ese ID.");
     }
@@ -246,9 +251,11 @@ function Products() {
         return;
       }
 
+
       const updatedData = {
         ...formData,
         userName: userLogin,
+        createdBy: productCheck.userName || productCheck.createdBy || "Sistema",
         price: formData.price ? parseFloat(formData.price) : 0.0,
         currentStock: formData.currentStock ? parseInt(formData.currentStock, 10) : 0
       };
@@ -258,7 +265,9 @@ function Products() {
 
       setFormData({
         productId: "", name: "", price: "", currentStock: "", description: "",
-        imageUrl: "", categoryName: "", supplierName: "", userName: userLogin
+        imageUrl: "", categoryName: "", supplierName: "",
+        userName: userLogin,
+        createdBy: ""
       });
 
       setEditSearchId("");
@@ -269,7 +278,8 @@ function Products() {
       }, 300);
 
     } catch (error) {
-      toast.error(`No se pudo actualizar: El producto con ID ${formData.productId}.`);
+      console.error(error);
+      toast.error(`No se pudo actualizar el producto con ID ${formData.productId}.`);
     }
   };
 
@@ -544,39 +554,34 @@ function Products() {
                       {categoriesList.map((c, i) => <option key={i} value={c.name} />)}
                     </datalist>
                   </div>
+              </div>
+              <div className="fb-crud-field">
+                <label className="fb-crud-label">Proveedor</label>
+                <div className="fb-crud-input-wrap">
+                  <i className="bi bi-truck fb-crud-input-icon" />
+                  <input type="text" name="supplierName" list="update-sups-options" className="fb-crud-input" value={formData.supplierName || ""} onChange={handleChange} required />
+                  <datalist id="update-sups-options">{suppliersList.map((s, i) => <option key={i} value={`${s.name || ""} ${s.lastName || ""}`.trim()} />)}</datalist>
                 </div>
-
+              </div>
+              <div className="fb-crud-field">
+                <label className="fb-crud-label">Descripción</label>
+                <div className="fb-crud-input-wrap">
+                  <i className="bi bi-justify-left fb-crud-input-icon" />
+                  <input type="text" name="description" className="fb-crud-input" value={formData.description || ""} onChange={handleChange} required />
+                </div>
+              </div>
+              <div className="fb-crud-field">
+                <label className="fb-crud-label">Registrado por:</label>
+                <div className="fb-crud-input-wrap">
+                  <i className="bi bi-person-badge fb-crud-input-icon" />
+                  <input type="text" className="fb-crud-input" style={{ backgroundColor: "#e9ecef", color: "#6c757d" }} value={formData.createdBy || "Usuario que registró"} readOnly disabled />
+                </div>
+              </div>
                 <div className="fb-crud-field">
-                  <label className="fb-crud-label">Proveedor</label>
+                  <label className="fb-crud-label">Actualizado por:</label>
                   <div className="fb-crud-input-wrap">
-                    <i className="bi bi-truck fb-crud-input-icon" />
-                    <input type="text" name="supplierName" list="update-sups-options" className="fb-crud-input" value={formData.supplierName || ""} onChange={handleChange} required autoComplete="off" />
-                    <datalist id="update-sups-options">
-                      {suppliersList.map((s, i) => (
-                        <option key={i} value={`${s.name || ""} ${s.lastName || ""}`.trim()} />
-                      ))}
-                    </datalist>
-                  </div>
-                </div>
-
-                <div className="fb-crud-field">
-                  <label className="fb-crud-label">Registrado por</label>
-                  <div className="fb-crud-input-wrap">
-                    <i className="bi bi-person-badge fb-crud-input-icon" />
-                    <input type="text" name="userName" list="update-users-options" className="fb-crud-input" value={formData.userName || ""} onChange={handleChange} required autoComplete="off" />
-                    <datalist id="update-users-options">
-                      {usersList.map((u, i) => (
-                        <option key={i} value={`${u.name || u.username} ${u.lastName || ""}`.trim()} />
-                      ))}
-                    </datalist>
-                  </div>
-                </div>
-
-                <div className="fb-crud-field" style={{ gridColumn: "span 2" }}>
-                  <label className="fb-crud-label">Descripción</label>
-                  <div className="fb-crud-input-wrap">
-                    <i className="bi bi-justify-left fb-crud-input-icon" />
-                    <input type="text" name="description" className="fb-crud-input" value={formData.description || ""} onChange={handleChange} required />
+                    <i className="bi bi-person-check-fill fb-crud-input-icon" />
+                    <input type="text" className="fb-crud-input" style={{ backgroundColor: "#e9ecef", fontWeight: "bold" }} value={userLogin || ""} readOnly disabled />
                   </div>
                 </div>
               </div>

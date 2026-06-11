@@ -224,13 +224,13 @@ function Freshbasket({ onLogout }) {
         { key: "id",     icon: "bi-tag-fill",         label: "Buscar por ID" }
       ] : []),
       ...(tieneAcceso(userRole, "crear") ? [
-        { key: "create", icon: "bi-plus-circle-fill", label: "Registrarun  pais" }
+        { key: "create", icon: "bi-plus-circle-fill", label: "Registrar pais" }
       ] : []),
       ...(tieneAcceso(userRole, "actualizar") ? [
-        { key: "update", icon: "bi-pencil-square",    label: "Actualizar un pais" }
+        { key: "update", icon: "bi-pencil-square",    label: "Actualizar pais" }
       ] : []),
       ...(tieneAcceso(userRole, "eliminar") ? [
-        { key: "delete", icon: "bi-trash3-fill",      label: "Eliminar un pais" }
+        { key: "delete", icon: "bi-trash3-fill",      label: "Eliminar pais" }
       ] : [])
     ];
   }, [userRole]);

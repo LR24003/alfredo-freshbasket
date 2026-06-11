@@ -128,7 +128,7 @@ public class UserController {
         return ResponseEntity.ok(userService.searchUsersByName(name));
     }
 
-    // 📡 GET /api/users/me -> Devuelve los datos exactos del usuario logueado
+
     @GetMapping("/me")
     public ResponseEntity<UserResponseDTO> getMyProfile(Principal principal) {
         String email = principal.getName();
