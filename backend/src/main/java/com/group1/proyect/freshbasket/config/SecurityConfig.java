@@ -96,6 +96,8 @@ public class SecurityConfig {
 
                 // Rutas para Users
                 .requestMatchers(HttpMethod.GET, "/api/users/**").hasAnyAuthority("ADMINISTRADOR", "SOPORTE")
+                .requestMatchers(HttpMethod.PUT, "/api/users/**").hasAnyAuthority("ADMINISTRADOR", "SOPORTE")
+                .requestMatchers(HttpMethod.POST, "/api/users/**").hasAnyAuthority("ADMINISTRADOR", "SOPORTE")
                 .requestMatchers("/api/users/**").hasAuthority("ADMINISTRADOR")
 
 

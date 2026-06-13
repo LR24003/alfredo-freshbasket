@@ -1,11 +1,9 @@
-// Página de registro, en el caso de que un usuario no tenga cuenta.
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../services/axiosConfig.js";
 import toast from "react-hot-toast";
 import "../styles/register.css";
-import { registerUserPublic } from "../services/userService.js";
 
 function Register() {
   const navigate = useNavigate();
@@ -113,7 +111,6 @@ function Register() {
             <div className="col-md-8 bg-white register-form">
               <div className="card-body p-3 p-md-4">
                 <h2 className="text-center mb-3 text-success fw-bold">Crear Cuenta</h2>
-
                 <form onSubmit={handleSubmit}>
                   {/* Fila: Nombre y Apellido */}
                   <div className="row">
@@ -147,7 +144,7 @@ function Register() {
                         />
                         <datalist id={`countries-options-${countriesList.length}`}>
                           {Array.isArray(countriesList) && countriesList.map((c, idx) => (
-                              <option key={c.id || c.country_id || idx} value={c.name} />
+                              <option key={c.id || c.countryId || c.country_id || idx} value={c.name || c.countryName} />
                           ))}
                         </datalist>
                       </div>
@@ -196,7 +193,6 @@ function Register() {
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </div>
