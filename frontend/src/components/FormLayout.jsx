@@ -29,8 +29,14 @@ function FormLayout({
     const [formData, setFormData] = useState({});
     const [idToLoad, setIdToLoad] = useState("");
 
-    // Instanciamos TanStack Query automáticamente para el recurso actual
-    const entity = useEntity(resource);
+    // Verifica si el usuario actual es un cliente con permisos limitados
+    const isGenuineClient = userRole === "CLIENTE" || userRole === "CLIENT" || userRole === "USUARIO";
+    const shouldLoadResource = !isGenuineClient || resource === "products" || resource === "productos";
+
+    // Instanciación de TanStack Query automáticamente para el recurso actual
+    const entity = useEntity(resource, {
+        enabled: shouldLoadResource && activeTab !== "home"
+    });
     const dataList = entity.list.data || [];
 
     // Helper para extraer el ID
@@ -83,7 +89,7 @@ function FormLayout({
         const encontrado = dataList.find(item => String(getItemId(item)) === String(idToLoad.trim()));
 
         if (!encontrado) {
-            toast.error(`No se encontró ningún ${title} con el ID ${idToLoad}.`);
+            toast.error(`No se encontró ${article === "la" ? "la" : "el"} ${title} con el ID ${idToLoad}.`);
             setFormData({});
         } else {
             setFormData({
@@ -105,7 +111,7 @@ function FormLayout({
         });
 
         if (filtrados.length === 0) {
-            toast.error(`No se encontró ningún ${title} con ese criterio.`);
+            toast.error(`${article === "la" ? "La" : "el"} ${title} con ese nombre no existe.`);
         }
         setFilteredByName(filtrados);
     };
@@ -117,7 +123,7 @@ function FormLayout({
 
         const encontrado = dataList.find(item => String(getItemId(item)) === String(searchId.trim()));
         if (!encontrado) {
-            toast.error(`El ${title} con ese ID no existe.`);
+            toast.error(`${article === "la" ? "La" : "el"} ${title} no existe con ese ID.`);
             setFilteredById(null);
         } else {
             setFilteredById(encontrado);
@@ -147,7 +153,7 @@ function FormLayout({
             toast.success(`¡${title.charAt(0).toUpperCase() + title.slice(1)} creado con éxito!`);
             e.target.reset();
         } catch (error) {
-            toast.error(`Error al registrar el ${title}.`);
+            toast.error(`Error al registrar ${article === "la" ? "la" : "el"} ${title}`);
         }
     };
 
@@ -156,7 +162,7 @@ function FormLayout({
         e.preventDefault();
         const currentId = formData.id;
         if (!currentId) return toast.error(
-            "Por favor, carga un registro usando el botón 'Cargar' antes de guardar.");
+            "Por favor, carga un ID valido usando el botón 'Cargar' antes de guardar.");
 
         try {
             await entity.update.mutateAsync({ id: currentId, data: formData });
@@ -164,7 +170,7 @@ function FormLayout({
             setFormData({});
             setIdToLoad("");
         } catch (error) {
-            const mensajeError = error.response?.data?.message || "Error al actualizar el registro.";
+            const mensajeError = error.response?.data?.message || `Error al actualizar ${article === "la" ? "la" : "el"} ${title}`;
             toast.error(mensajeError);
         }
     };
@@ -422,7 +428,7 @@ function FormLayout({
                     toast.dismiss(t.id);
                      try {
                       await entity.remove.mutateAsync(idValue);
-                         toast.success(`${article === "la" ? "la" : "el"} ${title} ha sido eliminado correctamente.`);
+                         toast.success(`${article === "la" ? "La" : "el"} ${title} ha sido eliminado correctamente.`);
                         e.target.reset();
                         } catch {
                          toast.error("Error al eliminar el registro.");

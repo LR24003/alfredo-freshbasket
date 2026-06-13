@@ -15,7 +15,7 @@ function Login({ setIsAuthenticated }) {
     const loginMutation = useMutation({
         mutationFn: () => authService.login(email, password),
         onSuccess: (data) => {
-            //Saludo de bienvenida
+            // Saludo de bienvenida
             const nombreCompleto = data.userName || localStorage.getItem("userName") || "Usuario";
             toast.success(`¡Bienvenid@ ${nombreCompleto}! Sesión iniciada con éxito.`);
 
@@ -30,13 +30,16 @@ function Login({ setIsAuthenticated }) {
         onError: (error) => {
             if (error.response) {
                 const status = error.response.status;
-                if (status === 401 || status === 400 || status === 403) {
+
+                if (status === 502 || status === 503) {
+                    toast.error("El servidor de autenticación está en mantenimiento o caído. Intenta más tarde.");
+                } else if (status === 401 || status === 400 || status === 403) {
                     toast.error("Correo electrónico o contraseña incorrectos. Por favor intenta de nuevo.");
                 } else {
                     toast.error("Ocurrió un error en el servidor. Intenta más tarde.");
                 }
             } else {
-                toast.error("No se pudo conectar con el servidor.");
+                toast.error("No se pudo conectar con el servidor. Revisa tu conexión de red.");
             }
         }
     });
@@ -44,6 +47,7 @@ function Login({ setIsAuthenticated }) {
     // Declaramos la funcion handleLogin para pasarle los datos del formulario de inicio de sesion
     const handleLogin = (e) => {
         e.preventDefault();
+        if (loginMutation.isPending) return;
         loginMutation.mutate();
     };
 
@@ -83,6 +87,7 @@ function Login({ setIsAuthenticated }) {
                                                 <input
                                                     id="email"
                                                     type="email"
+                                                    autocomplete="username"
                                                     className="form-control"
                                                     placeholder="correo@ejemplo.com"
                                                     value={email}
@@ -107,6 +112,7 @@ function Login({ setIsAuthenticated }) {
                                                     onChange={(e) => setPassword(e.target.value)}
                                                     required
                                                     disabled={loginMutation.isPending}
+                                                    autocomplete="current-password"
                                                 />
                                             </div>
 

@@ -20,12 +20,18 @@ import Exits from "./pages/exits";
 import Categories from "./pages/categories";
 import Countries from "./pages/countries";
 
-// Creación del cliente global de Queries
+// Creación del cliente global de Queries y silenciador de errores cuando un usuario no tiene permisos
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
             staleTime: 1000 * 60 * 1,
             refetchOnWindowFocus: false,
+            retry: (failureCount, error) => {
+                if (error?.response?.status === 502 || error?.status === 502) {
+                    return false;
+                }
+                return failureCount < 2;
+            },
         },
     },
 });
