@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "products")
-public class Product {
+public class Product implements Identifiable<Long> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,6 +34,10 @@ public class Product {
     @NotNull(message = "La cantidad es obligatorio")
     @Column(nullable = false)
     private Integer currentStock;
+
+    @Min(value = 1, message = "El stock mínimo no puede ser negativo")
+    @Column(name = "min_stock", nullable = false)
+    private Integer minStock = 5;
 
     @Size(max = 500)
     @NotBlank(message = "La descripción es obligatoria")

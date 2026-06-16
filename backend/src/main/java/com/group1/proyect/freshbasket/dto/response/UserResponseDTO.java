@@ -28,11 +28,7 @@ public class UserResponseDTO {
 
     @Schema(description = "Rol del usuario", example = "ADMINISTRADOR, USUARIO, SOPORTE")
     private String role;
-
-    //Con Password encoder logramos que la contraseña no se muestre en texto plano
-    @Schema(description = "Contraseña del usuario", example = "JDPEOD34#&TEmxr")
-    private String password;
-
+    
    @Schema(description = "ID del país", example = "1")
     private Long countryId;
 

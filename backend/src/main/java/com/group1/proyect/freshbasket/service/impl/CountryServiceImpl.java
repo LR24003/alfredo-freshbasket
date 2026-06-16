@@ -2,10 +2,7 @@ package com.group1.proyect.freshbasket.service.impl;
 
 import com.group1.proyect.freshbasket.dto.request.CountryRequestDTO;
 import com.group1.proyect.freshbasket.dto.response.CountryResponseDTO;
-import com.group1.proyect.freshbasket.dto.response.UserResponseDTO;
 import com.group1.proyect.freshbasket.entity.Country;
-import com.group1.proyect.freshbasket.entity.Exit;
-import com.group1.proyect.freshbasket.entity.User;
 import com.group1.proyect.freshbasket.repository.CountryRepository;
 import com.group1.proyect.freshbasket.service.CountryService;
 import org.springframework.stereotype.Service;
@@ -16,90 +13,75 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
-public class CountryServiceImpl implements CountryService {
+public class CountryServiceImpl extends GenericServiceImpl<Country,
+        CountryRequestDTO, CountryResponseDTO, Long> implements CountryService {
 
     private final CountryRepository countryRepository;
 
-    public CountryServiceImpl(CountryRepository countryRepository ) {
+    public CountryServiceImpl(CountryRepository countryRepository) {
+        super(countryRepository);
         this.countryRepository = countryRepository;
     }
 
-    // DTO → Entity
-    private Country convertToEntity(CountryRequestDTO dto) {
-        Country country = new Country();
-        country.setName(dto.getName());
-        country.setDescription(dto.getDescription());
-
-        return country;
-
-    }
-
-    // Entity → DTO
-    private CountryResponseDTO convertToDTO(Country country) {
+    @Override
+    protected CountryResponseDTO convertToResponseDto(Country country) {
         CountryResponseDTO dto = new CountryResponseDTO();
-
         dto.setId(country.getId());
         dto.setName(country.getName());
         dto.setDescription(country.getDescription());
-
         return dto;
     }
 
     @Override
-    public List<CountryResponseDTO> getAllCountries() {
+    protected Country convertToEntity(CountryRequestDTO dto) {
+        Country country = new Country();
+        country.setName(dto.getName() != null ? dto.getName().trim() : null);
+        country.setDescription(dto.getDescription() != null ? dto.getDescription().trim() : null);
+        return country;
+    }
+
+    @Override
+    protected void updateEntityFromDto(CountryRequestDTO dto, Country country) {
+        country.setName(dto.getName() != null ? dto.getName().trim() : country.getName());
+        country.setDescription(dto.getDescription() != null ? dto.getDescription().trim() : country.getDescription());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CountryResponseDTO> getAll() {
         return countryRepository.findByActiveTrue()
                 .stream()
-                .filter(Country::isActive)
-                .map(this::convertToDTO)
+                .map(this::convertToResponseDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public CountryResponseDTO getCountryById(Long id) {
+    public CountryResponseDTO getById(Long id) {
         return countryRepository.findById(id)
                 .filter(Country::isActive)
-                .map(this::convertToDTO)
-                .orElseThrow(() -> new RuntimeException("Pais no encontrado con ese ID: " + id));
-    }
-
-    @Override
-    public CountryResponseDTO createCountry(CountryRequestDTO requestDTO) {
-        Country country = convertToEntity(requestDTO);
-        Country savedCountry = countryRepository.save(country);
-        return convertToDTO(savedCountry);
-    }
-
-    @Override
-    public CountryResponseDTO updateCountry(Long id, CountryRequestDTO requestDTO) {
-        return countryRepository.findById(id)
-                .map(existingCountry -> {
-
-                    existingCountry.setName(requestDTO.getName());
-                    existingCountry.setDescription(requestDTO.getDescription());
-
-                    return countryRepository.save(existingCountry);
-                })
-                .map(this::convertToDTO)
+                .map(this::convertToResponseDto)
                 .orElseThrow(() -> new RuntimeException("País no encontrado con ese ID: " + id));
     }
 
     @Override
-    @Transactional // Importante: org.springframework.transaction.annotation.Transactional
-    public void deleteCountry(Long id) {
+    @Transactional
+    public void delete(Long id) {
         Country country = countryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("País no encontrado con ese ID: " + id));
 
         country.setActive(false);
+        countryRepository.save(country);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CountryResponseDTO> searchCountriesByName(String name) {
-        return countryRepository.findByNameContainingIgnoreCase(name)
+        String cleanName = name != null ? name.trim() : "";
+        return countryRepository.findByNameContainingIgnoreCase(cleanName)
                 .stream()
-                .filter(Country::isActive)
-                .map(this::convertToDTO)
+                .filter(Country::isActive) // Mantenemos tu filtro de seguridad operativo
+                .map(this::convertToResponseDto)
                 .collect(Collectors.toList());
     }
-
 }

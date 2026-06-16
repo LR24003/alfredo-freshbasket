@@ -1,7 +1,8 @@
-
 import "../styles/freshbasket.css";
 import { tieneAcceso } from "../Config/permissions";
+import { NotificationBell } from "../components/NotificationBell";
 import Profile from "./profile.jsx";
+import { useStockAlerts } from "../hooks/useStockAlerts";
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
 
@@ -21,6 +22,8 @@ function Freshbasket({ onLogout }) {
   const [openMenus, setOpenMenus] = React.useState({
     [location.pathname.split("/")[2]]: true
   });
+
+  const isAdmin = userRole === "ADMINISTRADOR" || userRole === "ADMIN";
 
   // Helper para obtener la pestaña activa real del módulo actual en el localStorage
   const getActiveTabForCurrentModule = (path) => {
@@ -283,13 +286,13 @@ function Freshbasket({ onLogout }) {
 
               const subItemsArr =
                   item.key === "productos" ? productSubItems :
-                  item.key === "usuarios" ? userSubItems :
-                  item.key === "proveedores" ? supplierSubItems :
-                  item.key === "entradas" ? entrySubItems :
-                  item.key === "salidas" ? exitSubItems :
-                  item.key === "categorias" ? categorySubItems :
-                  item.key === "paises" ? countrySubItems :
-                [];
+                      item.key === "usuarios" ? userSubItems :
+                          item.key === "proveedores" ? supplierSubItems :
+                              item.key === "entradas" ? entrySubItems :
+                                  item.key === "salidas" ? exitSubItems :
+                                      item.key === "categorias" ? categorySubItems :
+                                          item.key === "paises" ? countrySubItems :
+                                              [];
 
               return (
                   <div key={item.key} style={{ width: "100%" }}>
@@ -336,48 +339,48 @@ function Freshbasket({ onLogout }) {
                     {/* SUB-MENÚ DINÁMICO */}
                     {item.hasSubmenu && isMenuOpen && subItemsArr.length > 0 && (
                         <div className="fb-sidebar-submenu" style={{ paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.25rem", marginTop: "0.25rem" }}>
-                        {subItemsArr.map((sub) => {
-                         const storageKey =
-                            item.key === "productos" ? "active_products_Tab" :
-                            item.key === "usuarios" ? "active_users_Tab" :
-                            item.key === "proveedores" ? "active_suppliers_Tab" :
-                            item.key === "entradas" ? "active_entries_Tab" :
-                            item.key === "salidas" ? "active_exits_Tab" :
-                            item.key === "categorias" ? "active_categories_Tab" :
-                            item.key === "paises" ? "active_countries_Tab" : "";
+                          {subItemsArr.map((sub) => {
+                            const storageKey =
+                                item.key === "productos" ? "active_products_Tab" :
+                                    item.key === "usuarios" ? "active_users_Tab" :
+                                        item.key === "proveedores" ? "active_suppliers_Tab" :
+                                            item.key === "entradas" ? "active_entries_Tab" :
+                                                item.key === "salidas" ? "active_exits_Tab" :
+                                                    item.key === "categorias" ? "active_categories_Tab" :
+                                                        item.key === "paises" ? "active_countries_Tab" : "";
 
-                         const currentActiveTab = localStorage.getItem(storageKey) || "none";
-                         const isSubActive = currentActiveTab === sub.key;
-                        return (
-                            <button
-                               key={sub.key}
-                               className="fb-nav-item"
-                               style={{
-                               fontSize: "0.85rem", padding: "0.5rem 0.75rem", background: isSubActive ? "rgba(255,255,255,0.1)" : "transparent",
-                               border: "none", fontWeight: isSubActive ? "bold" : "normal"
-                               }}
-                               onClick={() => {
-                           const tabKeys = {
-                               productos: { storage: "active_products_Tab", event: "productsTabChanged" },
-                               usuarios: { storage: "active_users_Tab", event: "usersTabChanged" },
-                               proveedores: { storage: "active_suppliers_Tab", event: "suppliersTabChanged" },
-                               entradas: { storage: "active_entries_Tab", event: "entriesTabChanged" },
-                               salidas: { storage: "active_exits_Tab", event: "exitsTabChanged" },
-                               categorias: { storage: "active_categories_Tab", event: "categoriesTabChanged" },
-                               paises: { storage: "active_countries_Tab", event: "countriesTabChanged" }
-                               };
-                           const currentConfig = tabKeys[item.key];
-                            if (currentConfig) {
-                            localStorage.setItem(currentConfig.storage, sub.key);
-                            window.dispatchEvent(new Event(currentConfig.event));
-                            }
-                          navigate(item.path);
-                           }}
-                          >
-                          <i className={`bi ${sub.icon}`} style={{ marginRight: "0.5rem", fontSize: "1rem" }} />
-                          <span>{sub.label}</span>
-                          </button>
-                          );
+                            const currentActiveTab = localStorage.getItem(storageKey) || "none";
+                            const isSubActive = currentActiveTab === sub.key;
+                            return (
+                                <button
+                                    key={sub.key}
+                                    className="fb-nav-item"
+                                    style={{
+                                      fontSize: "0.85rem", padding: "0.5rem 0.75rem", background: isSubActive ? "rgba(255,255,255,0.1)" : "transparent",
+                                      border: "none", fontWeight: isSubActive ? "bold" : "normal"
+                                    }}
+                                    onClick={() => {
+                                      const tabKeys = {
+                                        productos: { storage: "active_products_Tab", event: "productsTabChanged" },
+                                        usuarios: { storage: "active_users_Tab", event: "usersTabChanged" },
+                                        proveedores: { storage: "active_suppliers_Tab", event: "suppliersTabChanged" },
+                                        entradas: { storage: "active_entries_Tab", event: "entriesTabChanged" },
+                                        salidas: { storage: "active_exits_Tab", event: "exitsTabChanged" },
+                                        categorias: { storage: "active_categories_Tab", event: "categoriesTabChanged" },
+                                        paises: { storage: "active_countries_Tab", event: "countriesTabChanged" }
+                                      };
+                                      const currentConfig = tabKeys[item.key];
+                                      if (currentConfig) {
+                                        localStorage.setItem(currentConfig.storage, sub.key);
+                                        window.dispatchEvent(new Event(currentConfig.event));
+                                      }
+                                      navigate(item.path);
+                                    }}
+                                >
+                                  <i className={`bi ${sub.icon}`} style={{ marginRight: "0.5rem", fontSize: "1rem" }} />
+                                  <span>{sub.label}</span>
+                                </button>
+                            );
                           })}
                         </div>
                     )}
@@ -397,41 +400,53 @@ function Freshbasket({ onLogout }) {
               </h2>
               <p style={{ margin: 0 }} className="fb-top-sub">Bienvenido/a </p>
             </div>
-            <div className="fb-top-right fb-profile-container" ref={profileRef}>
-              <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="fb-logout-btn fb-profile-trigger-btn">
-                <i className="bi bi-person-circle fb-profile-icon" />
-                <span>Perfil</span>
-                <i className={`bi ${showProfileMenu ? "bi-chevron-up" : "bi-chevron-down"} fb-profile-arrow`} />
-              </button>
-              {showProfileMenu && (
-                  <div className="fb-profile-dropdown">
-                    <div className="fb-profile-header">
-                  <span className={`fb-role-badge ${userRole.toUpperCase()}`}>
-                    {userRole}
-                  </span>
-                      <h6 className="fb-profile-name fw-bold text-dark mt-2 mb-1" style={{ fontSize: "0.95rem" }}>
-                        {localStorage.getItem("userName") || "Usuario Registrado"}
-                      </h6>
-                      <p className="fb-profile-email">
-                        <i className="bi bi-envelope-fill" /> {userEmail}
-                      </p>
-                    </div>
-                    <button
-                        onClick={() => {
-                          navigate("my-profile");
-                          setShowProfileMenu(false);
-                        }}
-                        className="fb-profile-edit-btn fb-profile-edit-action-btn mb-2"
-                        style={{ width: "100%", textAlign: "left" }}
-                    >
-                      <i className="bi bi-gear-fill" /> Actualizar datos
-                    </button>
 
-                    <button onClick={handleLogout} className="fb-logout-btn fb-profile-logout-action-btn">
-                      <i className="bi bi-box-arrow-left" /> Cerrar sesión
-                    </button>
-                  </div>
-              )}
+            {/* SECCIÓN DERECHA DE LA TOPBAR */}
+            <div className="fb-top-right">
+              <NotificationBell isAdmin={isAdmin} />
+
+              {/* CONTENEDOR DE PERFIL */}
+              <div className="fb-profile-container" ref={profileRef} style={{ position: "relative" }}>
+                <button
+                    onClick={() => setShowProfileMenu(!showProfileMenu)}
+                    className="fb-logout-btn fb-profile-trigger-btn"
+                >
+                  <i className="bi bi-person-circle fb-profile-icon" />
+                  <span>Perfil</span>
+                  <i className={`bi ${showProfileMenu ? "bi-chevron-up" : "bi-chevron-down"} fb-profile-arrow`} />
+                </button>
+
+                {showProfileMenu && (
+                    <div className="fb-profile-dropdown">
+                      <div className="fb-profile-header">
+              <span className={`fb-role-badge ${userRole.toUpperCase()}`}>
+                {userRole}
+              </span>
+                        <h6 className="fb-profile-name fw-bold text-dark mt-2 mb-1" style={{ fontSize: "0.95rem" }}>
+                          {localStorage.getItem("userName") || "Usuario Registrado"}
+                        </h6>
+                        <p className="fb-profile-email">
+                          <i className="bi bi-envelope-fill" /> {userEmail}
+                        </p>
+                      </div>
+
+                      <button
+                          onClick={() => {
+                            navigate("my-profile");
+                            setShowProfileMenu(false);
+                          }}
+                          className="fb-profile-edit-btn fb-profile-edit-action-btn mb-2"
+                          style={{ width: "100%", textAlign: "left" }}
+                      >
+                        <i className="bi bi-gear-fill" /> Actualizar datos
+                      </button>
+
+                      <button onClick={handleLogout} className="fb-logout-btn fb-profile-logout-action-btn">
+                        <i className="bi bi-box-arrow-left" /> Cerrar sesión
+                      </button>
+                    </div>
+                )}
+              </div>
             </div>
           </div>
 

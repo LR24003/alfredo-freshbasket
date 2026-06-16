@@ -13,7 +13,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "suppliers")
-public class Supplier {
+public class Supplier implements Identifiable<Long> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,7 +25,7 @@ public class Supplier {
     @Column(nullable = false, length = 100)
     private String name;
 
-   @Size(max = 100)
+    @Size(max = 100)
     @NotBlank(message = "El contacto es obligatorio")
     @Column(length = 100)
     private String lastName;
@@ -49,8 +49,8 @@ public class Supplier {
     @Column(name = "active", nullable = false)
     private boolean active = true;
 
-    //Relacion con paises ya que un pais tiene muchos proveedores
-    @ManyToOne
+    // Relación con países ya que un país tiene muchos proveedores
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "country_id")
     private Country country;
 

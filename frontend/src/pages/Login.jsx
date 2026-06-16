@@ -87,7 +87,7 @@ function Login({ setIsAuthenticated }) {
                                                 <input
                                                     id="email"
                                                     type="email"
-                                                    autocomplete="username"
+                                                    autoComplete="username"
                                                     className="form-control"
                                                     placeholder="correo@ejemplo.com"
                                                     value={email}
@@ -112,7 +112,7 @@ function Login({ setIsAuthenticated }) {
                                                     onChange={(e) => setPassword(e.target.value)}
                                                     required
                                                     disabled={loginMutation.isPending}
-                                                    autocomplete="current-password"
+                                                    autoComplete="current-password"
                                                 />
                                             </div>
 

@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import java.math.BigDecimal;
+
 @Getter
 @Setter
 @Builder
@@ -26,12 +27,18 @@ public class ProductRequestDTO {
     @Min(value = 0, message = "El stock debe ser mayor o igual a 0")
     private Integer currentStock;
 
+    @NotNull(message = "El stock minimo es obligatorio")
+    @Schema(description = "Stock minimo disponible", example = "5")
+    private Integer minStock;
+
     @Schema(description = "Descripción del producto", example = "Manzana fresca importada")
     private String description;
 
-    //URL de la imagen
     @Schema(description = "URL de la imagen del producto", example = "https://miapp.com/img/manzana.jpg")
     private String imageUrl;
+
+    @Schema(description = "Indica si el producto está activo", example = "true")
+    private boolean active = true;
 
     @Schema(description = "Nombre de la categoría", example = "Frutas")
     @NotNull(message = "El nombre de la categoría es obligatorio")
@@ -44,5 +51,4 @@ public class ProductRequestDTO {
     @Schema(description = "Nombre del usuario", example = "Juan Martinez")
     @NotNull(message = "El nombre del usuario es obligatorio")
     private String userName;
-
 }

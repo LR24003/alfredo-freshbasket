@@ -1,12 +1,10 @@
 package com.group1.proyect.freshbasket.entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.*;
-
 import java.time.LocalDateTime;
+import lombok.*;
 
 @Entity
 @Getter
@@ -14,15 +12,16 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "exits")
-public class Exit {
+
+public class Exit implements Identifiable<Long> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "exit_id")
     private Long id;
 
-    @Min(1)
-    @NotNull(message = "El valor es obligatorio")
+    @NotNull(message = "La cantidad es obligatoria")
+    @Min(value = 1, message = "La cantidad debe ser mayor a 0")
     @Column(nullable = false)
     private Integer quantity;
 
@@ -30,14 +29,14 @@ public class Exit {
     @Column(name = "exit_date", nullable = false, updatable = false)
     private LocalDateTime exitDate;
 
-    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
+    @JsonIgnore
     private Product product;
 
-    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     @Column(name = "active", nullable = false)
@@ -45,7 +44,6 @@ public class Exit {
 
     @PrePersist
     protected void onCreate() {
-        exitDate = LocalDateTime.now();
+        this.exitDate = LocalDateTime.now();
     }
-
 }

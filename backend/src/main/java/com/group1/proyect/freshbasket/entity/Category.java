@@ -13,7 +13,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "categories")
-public class Category {
+public class Category implements Identifiable<Long> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,7 +33,6 @@ public class Category {
     @Column(name = "active", nullable = false)
     private boolean active = true;
 
-    // Relación 1:N: Una categoría tiene muchos productos
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Product> products = new ArrayList<>();

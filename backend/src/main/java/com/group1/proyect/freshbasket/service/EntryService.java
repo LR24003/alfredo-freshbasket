@@ -2,20 +2,9 @@ package com.group1.proyect.freshbasket.service;
 
 import com.group1.proyect.freshbasket.dto.request.EntryRequestDTO;
 import com.group1.proyect.freshbasket.dto.response.EntryResponseDTO;
-import org.springframework.stereotype.Service;
+import com.group1.proyect.freshbasket.entity.Entry;
 
-import java.util.List;
+public interface EntryService extends GenericService<Entry,
+        EntryRequestDTO, EntryResponseDTO, Long> {
 
-@Service
-public interface EntryService {
-
-    List<EntryResponseDTO> getAllEntries();
-
-    EntryResponseDTO getEntryById(Long id);
-
-    EntryResponseDTO createEntry(EntryRequestDTO requestDTO);
-
-    EntryResponseDTO updateEntry(Long id, EntryRequestDTO requestDTO);
-
-    void deleteEntry(Long id);
 }

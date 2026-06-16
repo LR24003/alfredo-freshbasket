@@ -4,7 +4,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.Map;
 
-// Extraemos los datos del usuario logueado para la tabla de auditoría
 public class SecurityUtils {
 
     public static String getCurrentUserId() {

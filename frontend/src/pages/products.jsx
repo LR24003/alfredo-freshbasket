@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import FormLayout from "../components/FormLayout.jsx";
 import { useEntity } from "../hooks/useEntity.js";
@@ -64,6 +63,15 @@ function Products() {
       name: "description",
       icon: "bi-justify-left",
       placeholder: "Detalles del producto"
+    },
+    {
+      name: "minStock",
+      label: "Stock mínimo requerido del producto",
+      type: "number",
+      placeholder: "Ej. 5",
+      icon: "bi-exclamation-triangle",
+      required: true,
+      step: "1"
     },
     {
       label: isEditMode ? "Usuario que actualiza:" : "Usuario que registra:",

@@ -13,13 +13,13 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "users")
-public class User {
+public class User implements Identifiable<Long> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Long id;
-    
+
     @NotBlank(message = "El nombre es obligatorio")
     @Size(max = 50)
     @Column(nullable = false, length = 50)
@@ -51,7 +51,6 @@ public class User {
     @Column(name = "active", nullable = false)
     private boolean active = true;
 
-    // Por esto (Relación Muchos a Uno):
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "country_id", nullable = false)
     private Country country;

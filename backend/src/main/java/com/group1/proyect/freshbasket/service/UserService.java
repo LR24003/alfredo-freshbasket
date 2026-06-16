@@ -1,23 +1,12 @@
 package com.group1.proyect.freshbasket.service;
 
-
+import com.group1.proyect.freshbasket.entity.User;
 import com.group1.proyect.freshbasket.dto.request.UserRequestDTO;
 import com.group1.proyect.freshbasket.dto.response.UserResponseDTO;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
-public interface UserService {
-    List<UserResponseDTO> getAllUsers();
-
-    UserResponseDTO getUserById(Long id);
-
-    UserResponseDTO createUser(UserRequestDTO requestDTO);
-
-    UserResponseDTO updateUser(Long id, UserRequestDTO requestDTO);
-
-    void deleteUser(Long id);
+public interface UserService extends GenericService<User, UserRequestDTO, UserResponseDTO, Long> {
 
     List<UserResponseDTO> searchUsersByName(String name);
 

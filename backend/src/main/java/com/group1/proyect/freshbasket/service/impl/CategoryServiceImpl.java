@@ -13,90 +13,75 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
-public class CategoryServiceImpl implements CategoryService {
+public class CategoryServiceImpl extends GenericServiceImpl<Category,
+        CategoryRequestDTO, CategoryResponseDTO, Long> implements CategoryService {
 
     private final CategoryRepository categoryRepository;
 
-    public CategoryServiceImpl(CategoryRepository categoryRepository ) {
+    public CategoryServiceImpl(CategoryRepository categoryRepository) {
+        super(categoryRepository);
         this.categoryRepository = categoryRepository;
     }
 
-    // DTO → Entity
-    private Category convertToEntity(CategoryRequestDTO dto) {
-        Category category = new Category();
-        category.setName(dto.getName());
-        category.setDescription(dto.getDescription());
-
-        return category;
-
-    }
-
-    // Entity → DTO
-    private CategoryResponseDTO convertToDTO(Category category) {
+    @Override
+    protected CategoryResponseDTO convertToResponseDto(Category category) {
         CategoryResponseDTO dto = new CategoryResponseDTO();
-
         dto.setId(category.getId());
         dto.setName(category.getName());
         dto.setDescription(category.getDescription());
-
         return dto;
     }
 
     @Override
-    public List<CategoryResponseDTO> getAllCategories() {
+    protected Category convertToEntity(CategoryRequestDTO dto) {
+        Category category = new Category();
+        category.setName(dto.getName() != null ? dto.getName().trim() : null);
+        category.setDescription(dto.getDescription() != null ? dto.getDescription().trim() : null);
+        return category;
+    }
+
+    @Override
+    protected void updateEntityFromDto(CategoryRequestDTO dto, Category category) {
+        category.setName(dto.getName() != null ? dto.getName().trim() : category.getName());
+        category.setDescription(dto.getDescription() != null ? dto.getDescription().trim() : category.getDescription());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CategoryResponseDTO> getAll() {
         return categoryRepository.findByActiveTrue()
                 .stream()
-                .filter(Category::isActive)
-                .map(this::convertToDTO)
+                .map(this::convertToResponseDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public CategoryResponseDTO getCategoryById(Long id) {
+    public CategoryResponseDTO getById(Long id) {
         return categoryRepository.findById(id)
                 .filter(Category::isActive)
-                .map(this::convertToDTO)
-                .orElseThrow(() -> new RuntimeException("Categoria no encontrada con ese ID: " + id));
+                .map(this::convertToResponseDto)
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ese ID: " + id));
     }
 
     @Override
-    public CategoryResponseDTO createCategory(CategoryRequestDTO requestDTO) {
-        Category category = convertToEntity(requestDTO);
-        Category savedCategory = categoryRepository.save(category);
-        return convertToDTO(savedCategory);
-    }
-
-    @Override
-    public CategoryResponseDTO updateCategory(Long id, CategoryRequestDTO requestDTO) {
-        return categoryRepository.findById(id)
-                .map(existingCategory -> {
-
-                    existingCategory.setName(requestDTO.getName());
-                    existingCategory.setDescription(requestDTO.getDescription());
-
-                    return categoryRepository.save(existingCategory);
-                })
-                .map(this::convertToDTO)
-                .orElseThrow(() -> new RuntimeException("Categoria no encontrada con ese ID: " + id));
-    }
-
-    @Override
-    @Transactional // Importante: org.springframework.transaction.annotation.Transactional
-    public void deleteCategory(Long id) {
+    @Transactional
+    public void delete(Long id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Categoria no encontrada con ese ID: " + id));
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ese ID: " + id));
 
         category.setActive(false);
+        categoryRepository.save(category);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CategoryResponseDTO> searchCategoriesByName(String name) {
-        return categoryRepository.findByNameContainingIgnoreCase(name)
+        String cleanName = name != null ? name.trim() : "";
+        return categoryRepository.findByNameContainingIgnoreCase(cleanName)
                 .stream()
                 .filter(Category::isActive)
-                .map(this::convertToDTO)
+                .map(this::convertToResponseDto)
                 .collect(Collectors.toList());
     }
-
 }

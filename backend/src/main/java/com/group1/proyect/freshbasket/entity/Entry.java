@@ -3,10 +3,9 @@ package com.group1.proyect.freshbasket.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import lombok.*;
 
 @Entity
 @Getter
@@ -14,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "entries")
-public class Entry {
+public class Entry implements Identifiable<Long> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,26 +26,26 @@ public class Entry {
 
     @NotNull(message = "El precio unitario es obligatorio")
     @Column(name = "unit_cost", nullable = false, updatable = false)
-    public BigDecimal unitCost;
+    private BigDecimal unitCost;
 
     @Min(1)
     @NotNull(message = "El valor es obligatorio")
     @Column(nullable = false)
     private Integer quantity;
 
-    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
+    @JsonIgnore
     private Product product;
 
-    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "supplier_id", nullable = false)
+    @JsonIgnore
     private Supplier supplier;
 
-    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     @Column(name = "active", nullable = false)
@@ -54,6 +53,6 @@ public class Entry {
 
     @PrePersist
     protected void onCreate() {
-        entryDate = LocalDateTime.now();
+        this.entryDate = LocalDateTime.now();
     }
 }

@@ -1,9 +1,6 @@
 package com.group1.proyect.freshbasket.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Getter
@@ -26,17 +23,15 @@ public class SupplierResponseDTO {
     @Schema(description = "Teléfono de contacto del proveedor", example = "2300-3476")
     private String phone;
 
-    @Schema(description = "E-mail del usuario", example = "distribuidora.delcampo@mail.com")
+    @Schema(description = "E-mail del proveedor", example = "distribuidora.delcampo@mail.com")
     private String email;
 
     @Schema(description = "Dirección del proveedor", example = "Av. las Amapolas #102, San Salvador")
     private String address;
 
-    @NotNull(message = "El ID del país es obligatorio")
     @Schema(description = "ID del país", example = "1")
     private Long countryId;
 
-    @Schema(description = "El nombre del país", example = " El Salvador")
+    @Schema(description = "Nombre del país", example = "El Salvador")
     private String countryName;
-
 }

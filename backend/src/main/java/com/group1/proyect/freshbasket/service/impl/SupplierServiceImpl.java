@@ -15,49 +15,30 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
-public class SupplierServiceImpl implements SupplierService {
+public class SupplierServiceImpl extends GenericServiceImpl<Supplier, SupplierRequestDTO, SupplierResponseDTO, Long> implements SupplierService {
 
     private final SupplierRepository supplierRepository;
     private final CountryRepository countryRepository;
 
     public SupplierServiceImpl(SupplierRepository supplierRepository,
                                CountryRepository countryRepository) {
+        super(supplierRepository);
         this.supplierRepository = supplierRepository;
         this.countryRepository = countryRepository;
     }
 
-    // DTO → Entity
-    private Supplier convertToEntity(SupplierRequestDTO dto) {
-        Supplier supplier = new Supplier();
-        supplier.setName(dto.getName());
-        supplier.setLastName(dto.getLastName());
-        supplier.setEmail(dto.getEmail());
-        supplier.setPhone(dto.getPhone());
-        supplier.setAddress(dto.getAddress());
-
-        String nombrePais = dto.getCountryName();
-        if (nombrePais != null && !nombrePais.trim().isEmpty()) {
-            Country country = countryRepository.findByNameIgnoreCase(nombrePais.trim())
-                    .orElseThrow(() -> new RuntimeException("El país '" + nombrePais + "' no existe en los registros del sistema."));
-            supplier.setCountry(country);
-        }
-
-        return supplier;
-    }
-
-    // Entity → DTO
-    private SupplierResponseDTO convertToDTO(Supplier supplier) {
+    @Override
+    protected SupplierResponseDTO convertToResponseDto(Supplier supplier) {
         SupplierResponseDTO dto = new SupplierResponseDTO();
-
         dto.setId(supplier.getId());
         dto.setName(supplier.getName());
         dto.setLastName(supplier.getLastName());
         dto.setEmail(supplier.getEmail());
         dto.setPhone(supplier.getPhone());
         dto.setAddress(supplier.getAddress());
-        dto.setCountryId(supplier.getCountry().getId());
 
         if (supplier.getCountry() != null) {
+            dto.setCountryId(supplier.getCountry().getId());
             dto.setCountryName(supplier.getCountry().getName());
         }
 
@@ -65,56 +46,56 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     @Override
+    protected Supplier convertToEntity(SupplierRequestDTO dto) {
+        Supplier supplier = new Supplier();
+        mapDtoToEntityRelations(dto, supplier);
+        return supplier;
+    }
+
+    @Override
+    protected void updateEntityFromDto(SupplierRequestDTO dto, Supplier supplier) {
+        mapDtoToEntityRelations(dto, supplier);
+    }
+
+    private void mapDtoToEntityRelations(SupplierRequestDTO dto, Supplier supplier) {
+        supplier.setName(dto.getName());
+        supplier.setLastName(dto.getLastName());
+        supplier.setEmail(dto.getEmail());
+        supplier.setPhone(dto.getPhone());
+        supplier.setAddress(dto.getAddress());
+
+        Country country = countryRepository.findById(dto.getCountryId())
+                .orElseThrow(() -> new RuntimeException("País no encontrado con ese ID: " + dto.getCountryId()));
+
+        supplier.setCountry(country);
+    }
+
+    @Override
     @Transactional(readOnly = true)
-    public List<SupplierResponseDTO> getAllSuppliers() {
+    public List<SupplierResponseDTO> getAll() {
         return supplierRepository.findByActiveTrue()
                 .stream()
-                .map(this::convertToDTO)
+                .map(this::convertToResponseDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public SupplierResponseDTO getSupplierById(Long id) {
+    public SupplierResponseDTO getById(Long id) {
         return supplierRepository.findById(id)
                 .filter(Supplier::isActive)
-                .map(this::convertToDTO)
+                .map(this::convertToResponseDto)
                 .orElseThrow(() -> new RuntimeException("Proveedor no encontrado con ese ID: " + id));
     }
 
     @Override
-    public SupplierResponseDTO createSupplier(SupplierRequestDTO requestDTO) {
-        Supplier supplier = convertToEntity(requestDTO);
-        Supplier savedSupplier = supplierRepository.save(supplier);
-        return convertToDTO(savedSupplier);
-    }
-
-    @Override
-    public SupplierResponseDTO updateSupplier(Long id, SupplierRequestDTO requestDTO) {
-        return supplierRepository.findById(id)
-                .map(existingSupplier -> {
-                    existingSupplier.setName(requestDTO.getName());
-                    existingSupplier.setLastName(requestDTO.getLastName());
-                    existingSupplier.setEmail(requestDTO.getEmail());
-                    existingSupplier.setPhone(requestDTO.getPhone());
-                    existingSupplier.setAddress(requestDTO.getAddress());
-
-                    Country country = countryRepository.findByNameIgnoreCase(requestDTO.getCountryName())
-                            .orElseThrow(() -> new RuntimeException("País no encontrado con ese Nombre: " + requestDTO.getCountryName()));
-                    existingSupplier.setCountry(country);
-
-                    return supplierRepository.save(existingSupplier);
-                })
-                .map(this::convertToDTO)
-                .orElseThrow(() -> new RuntimeException("Proveedor no encontrado con ese ID: " + id));
-    }
-
-    @Override
-    public void deleteSupplier(Long id) {
+    @Transactional
+    public void delete(Long id) {
         Supplier supplier = supplierRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Proveedor no encontrado con ese ID: " + id));
 
         supplier.setActive(false);
+        supplierRepository.save(supplier);
     }
 
     @Override
@@ -123,7 +104,7 @@ public class SupplierServiceImpl implements SupplierService {
         return supplierRepository.findByNameContainingIgnoreCase(name)
                 .stream()
                 .filter(Supplier::isActive)
-                .map(this::convertToDTO)
+                .map(this::convertToResponseDto)
                 .collect(Collectors.toList());
     }
 }

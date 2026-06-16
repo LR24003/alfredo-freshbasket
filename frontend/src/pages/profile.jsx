@@ -121,7 +121,7 @@ const Profile = () => {
                             <label className="fb-crud-label">Email</label>
                             <div className="fb-crud-input-wrap">
                                 <i className="bi bi-envelope fb-crud-input-icon" />
-                                <input type="email" name="email" autocomplete="username" className="fb-crud-input field-disabled" value={profileData.email} disabled />
+                                <input type="email" name="email" autoComplete="username" className="fb-crud-input field-disabled" value={profileData.email} disabled />
                             </div>
                         </div>
                         <div className="fb-crud-field">
@@ -131,7 +131,7 @@ const Profile = () => {
                                 <input
                                     type="password"
                                     name="password"
-                                    autocomplete="new-password"
+                                    autoComplete="new-password"
                                     className="fb-crud-input"
                                     placeholder="Sino dejar en blanco para mantener la actual"
                                     value={profileData.password}
