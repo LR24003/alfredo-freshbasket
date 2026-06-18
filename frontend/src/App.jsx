@@ -19,16 +19,17 @@ import Entries from "./pages/entries";
 import Exits from "./pages/exits";
 import Categories from "./pages/categories";
 import Countries from "./pages/countries";
+import Cart from "./pages/Carrito.jsx";
 
-// Creación del cliente global de Queries y silenciador de errores cuando un usuario no tiene permisos
+// Creación del cliente global de Queries
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
             staleTime: 1000 * 60 * 1,
             refetchOnWindowFocus: false,
             retry: (failureCount, error) => {
-                if (error?.response?.status === 502 || error?.status === 502) {
-                    return false;
+                if (error?.response?.status === 502 || error?.status === 502 || error?.response?.status === 403) {
+                    return false; // Evitamos reintentos si cae en error de permisos o pasarela caída
                 }
                 return failureCount < 2;
             },
@@ -38,20 +39,36 @@ const queryClient = new QueryClient({
 
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(
-        !!localStorage.getItem("token")
+        () => !!localStorage.getItem("token")
     );
 
+    // Función centralizada para reflejar el estado de autenticación en tiempo real
+    const checkAuth = () => {
+        const token = localStorage.getItem("token");
+        setIsAuthenticated(!!token);
+        if (!token) {
+            queryClient.clear(); // Limpia la caché de consultas de React Query si la sesión expira
+        }
+    };
+
     useEffect(() => {
-        const handleStorageChange = () => {
-            const token = localStorage.getItem("token");
-            setIsAuthenticated(!!token);
-            if (!token) {
-                queryClient.clear();
-            }
+        // Escucha cambios desde otras pestañas
+        window.addEventListener("storage", checkAuth);
+        // Escucha eventos del mismo hilo (por si haces login/logout directo en la app)
+        window.addEventListener("local-storage-change", checkAuth);
+
+        return () => {
+            window.removeEventListener("storage", checkAuth);
+            window.removeEventListener("local-storage-change", checkAuth);
         };
-        window.addEventListener("storage", handleStorageChange);
-        return () => window.removeEventListener("storage", handleStorageChange);
     }, []);
+
+    // Manejador nativo del Logout que se pasa al layout de Freshbasket
+    const handleLogout = () => {
+        localStorage.clear(); // O remueve uno por uno si conservas datos independientes
+        setIsAuthenticated(false);
+        queryClient.clear();
+    };
 
     return (
         <QueryClientProvider client={queryClient}>
@@ -62,17 +79,29 @@ function App() {
                     <nav className="menu-grid"></nav>
 
                     <Routes>
-
                         {/* Rutas públicas */}
                         <Route path="/" element={<Home />} />
-                        <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
+                        <Route
+                            path="/login"
+                            element={
+                                !isAuthenticated ? (
+                                    <Login setIsAuthenticated={(val) => {
+                                        setIsAuthenticated(val);
+                                        // Dispara evento para sincronizar inmediatamente las queries activas
+                                        window.dispatchEvent(new Event("local-storage-change"));
+                                    }} />
+                                ) : (
+                                    <Navigate to="/freshbasket" replace />
+                                )
+                            }
+                        />
                         <Route path="/register" element={<Register />} />
                         <Route path="/forgot-password" element={<ForgotPassword />} />
 
                         {/* Rutas privadas */}
                         <Route
                             path="/freshbasket"
-                            element={isAuthenticated ? <Freshbasket /> : <Navigate to="/login" />}
+                            element={isAuthenticated ? <Freshbasket onLogout={handleLogout} /> : <Navigate to="/login" replace />}
                         >
                             <Route path="productos" element={<Products />} />
                             <Route path="usuarios" element={<Users />} />
@@ -81,6 +110,7 @@ function App() {
                             <Route path="salidas" element={<Exits />} />
                             <Route path="categorias" element={<Categories />} />
                             <Route path="paises" element={<Countries />} />
+                            <Route path="cart" element={<Cart />} />
 
                             <Route
                                 path="my-profile"
@@ -99,7 +129,7 @@ function App() {
                             />
                         </Route>
 
-                        <Route path="*" element={<Navigate to="/" />} />
+                        <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                 </div>
             </Router>

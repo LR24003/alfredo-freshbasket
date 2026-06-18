@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import FormLayout from "../components/FormLayout.jsx";
 import { useEntity } from "../hooks/useEntity.js";
+import { useCart } from "../hooks/useCart.js";
+import { toast } from 'react-hot-toast';
 
 function Products() {
   const userLogin = localStorage.getItem("userName") || localStorage.getItem("userEmail") || "";
@@ -8,6 +10,8 @@ function Products() {
   // Se cargan de manera global las dependencias
   const categories = useEntity("categories");
   const suppliers = useEntity("suppliers");
+
+  const { cart, updateQuantity } = useCart();
 
   // Carga las listas de categorías y proveedores
   const categoriesList = categories.list.data || [];
@@ -82,8 +86,14 @@ function Products() {
     }
   ];
 
-  // Renderizador estético de tarjetas
-  const renderProductCard = (p) => <ProductCard key={p.id || p.productId || p.products_id} p={p} />;
+  const renderProductCard = (p) => (
+      <ProductCard
+          key={p.id || p.productId || p.products_id}
+          p={p}
+          cart={cart}
+          updateQuantity={updateQuantity}
+      />
+  );
 
   return (
       <FormLayout
@@ -98,10 +108,40 @@ function Products() {
   );
 }
 
-// Subcomponente encapsulado
-function ProductCard({ p }) {
+function ProductCard({ p, cart, updateQuantity }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const productId = p.id ?? p.productId ?? p.products_id;
+
+  const itemEnCarrito = cart?.items?.find(item => item.productId === productId);
+  const cantidadActual = itemEnCarrito ? itemEnCarrito.quantity : 0;
+
+  const handleAgregarAlCarrito = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    const siguienteCantidad = cantidadActual === 0 ? 1 : cantidadActual + 1;
+
+    updateQuantity(
+        { productId, quantity: siguienteCantidad },
+        {
+          onSuccess: () => {
+            toast.success('¡Producto añadido a tu carrito!', {
+              id: `add-cart-${productId}`,
+              duration: 1500,
+              icon: '🛒'
+            });
+          },
+          onError: (error) => {
+            toast.error(
+                error.response?.data?.message || 'No se pudo actualizar el carrito',
+                { id: 'cart-error' }
+            );
+          }
+        }
+    );
+  };
 
   return (
       <div className="fb-user-display-card">
@@ -110,7 +150,7 @@ function ProductCard({ p }) {
           <span className="fb-card-user-id">ID: {productId}</span>
         </div>
 
-        {/* Imagen del producto con fallback de seguridad */}
+        {/* Imagen del producto */}
         <div className="fb-product-card-image-wrap">
           {p.imageUrl ? (
               <img
@@ -134,7 +174,7 @@ function ProductCard({ p }) {
           <p className="fb-card-user-detail">
             <i className="bi bi-currency-dollar" /> <strong>Precio:</strong> ${Number(p.price || 0).toFixed(2)}
           </p>
-          <div className="fb-card-info-row">
+          <div className="fb-card-info-row fb-desc-spacing">
             <i className="bi bi-justify-left" />
             <div className="fb-card-info-meta">
               <span className="fb-card-info-label">Descripción:</span>
@@ -168,15 +208,30 @@ function ProductCard({ p }) {
               </div>
           )}
 
-          {/* BOTÓN CON CLASES DINÁMICAS SEGÚN EL ESTADO */}
-          <button
-              type="button"
-              onClick={() => setIsExpanded(!isExpanded)}
-              className={`fb-product-card-toggle-btn ${isExpanded ? 'expanded' : 'collapsed'}`}
-          >
-            <i className={`bi ${isExpanded ? "bi-chevron-up" : "bi-chevron-down"}`} />
-            <span>{isExpanded ? "Ver menos detalles" : "Ver más detalles"}</span>
-          </button>
+          {/* CONTENEDOR UNIFICADO Y CENTRADO DE ACCIONES */}
+          <div className="fb-product-card-actions-row">
+
+            {/* BOTÓN AGREGAR */}
+            <button
+                type="button"
+                onClick={(e) => handleAgregarAlCarrito(e)}
+                className="fb-btn-action-add"
+            >
+              <i className="bi bi-cart-plus-fill" />
+              <span>{cantidadActual > 0 ? `En carrito: ${cantidadActual}` : "Agregar"}</span>
+            </button>
+
+            {/* BOTÓN DETALLES */}
+            <button
+                type="button"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className={`fb-btn-action-toggle ${isExpanded ? 'is-expanded' : 'is-collapsed'}`}
+            >
+              <i className={`bi ${isExpanded ? "bi-chevron-up" : "bi-chevron-down"}`} />
+              <span>{isExpanded ? "Menos" : "Detalles"}</span>
+            </button>
+
+          </div>
         </div>
       </div>
   );

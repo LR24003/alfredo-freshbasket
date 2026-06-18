@@ -171,7 +171,7 @@ body {
 .fb-top-right {
   display: flex;
   align-items: center;
-  gap: 0.2rem;
+  gap: 0.5rem !important;
   justify-content: flex-end;
 }
 
@@ -186,6 +186,70 @@ body {
   width: 100%;
 }
 
+/* BOTÓN DEL CARRITO */
+.fb-topbar-cart-btn {
+  position: relative;
+  background: transparent !important; /* Evita fondos azules de Bootstrap */
+  border: none;
+  color: #212529 !important;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  transition: transform 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fb-topbar-cart-btn i,
+.fb-topbar-cart-btn:hover i,
+.fb-topbar-cart-btn:active i,
+.fb-topbar-cart-btn:focus i,
+.fb-topbar-cart-btn:focus-visible i {
+  color: #212529 !important;
+}
+
+/* Efectos visuales de interacción (Escala) */
+.fb-topbar-cart-btn:hover {
+  transform: scale(1.1);
+  background: transparent !important;
+}
+
+.fb-topbar-cart-btn:active {
+  transform: scale(0.9);
+  background: transparent !important;
+}
+
+/* Limpieza estricta de estados de enfoque */
+.fb-topbar-cart-btn:focus,
+.fb-topbar-cart-btn:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+}
+
+/* INDICADOR (BADGE) EN LA ESQUINA SUPERIOR IZQUIERDA */
+.fb-topbar-cart-btn .fb-cart-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background-color: #dc3545;
+  color: #ffffff !important;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: bold;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  transition: transform 0.2s ease;
+}
 /* ==========================================================================
    COMPONENTES DE FORMULARIOS Y TARJETAS
    ========================================================================== */

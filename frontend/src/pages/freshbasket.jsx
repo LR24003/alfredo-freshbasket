@@ -3,6 +3,7 @@ import { tieneAcceso } from "../Config/permissions";
 import { NotificationBell } from "../components/NotificationBell";
 import Profile from "./profile.jsx";
 import { useStockAlerts } from "../hooks/useStockAlerts";
+import { useCart } from "../hooks/useCart"; // 🌟 Importación del carrito integrada correctamente
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
 
@@ -13,6 +14,15 @@ function Freshbasket({ onLogout }) {
   // Extrae el rol y correo de cada usuario para mostrarse en el perfil
   const userRole = (localStorage.getItem("userRole") || "USUARIO").toUpperCase().trim();
   const userEmail = localStorage.getItem("userEmail") || "correodeejemplo@mail.com";
+
+  // 🌟 Consumimos el estado del carrito
+  const { cart, refetch } = useCart();
+  const totalArticulos = cart?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+
+  // 🌟 Sincronizar el contador del carrito inmediatamente cuando cambie la ruta
+  useEffect(() => {
+    if (refetch) refetch();
+  }, [location.pathname, refetch]);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -396,13 +406,30 @@ function Freshbasket({ onLogout }) {
           <div className="fb-topbar">
             <div>
               <h2 className="fb-top-title">
-                {menuItems.find(m => location.pathname === m.path)?.label || "Panel"}
+                {location.pathname.toLowerCase().includes("cart") ? "Mi Carrito" : (menuItems.find(m => location.pathname === m.path)?.label || "Panel")}
               </h2>
               <p style={{ margin: 0 }} className="fb-top-sub">Bienvenido/a </p>
             </div>
 
             {/* SECCIÓN DERECHA DE LA TOPBAR */}
-            <div className="fb-top-right">
+            <div className="fb-top-right" style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
+
+              {/* BOTÓN E INDICADOR DEL CARRITO */}
+              <button
+                  type="button"
+                  onClick={() => navigate("/freshbasket/cart")}
+                  className="fb-topbar-cart-btn"
+                  title="Ver mi carrito"
+              >
+                <i className="bi bi-cart3 text-dark" style={{ fontSize: "1.3rem" }} />
+
+                {totalArticulos > 0 && (
+                    <span className="fb-cart-badge">
+                 {totalArticulos}
+               </span>
+                )}
+              </button>
+
               <NotificationBell isAdmin={isAdmin} />
 
               {/* CONTENEDOR DE PERFIL */}
@@ -419,9 +446,9 @@ function Freshbasket({ onLogout }) {
                 {showProfileMenu && (
                     <div className="fb-profile-dropdown">
                       <div className="fb-profile-header">
-              <span className={`fb-role-badge ${userRole.toUpperCase()}`}>
-                {userRole}
-              </span>
+                        <span className={`fb-role-badge ${userRole.toUpperCase()}`}>
+                          {userRole}
+                        </span>
                         <h6 className="fb-profile-name fw-bold text-dark mt-2 mb-1" style={{ fontSize: "0.95rem" }}>
                           {localStorage.getItem("userName") || "Usuario Registrado"}
                         </h6>
@@ -452,7 +479,7 @@ function Freshbasket({ onLogout }) {
 
           {/* VISTA DINÁMICA DE CONTENIDO */}
           <div className="fb-content">
-            {(location.pathname === "/freshbasket" || (isTabNone && !location.pathname.endsWith("my-profile"))) && (
+            {(location.pathname === "/freshbasket" || (isTabNone && !location.pathname.endsWith("my-profile") && !location.pathname.toLowerCase().includes("cart"))) && (
                 <div
                     className="fb-photo-section"
                     style={{

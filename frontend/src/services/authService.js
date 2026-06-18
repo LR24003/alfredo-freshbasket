@@ -12,6 +12,7 @@ export const authService = {
 
     // Guardar el token de acceso
     localStorage.setItem("token", data.token);
+    localStorage.setItem("userId", data.id || data.userId);
 
     // Procesa el nombre completo
     let nombreCompleto = "";
