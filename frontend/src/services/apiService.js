@@ -5,25 +5,32 @@ import axios from "./axiosConfig.js";
 export const apiService = (resource) => {
     const API_URL = `/api/${resource}`;
 
+    // Helper para evitar el caché agresivo del navegador
+    const getTimestamp = () => `t=${new Date().getTime()}`;
+
     return {
-
-        // Para consultar todos los Get
+        // Consultar todos los registros
         getAll: async () => {
-            const response = await axios.get(`${API_URL}?t=${new Date().getTime()}`);
+            const response = await axios.get(`${API_URL}?${getTimestamp()}`);
             return response.data;
         },
 
-        // Consultar por ID
+        // Búsqueda por ID
         getById: async (id) => {
-            const response = await axios.get(`${API_URL}/${id}?t=${new Date().getTime()}`);
+            const response = await axios.get(`${API_URL}/${id}?${getTimestamp()}`);
             return response.data;
         },
 
-        // Crear un registro en cada entidad
+        // Búsqueda de productos por categoría
+        getByCategory: async (categoryName) => {
+            const response = await axios.get(`${API_URL}/category/${encodeURIComponent(categoryName)}?${getTimestamp()}`);
+            return response.data;
+        },
+
+        // Crear un registro
         create: async (data) => {
             const response = await axios.post(API_URL, data);
             return response.data;
-
         },
 
         // Actualizar un registro existente
@@ -33,7 +40,7 @@ export const apiService = (resource) => {
             return response.data;
         },
 
-        // Borra un registro logico/fisico
+        // Borrar un registro lógico/físico
         delete: async (id) => {
             const response = await axios.delete(`${API_URL}/${id}`);
             return response.data;
@@ -41,20 +48,10 @@ export const apiService = (resource) => {
 
         // Buscar por nombre
         searchByName: async (name) => {
-            try {
-                const response = await axios.get(`${API_URL}/search`, {
-                    params: { name, t: new Date().getTime() }
-                });
-                return response.data;
-            } catch (error) {
-                if (error.response && error.response.status === 404) {
-                    const fallbackResponse = await axios.get(API_URL, {
-                        params: { name, t: new Date().getTime() }
-                    });
-                    return fallbackResponse.data;
-                }
-                throw error;
-            }
+            const response = await axios.get(`${API_URL}/search`, {
+                params: { name, t: new Date().getTime() }
+            });
+            return response.data;
         }
     };
 };
@@ -66,7 +63,6 @@ export const profileService = {
         return response.data;
     },
 
-    //Se actualizan los datos del usuario desde el boton de actualizar datos
     updateMyProfile: async (payload) => {
         const response = await axios.put(`/api/users/me?t=${new Date().getTime()}`, payload);
         return response.data;

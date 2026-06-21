@@ -37,6 +37,9 @@ public class ProductRequestDTO {
     @Schema(description = "URL de la imagen del producto", example = "https://miapp.com/img/manzana.jpg")
     private String imageUrl;
 
+    @Schema(description = "Descuentos en el producto por promociones", example = "10%")
+    private BigDecimal discount;
+
     @Schema(description = "Indica si el producto está activo", example = "true")
     private boolean active = true;
 

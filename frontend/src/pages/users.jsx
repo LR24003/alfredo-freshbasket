@@ -1,4 +1,5 @@
 import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import FormLayout from "../components/FormLayout.jsx";
 import { useEntity } from "../hooks/useEntity.js";
 
@@ -6,8 +7,19 @@ function Users() {
   const countries = useEntity("countries");
   const countriesList = countries.list.data || [];
 
-  // Campos del formulario
-  const userFields = [
+  // 🚀 DETECTAR ORIGEN Y RUTA DE CREACIÓN DIRECTA
+  const location = useLocation();
+  const navigate = useNavigate();
+  const queryParams = new URLSearchParams(location.search);
+
+  const isFromVentas = queryParams.get("from") === "ventas";
+  const userRoleLogged = localStorage.getItem("userRole")?.toUpperCase();
+
+  // 🌟 Evalúa si estamos en la subruta dedicada al formulario directo o viniendo de caja
+  const esCreacionDirecta = location.pathname.endsWith("/nuevo") || isFromVentas;
+
+  // Filtramos o modificamos los campos si el origen es la caja registradora
+  let userFields = [
     {
       label: "Nombre",
       name: "name",
@@ -61,16 +73,23 @@ function Users() {
     }
   ];
 
-  // Renderizador estético de tarjetas
-  const renderUserCard = (u2) => {
-    // Blindaje de llaves primarias: Soporta variaciones del backend (id, userId, user_id)
-    const userId = u2.id ?? u2.userId ?? u2.user_id ?? u2.users_id;
+  // 🚀 ADAPTACIÓN EXPRESS PARA EL POS:
+  if (isFromVentas) {
+    userFields = userFields.filter(field => field.name !== "role");
+  }
 
-    // Extracción del nombre completo
+  // 🛡️ Si entra de forma directa desde ventas, retornamos null para blindar que no se pinte listado secundario
+  const renderUserCard = (u2) => {
+    if (esCreacionDirecta) return null;
+
+    const targetRole = (u2.role || "CLIENTE").toUpperCase();
+    if (userRoleLogged === "EMPLEADO" && targetRole !== "CLIENTE") {
+      return null;
+    }
+
+    const userId = u2.id ?? u2.userId ?? u2.user_id ?? u2.users_id;
     const lastNameStr = u2.lastName ?? u2.last_name ?? "";
     const fullName = `${u2.name || "Usuario sin nombre"} ${lastNameStr}`.trim();
-
-    // Extracción del país
     const countryDisplay = u2.countryName ?? u2.country_name ?? u2.country?.name ?? "Sin país asignado";
 
     return (
@@ -100,16 +119,32 @@ function Users() {
   return (
       <FormLayout
           resource="users"
-          title="usuario"
-          article="el"
-          icon="bi-people-fill"
+          title={isFromVentas ? "Cliente desde Caja" : "usuario"}
+          article={isFromVentas ? "al" : "el"}
+          icon="bi-person-fill-add"
           searchField="name"
           fields={userFields}
           renderCard={renderUserCard}
+          forcedMode={esCreacionDirecta ? "create" : "list"}
           onBeforeSave={(formData, mode) => {
             if (mode === "update" && (!formData.password || formData.password.trim() === "")) {
+
+            }
+
+            if (isFromVentas) {
+              formData.role = "CLIENTE";
+
+              if (!formData.password) {
+                formData.password = "ClienteFresh2026*";
+              }
             }
             return formData;
+          }}
+
+          onSuccessHook={() => {
+            if (isFromVentas) {
+              navigate("/freshbasket/ventas");
+            }
           }}
       />
   );

@@ -11,7 +11,7 @@ import java.util.Optional;
 @Repository
 public interface SupplierRepository extends GenericRepository<Supplier, Long> {
 
-    List<Supplier> findByNameContainingIgnoreCase(String name);
+    List<Supplier> findByNameIgnoreCase(String name);
 
     @Query("SELECT s FROM Supplier s WHERE LOWER(TRIM(CONCAT(s.name, ' ', COALESCE(s.lastName, '')))) = LOWER(TRIM(:fullName))")
     Optional<Supplier> findByFullNameIgnoreCase(@Param("fullName") String fullName);

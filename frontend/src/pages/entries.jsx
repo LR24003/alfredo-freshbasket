@@ -85,9 +85,13 @@ function Entries() {
             <p className="fb-card-user-detail">
               <i className="bi bi-layers" /> <strong>Cantidad:</strong> {entry.quantity || 0}
             </p>
-            <p className="fb-card-user-detail">
-              <i className="bi bi-building" /> <strong>Proveedor:</strong> {entry.supplierName || "Sin proveedor asignado"}
-            </p>
+            <div className="fb-card-info-row">
+              <i className="bi bi-truck" />
+              <div className="fb-card-info-meta">
+                <span className="fb-card-info-label">Proveedor:</span>
+                <span className="fb-card-info-value">{entry.supplierName || "Sin proveedor"}</span>
+              </div>
+            </div>
             <div className="fb-card-info-row">
               <i className="bi bi-person" />
               <div className="fb-card-info-meta">

@@ -1,0 +1,337 @@
+/* ==========================================
+   ESTILOS ESPECÍFICOS DEL MÓDULO DE VENTAS (POS)
+   ========================================== */
+
+.fb-pos-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 1.5rem;
+    margin-top: 0.5rem;
+}
+
+/* Catálogo Izquierdo */
+.fb-pos-catalog-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.fb-pos-loading {
+    text-align: center;
+    padding: 3rem 0;
+    color: #7f8c8d;
+}
+
+.fb-pos-grid {
+    max-height: 60vh;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 1rem;
+}
+
+.fb-product-card {
+    padding: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.fb-product-name {
+    font-size: 1rem;
+    margin: 0 0 0.3rem 0;
+}
+
+.fb-product-price {
+    color: #2ecc71;
+    font-weight: bold;
+    margin: 0 0 0.2rem 0;
+}
+
+.fb-product-stock {
+    font-size: 0.75rem;
+    color: #7f8c8d;
+    margin: 0 0 0.8rem 0;
+}
+
+/* Columna de Resumen Derecha */
+.fb-pos-summary-column {
+    height: fit-content;
+}
+
+.fb-summary-title {
+    border-bottom: 2px solid #f4f6f7;
+    padding-bottom: 0.5rem;
+}
+
+/* Carrito de Compras */
+.fb-pos-cart-container {
+    max-height: 25vh;
+    overflow-y: auto;
+    margin: 1rem 0;
+}
+
+.fb-pos-cart-empty {
+    text-align: center;
+    color: #95a5a6;
+    padding: 1.5rem 0;
+}
+
+.fb-pos-cart-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.fb-pos-cart-table tr {
+    border-bottom: 1px solid #f4f6f7;
+}
+
+.fb-pos-cart-qty-input {
+    width: 45px;
+    padding: 2px;
+}
+
+.fb-pos-cart-remove-btn {
+    background: none;
+    border: none;
+    color: #e74c3c;
+    cursor: pointer;
+}
+
+/* Caja de configuraciones internas */
+.fb-pos-config-box {
+    background: #f8f9fa;
+    padding: 0.8rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+/* Selector del Cliente */
+.fb-pos-customer-wrap {
+    position: relative;
+}
+
+.fb-pos-customer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.2rem;
+}
+
+.fb-pos-customer-header label,
+.fb-pos-payment-wrap label,
+.fb-pos-discount-wrap label {
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #495057;
+}
+
+.fb-pos-add-customer-btn {
+    background: none;
+    border: none;
+    color: #27ae60;
+    font-size: 0.75rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.fb-pos-customer-search-row {
+    display: flex;
+    gap: 0.3rem;
+}
+
+.fb-pos-customer-input {
+    width: 100%;
+    padding: 0.4rem;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    font-size: 0.85rem;
+    color: #333;
+}
+
+.fb-pos-customer-input.active {
+    font-weight: 600;
+    color: #2980b9;
+}
+
+.fb-pos-customer-reset-btn {
+    border: 1px solid #ced4da;
+    background: #eee;
+    border-radius: 4px;
+    padding: 0 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.fb-pos-customer-badge {
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    color: #2980b9;
+    font-weight: 500;
+}
+
+/* Menú desplegable predictivo */
+.fb-pos-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    max-height: 160px;
+    overflow-y: auto;
+    z-index: 10;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.fb-pos-dropdown-item {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+}
+
+.fb-pos-dropdown-item span {
+    font-size: 0.7rem;
+    color: #95a5a6;
+}
+
+.fb-pos-dropdown-default {
+    background-color: #f1f2f6;
+}
+
+.fb-pos-dropdown-empty {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    text-align: center;
+}
+
+/* Campos de entrada genéricos */
+.fb-pos-select,
+.fb-pos-discount-input {
+    width: 100%;
+    padding: 0.4rem;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    font-size: 0.85rem;
+}
+
+/* Sección de checkout del pie */
+.fb-pos-checkout-footer {
+    border-top: 2px solid #f4f6f7;
+    padding-top: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.fb-pos-row-subtotal {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: #7f8c8d;
+}
+
+.fb-pos-row-discount {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: #e74c3c;
+}
+
+.fb-pos-row-total {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-top: 0.3rem;
+    margin-bottom: 1rem;
+}
+
+.fb-total-green {
+    color: #27ae60;
+}
+
+.fb-pos-submit-btn {
+    background: linear-gradient(135deg, #1a6b3a, #2ecc71);
+    width: 100%;
+    margin: 0;
+}
+
+.fb-pos-submit-btn i {
+    margin-right: 0.4rem;
+}
+
+/* ==========================================================================
+   FORMULARIO DE REGISTRO INTEGRADO EXCLUSIVO (POS)
+   ========================================================================== */
+.fb-pos-custom-register {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.fb-pos-register-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-top: 0.5rem;
+}
+
+.fb-pos-form-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.fb-pos-form-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 0.3rem;
+}
+
+.fb-pos-form-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--fb-secondary-text, #555);
+}
+
+.fb-pos-form-input {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    background-color: #f8f9fa;
+    color: #333;
+    transition: border-color 0.2s ease-in-out;
+}
+
+.fb-pos-form-input:focus {
+    outline: none;
+    border-color: #28a745;
+    background-color: #fff;
+}
+
+.fb-mb-15 {
+    margin-bottom: 1.5rem;
+}
+
+.fb-pos-register-actions {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Clases Utilitarias rápidas */
+.fb-mb-1 { margin-bottom: 1rem; }
+.fb-mt-2 { margin-top: 0.5rem; }
+.fb-p-y-05 { padding: 0.5rem 0; }
+.fb-w-100 { width: 100%; }
+.fb-p-04 { padding: 0.4rem; }

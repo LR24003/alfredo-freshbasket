@@ -1,6 +1,7 @@
 import "../styles/forms.css";
 import React, { useState, useEffect, useMemo } from "react";
 import toast from "react-hot-toast";
+import { apiService } from "../services/apiService.js";
 import { useEntity } from "../hooks/useEntity.js";
 import { tieneAcceso } from "../Config/permissions.js";
 
@@ -23,6 +24,8 @@ function FormLayout({
     const [searchId, setSearchId] = useState("");
     const [filteredByName, setFilteredByName] = useState([]);
     const [filteredById, setFilteredById] = useState(null);
+    const [searchCategory, setSearchCategory] = useState("");
+    const [filteredByCategory, setFilteredByCategory] = useState([]);
 
     // Estado para el formulario de actualización
     const [formData, setFormData] = useState({});
@@ -132,6 +135,28 @@ function FormLayout({
             setFilteredById(null);
         } else {
             setFilteredById(encontrado);
+        }
+    };
+
+    // Buscar por categoría
+    const handleSearchByCategory = async (e) => {
+        e.preventDefault();
+        const cleanCategory = searchCategory.trim();
+        if (!cleanCategory) return setFilteredByCategory([]);
+
+        try {
+            const productService = apiService("products");
+            const resultado = await productService.getByCategory(cleanCategory);
+
+            if (!resultado || resultado.length === 0) {
+                toast.error(`No se encontraron productos en la categoría "${cleanCategory}".`);
+                setFilteredByCategory([]);
+            } else {
+                setFilteredByCategory(resultado);
+            }
+        } catch (error) {
+            toast.error("Error al buscar productos por esa categoría.");
+            setFilteredByCategory([]);
         }
     };
 
@@ -248,8 +273,36 @@ function FormLayout({
                 </div>
             )}
 
+            {/* BUSCAR POR CATEGORÍA */}
+            {activeTab === "category" && resource === "products" && !showWelcome && (
+                <div className="fb-form-section">
+                    <div className="fb-form-card">
+                        <h3 className="fb-form-title"><i className="bi bi-grid-3x3-gap"/> Buscar por categoría</h3>
+                        <form onSubmit={handleSearchByCategory} className="fb-search-form">
+                            <div className="fb-search-input-wrap">
+                                <i className="bi bi-tag fb-search-icon"/>
+                                <input
+                                    type="text"
+                                    className="fb-search-input"
+                                    placeholder="Ej: Lácteos, Verduras, Frutas..."
+                                    value={searchCategory}
+                                    onChange={(e) => setSearchCategory(e.target.value)}
+                                />
+                            </div>
+                            <button type="submit" className="fb-search-btn">Buscar</button>
+                        </form>
+                    </div>
+
+                    <div className="fb-results-grid fb-users-cards-margin mt-4">
+                        {filteredByCategory.length > 0 &&
+                            filteredByCategory.map(item => renderCard(item))
+                        }
+                    </div>
+                </div>
+            )}
+
             {/* FORMULARIO CREAR */}
-            {activeTab === "create" && !showWelcome && (
+            {activeTab === "create" && (
                 <div className="fb-form-section fb-tab-create">
                     <div className="fb-form-card">
                         <h3 className="fb-form-title"><i className="bi bi-plus-circle"/> Registrar {title}</h3>
@@ -260,20 +313,37 @@ function FormLayout({
                                         <label className="fb-crud-label">{f.label}</label>
                                         <div className="fb-crud-input-wrap">
                                             <i className={`bi ${f.icon} fb-crud-input-icon`}/>
-                                            <input
-                                                type={f.type || "text"}
-                                                name={f.name}
-                                                className="fb-crud-input"
-                                                placeholder={f.placeholder}
-                                                required={f.required !== false}
-                                                disabled={f.disabled || entity.create.isPending}
-                                                readOnly={f.readOnly || f.name === "userName"}
-                                                defaultValue={f.defaultValue ?? ""}
-                                                step={f.step}
-                                                list={f.list}
-                                                autoComplete={f.list ? "off" : "on"}
-                                            />
-                                            {f.list && f.options && (
+
+                                            {f.type === "select" ? (
+                                                <select
+                                                    name={f.name}
+                                                    className="fb-crud-input"
+                                                    required={f.required !== false}
+                                                    disabled={f.disabled || entity.create.isPending}
+                                                    defaultValue={f.defaultValue ?? ""}
+                                                >
+                                                    <option value="" disabled>{f.placeholder || "Seleccione una opción"}</option>
+                                                    {f.options && f.options.map((opt, idx) => (
+                                                        <option key={idx} value={opt.value ?? opt}>{opt.label ?? opt}</option>
+                                                    ))}
+                                                </select>
+                                            ) : (
+                                                <input
+                                                    type={f.type || "text"}
+                                                    name={f.name}
+                                                    className="fb-crud-input"
+                                                    placeholder={f.placeholder}
+                                                    required={f.required !== false}
+                                                    disabled={f.disabled || entity.create.isPending}
+                                                    readOnly={f.readOnly || f.name === "userName"}
+                                                    defaultValue={f.defaultValue ?? ""}
+                                                    step={f.step}
+                                                    list={f.list}
+                                                    autoComplete={f.list ? "off" : "on"}
+                                                />
+                                            )}
+
+                                            {f.type !== "select" && f.list && f.options && (
                                                 <datalist id={f.list}>
                                                     {f.options.map((opt, idx) => <option key={idx} value={opt}/>)}
                                                 </datalist>
@@ -333,25 +403,45 @@ function FormLayout({
                                             <label className="fb-crud-label">{f.label}</label>
                                             <div className="fb-crud-input-wrap">
                                                 <i className={`bi ${f.icon} fb-crud-input-icon`}/>
-                                                <input
-                                                    type={f.type || "text"}
-                                                    name={f.name}
-                                                    className="fb-crud-input"
-                                                    placeholder={f.placeholder}
-                                                    value={inputValue}
-                                                    onChange={(e) => {
-                                                        if (!isUserNameField) {
+
+                                                {f.type === "select" ? (
+                                                    <select
+                                                        name={f.name}
+                                                        className="fb-crud-input"
+                                                        value={inputValue}
+                                                        onChange={(e) => {
                                                             setFormData({...formData, [f.name]: e.target.value});
-                                                        }
-                                                    }}
-                                                    required={f.requiredOnUpdate !== false && f.required !== false}
-                                                    disabled={f.disabled || f.disabledOnUpdate || entity.update.isPending}
-                                                    readOnly={f.readOnly || isUserNameField}
-                                                    step={f.step}
-                                                    list={f.list}
-                                                    autoComplete={f.list ? "off" : "on"}
-                                                />
-                                                {f.list && f.options && (
+                                                        }}
+                                                        required={f.requiredOnUpdate !== false && f.required !== false}
+                                                        disabled={f.disabled || f.disabledOnUpdate || entity.update.isPending}
+                                                    >
+                                                        <option value="" disabled>{f.placeholder || "Seleccione una opción"}</option>
+                                                        {f.options && f.options.map((opt, idx) => (
+                                                            <option key={idx} value={opt.value ?? opt}>{opt.label ?? opt}</option>
+                                                        ))}
+                                                    </select>
+                                                ) : (
+                                                    <input
+                                                        type={f.type || "text"}
+                                                        name={f.name}
+                                                        className="fb-crud-input"
+                                                        placeholder={f.placeholder}
+                                                        value={inputValue}
+                                                        onChange={(e) => {
+                                                            if (!isUserNameField) {
+                                                                setFormData({...formData, [f.name]: e.target.value});
+                                                            }
+                                                        }}
+                                                        required={f.requiredOnUpdate !== false && f.required !== false}
+                                                        disabled={f.disabled || f.disabledOnUpdate || entity.update.isPending}
+                                                        readOnly={f.readOnly || isUserNameField}
+                                                        step={f.step}
+                                                        list={f.list}
+                                                        autoComplete={f.list ? "off" : "on"}
+                                                    />
+                                                )}
+
+                                                {f.type !== "select" && f.list && f.options && (
                                                     <datalist id={f.list}>
                                                         {f.options.map((opt, idx) => <option key={idx} value={opt}/>)}
                                                     </datalist>

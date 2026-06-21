@@ -2,6 +2,7 @@ package com.group1.proyect.freshbasket.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -22,6 +23,12 @@ public class ExitResponseDTO {
 
     @Schema(description = "Cantidad total de la salida", example = "50")
     private Integer quantity;
+
+    @Schema(description = "Razón de o motivo de la salida", example = "Venta")
+    private String exitReason;
+
+    @Schema(description = "ID de la venta", example = "1")
+    private Long saleId;
 
     @Schema(description = "ID del producto", example = "1")
     private Long productId;

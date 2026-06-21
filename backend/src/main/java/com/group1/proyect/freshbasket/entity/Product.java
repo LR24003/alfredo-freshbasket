@@ -25,7 +25,6 @@ public class Product implements Identifiable<Long> {
     @Column(nullable = false, length = 100)
     private String name;
 
-    @NotNull(message = "El precio es obligatorio")
     @DecimalMin("0.0")
     @Column(nullable = false)
     private BigDecimal price;
@@ -51,6 +50,9 @@ public class Product implements Identifiable<Long> {
 
     @Column(name = "active", nullable = false)
     private boolean active = true;
+
+    @Column(name = "discount", nullable = false, precision = 10, scale = 2)
+    private BigDecimal discount = BigDecimal.ZERO;
 
     // Relación con Categoría
     @JsonIgnore

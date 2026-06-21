@@ -28,6 +28,9 @@ public class CarritoResponseDTO {
     @Schema(description = "Precio unitario actual del producto", example = "5.50")
     private BigDecimal unitPrice;
 
+    @Schema(description = "Descuentos por promociones", example = "10%")
+    private BigDecimal discount;
+
     @Schema(description = "Subtotal de este producto (Cantidad x Precio Unitario)", example = "16.50")
     private BigDecimal subtotal;
 

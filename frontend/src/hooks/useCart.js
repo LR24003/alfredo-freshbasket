@@ -82,18 +82,21 @@ export const useCart = () => {
         }
     });
 
+    // Cambios aplicados aquí 👇
     const checkoutMutation = useMutation({
         mutationFn: async () => {
             if (!userId) throw new Error("Usuario no autenticado");
-            await axios.post(`/api/cart/user/${userId}/checkout`);
+            const { data } = await axios.post(`/api/cart/user/${userId}/checkout`);
+            return data;
         },
         onSuccess: () => {
             invalidateCart();
-            toast.success('¡Compra realizada con éxito!');
+            // Avisamos a los componentes de ventas que refresquen sus listas
+            queryClient.invalidateQueries({ queryKey: ['ventas'] });
+            queryClient.invalidateQueries({ queryKey: ['sales'] });
         },
         onError: (error) => {
-            console.error(error);
-            toast.error('Hubo un problema al procesar la compra');
+            console.error("Error al procesar el checkout en hook:", error);
         }
     });
 

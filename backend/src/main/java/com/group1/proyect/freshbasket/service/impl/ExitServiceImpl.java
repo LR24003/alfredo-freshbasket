@@ -5,9 +5,11 @@ import com.group1.proyect.freshbasket.dto.response.ExitResponseDTO;
 import com.group1.proyect.freshbasket.entity.Exit;
 import com.group1.proyect.freshbasket.entity.Product;
 import com.group1.proyect.freshbasket.entity.User;
+import com.group1.proyect.freshbasket.entity.Sale; // Asegúrate de que esta sea tu entidad de Ventas
 import com.group1.proyect.freshbasket.repository.ExitRepository;
 import com.group1.proyect.freshbasket.repository.ProductRepository;
 import com.group1.proyect.freshbasket.repository.UserRepository;
+import com.group1.proyect.freshbasket.repository.SaleRepository; // Asegúrate de tener este repositorio
 import com.group1.proyect.freshbasket.service.ExitService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,15 +25,18 @@ public class ExitServiceImpl extends GenericServiceImpl<Exit,
     private final ExitRepository exitRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final SaleRepository saleRepository;
 
     public ExitServiceImpl(
             ExitRepository exitRepository,
             ProductRepository productRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            SaleRepository saleRepository) {
         super(exitRepository);
         this.exitRepository = exitRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
+        this.saleRepository = saleRepository;
     }
 
     @Override
@@ -40,6 +45,13 @@ public class ExitServiceImpl extends GenericServiceImpl<Exit,
         dto.setId(exit.getId());
         dto.setExitDate(exit.getExitDate());
         dto.setQuantity(exit.getQuantity());
+        dto.setExitReason(exit.getExitReason());
+
+        if (exit.getSale() != null) {
+            dto.setSaleId(exit.getSale().getId());
+        } else {
+            dto.setSaleId(null);
+        }
 
         if (exit.getProduct() != null) {
             dto.setProductId(exit.getProduct().getId());
@@ -65,12 +77,14 @@ public class ExitServiceImpl extends GenericServiceImpl<Exit,
     protected Exit convertToEntity(ExitRequestDTO dto) {
         Exit exit = new Exit();
         exit.setQuantity(dto.getQuantity());
+        exit.setExitReason(dto.getExitReason());
         mapRelationsFromDto(dto, exit);
         return exit;
     }
 
     @Override
     protected void updateEntityFromDto(ExitRequestDTO dto, Exit exit) {
+        exit.setExitReason(dto.getExitReason());
         mapRelationsFromDto(dto, exit);
     }
 
@@ -85,6 +99,17 @@ public class ExitServiceImpl extends GenericServiceImpl<Exit,
 
         exit.setProduct(product);
         exit.setUser(user);
+
+        if (dto.getExitReason() != null && dto.getExitReason().toUpperCase().equals("VENTA")) {
+            if (dto.getSaleId() == null) {
+                throw new IllegalArgumentException("El ID de la venta es obligatorio cuando el motivo es VENTA.");
+            }
+            Sale sale = saleRepository.findById(dto.getSaleId())
+                    .orElseThrow(() -> new RuntimeException("Venta no encontrada con el ID: " + dto.getSaleId()));
+            exit.setSale(sale);
+        } else {
+            exit.setSale(null);
+        }
     }
 
     @Override
@@ -135,8 +160,8 @@ public class ExitServiceImpl extends GenericServiceImpl<Exit,
                 .orElseThrow(() -> new RuntimeException("Salida no encontrada con ese ID: " + id));
 
         updateEntityFromDto(requestDTO, exit);
-        Product product = exit.getProduct();
 
+        Product product = exit.getProduct();
         if (!product.isActive()) {
             throw new IllegalStateException("No se puede modificar esta salida porque el producto asociado está eliminado.");
         }

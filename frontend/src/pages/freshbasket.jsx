@@ -1,9 +1,7 @@
 import "../styles/freshbasket.css";
-import { tieneAcceso } from "../Config/permissions";
 import { NotificationBell } from "../components/NotificationBell";
-import Profile from "./profile.jsx";
-import { useStockAlerts } from "../hooks/useStockAlerts";
-import { useCart } from "../hooks/useCart"; // 🌟 Importación del carrito integrada correctamente
+import { useCart } from "../hooks/useCart";
+import { useMenu } from "../hooks/useMenu";
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
 
@@ -11,31 +9,29 @@ function Freshbasket({ onLogout }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Extrae el rol y correo de cada usuario para mostrarse en el perfil
   const userRole = (localStorage.getItem("userRole") || "USUARIO").toUpperCase().trim();
   const userEmail = localStorage.getItem("userEmail") || "correodeejemplo@mail.com";
 
-  // 🌟 Consumimos el estado del carrito
+  // Consumimos el hook que acabamos de crear pasándole el rol actual
+  const { menuItems, getSubItems } = useMenu(userRole);
+
   const { cart, refetch } = useCart();
   const totalArticulos = cart?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
-  // 🌟 Sincronizar el contador del carrito inmediatamente cuando cambie la ruta
   useEffect(() => {
     if (refetch) refetch();
   }, [location.pathname, refetch]);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-
   const [isTabNone, setIsTabNone] = useState(true);
 
-  const [openMenus, setOpenMenus] = React.useState({
+  const [openMenus, setOpenMenus] = useState({
     [location.pathname.split("/")[2]]: true
   });
 
   const isAdmin = userRole === "ADMINISTRADOR" || userRole === "ADMIN";
 
-  // Helper para obtener la pestaña activa real del módulo actual en el localStorage
   const getActiveTabForCurrentModule = (path) => {
     const currentModule = path.split("/")[2];
     if (!currentModule) return "none";
@@ -47,13 +43,13 @@ function Freshbasket({ onLogout }) {
       entradas: "active_entries_Tab",
       salidas: "active_exits_Tab",
       categorias: "active_categories_Tab",
-      paises: "active_countries_Tab"
+      paises: "active_countries_Tab",
+      ventas: "active_sales_Tab"
     };
     return localStorage.getItem(mapping[currentModule]) || "none";
   };
 
-  // Sincronizar el estado de la foto cuando cambia la URL
-  React.useEffect(() => {
+  useEffect(() => {
     const currentModule = location.pathname.split("/")[2];
     setOpenMenus(() => {
       if (!currentModule) return {};
@@ -64,7 +60,6 @@ function Freshbasket({ onLogout }) {
     setIsTabNone(activeTab === "none");
   }, [location.pathname]);
 
-  // Escuchar los eventos globales para mostrar la foto de inicio
   useEffect(() => {
     const handleTabChange = () => {
       const activeTab = getActiveTabForCurrentModule(window.location.pathname);
@@ -72,13 +67,9 @@ function Freshbasket({ onLogout }) {
     };
 
     const events = [
-      "productsTabChanged",
-      "usersTabChanged",
-      "suppliersTabChanged",
-      "entriesTabChanged",
-      "exitsTabChanged",
-      "categoriesTabChanged",
-      "countriesTabChanged"
+      "productsTabChanged", "usersTabChanged", "suppliersTabChanged",
+      "entriesTabChanged", "exitsTabChanged", "categoriesTabChanged",
+      "countriesTabChanged", "salesTabChanged"
     ];
 
     events.forEach(evt => window.addEventListener(evt, handleTabChange));
@@ -87,21 +78,14 @@ function Freshbasket({ onLogout }) {
     };
   }, [location.pathname]);
 
-  // Inicializador de pestañas
   useEffect(() => {
     const modules = [
-      "active_products_Tab",
-      "active_users_Tab",
-      "active_suppliers_Tab",
-      "active_entries_Tab",
-      "active_exits_Tab",
-      "active_categories_Tab",
-      "active_countries_Tab"
+      "active_products_Tab", "active_users_Tab", "active_suppliers_Tab",
+      "active_entries_Tab", "active_exits_Tab", "active_categories_Tab",
+      "active_countries_Tab", "active_sales_Tab"
     ];
     modules.forEach(key => {
-      if (!localStorage.getItem(key)) {
-        localStorage.setItem(key, "none");
-      }
+      if (!localStorage.getItem(key)) localStorage.setItem(key, "none");
     });
   }, [userRole]);
 
@@ -130,156 +114,6 @@ function Freshbasket({ onLogout }) {
     navigate("/login");
   };
 
-  // MENÚ PRINCIPAL
-  const menuItems = React.useMemo(() => {
-    return [
-      { key: "home",         icon: "bi-house-door",         label: "Inicio",        path: "/freshbasket" },
-      { key: "productos",    icon: "bi-basket3",            label: "Productos",     path: "/freshbasket/productos", hasSubmenu: true },
-
-      ...(tieneAcceso(userRole, "crear") ? [
-        { key: "entradas",     icon: "bi-arrow-up-circle",    label: "Entradas" ,   path: "/freshbasket/entradas", hasSubmenu: true }
-      ] : []),
-
-      ...(tieneAcceso(userRole, "crear") ? [
-        { key: "salidas",      icon: "bi-arrow-right-circle",  label: "Salidas" ,    path: "/freshbasket/salidas", hasSubmenu: true }
-      ] : []),
-
-      ...(tieneAcceso(userRole, "crear") ? [
-        { key: "proveedores",  icon: "bi-truck",              label: "Proveedores", path: "/freshbasket/proveedores", hasSubmenu: true }
-      ] : []),
-
-      ...(tieneAcceso(userRole, "verModuloUsuarios") ? [
-        { key: "usuarios",     icon: "bi-people",             label: "Usuarios",    path: "/freshbasket/usuarios", hasSubmenu: true }
-      ] : []),
-
-      ...(tieneAcceso(userRole, "crear") ? [
-        { key: "categorias",   icon: "bi-list-stars",         label: "Categorias",  path: "/freshbasket/categorias", hasSubmenu: true }
-      ] : []),
-
-      ...(tieneAcceso(userRole, "crear") ? [
-        { key: "paises",       icon: "bi-globe",              label: "Paises",      path: "/freshbasket/paises", hasSubmenu: true }
-      ] : []),
-    ];
-  }, [userRole]);
-
-  // SubMenús Visuales del CRUD
-  const productSubItems = React.useMemo(() => [
-    ...(tieneAcceso(userRole, "verTabsConsulta") ? [
-      { key: "all",    icon: "bi-basket3",    label: "Todos los productos" },
-      { key: "name",   icon: "bi-search",           label: "Buscar por nombre" },
-      { key: "id",     icon: "bi-tag-fill",         label: "Buscar por ID" }
-    ] : []),
-    ...(tieneAcceso(userRole, "crear") ? [
-      { key: "create", icon: "bi-plus-circle-fill", label: "Registrar producto" }
-    ] : []),
-    ...(tieneAcceso(userRole, "actualizar") ? [
-      { key: "update", icon: "bi-pencil-square",    label: "Actualizar producto" }
-    ] : []),
-    ...(tieneAcceso(userRole, "eliminar") ? [
-      { key: "delete", icon: "bi-trash3-fill",      label: "Eliminar producto" }
-    ] : [])
-  ], [userRole]);
-
-  const userSubItems = React.useMemo(() => [
-    ...(tieneAcceso(userRole, "verModuloUsuarios") ? [
-      { key: "all",    icon: "bi-people",    label: "Todos los usuarios" },
-      { key: "name",   icon: "bi-search",           label: "Buscar por nombre" },
-      { key: "id",     icon: "bi-tag-fill",         label: "Buscar por ID" }
-    ] : []),
-    ...(tieneAcceso(userRole, "crear") ? [
-      { key: "create", icon: "bi-plus-circle-fill", label: "Registrar usuario" }
-    ] : []),
-    ...(tieneAcceso(userRole, "actualizar") ? [
-      { key: "update", icon: "bi-pencil-square",    label: "Actualizar usuario" }
-    ] : []),
-    ...(tieneAcceso(userRole, "eliminar") ? [
-      { key: "delete", icon: "bi-trash3-fill",      label: "Eliminar usuario" }
-    ] : [])
-  ], [userRole]);
-
-  const supplierSubItems = React.useMemo(() => [
-    ...(tieneAcceso(userRole, "verTabsConsulta") ? [
-      { key: "all",    icon: "bi-truck",    label: "Todos los proveedores" },
-      { key: "name",   icon: "bi-search",           label: "Buscar por nombre" },
-      { key: "id",     icon: "bi-tag-fill",         label: "Buscar por ID" }
-    ] : []),
-    ...(tieneAcceso(userRole, "crear") ? [
-      { key: "create", icon: "bi-plus-circle-fill", label: "Registrar proveedor" }
-    ] : []),
-    ...(tieneAcceso(userRole, "actualizar") ? [
-      { key: "update", icon: "bi-pencil-square",    label: "Actualizar proveedor" }
-    ] : []),
-    ...(tieneAcceso(userRole, "eliminar") ? [
-      { key: "delete", icon: "bi-trash3-fill",      label: "Eliminar proveedor" }
-    ] : [])
-  ], [userRole]);
-
-  const entrySubItems = React.useMemo(() => [
-    ...(tieneAcceso(userRole, "verTabsConsulta") ? [
-      { key: "all",    icon: "bi-arrow-up-circle",    label: "Todas las entradas" },
-      { key: "id",     icon: "bi-tag-fill",         label: "Buscar por ID" }
-    ] : []),
-    ...(tieneAcceso(userRole, "crear") ? [
-      { key: "create", icon: "bi-plus-circle-fill", label: "Registrar entrada" }
-    ] : []),
-    ...(tieneAcceso(userRole, "actualizar") ? [
-      { key: "update", icon: "bi-pencil-square",    label: "Actualizar entrada" }
-    ] : []),
-    ...(tieneAcceso(userRole, "eliminar") ? [
-      { key: "delete", icon: "bi-trash3-fill",      label: "Eliminar entrada" }
-    ] : [])
-  ], [userRole]);
-
-  const exitSubItems = React.useMemo(() => [
-    ...(tieneAcceso(userRole, "verTabsConsulta") ? [
-      { key: "all",    icon: "bi-arrow-right-circle",    label: "Todas las salidas" },
-      { key: "id",     icon: "bi-tag-fill",         label: "Buscar por ID" }
-    ] : []),
-    ...(tieneAcceso(userRole, "crear") ? [
-      { key: "create", icon: "bi-plus-circle-fill", label: "Registrar salida" }
-    ] : []),
-    ...(tieneAcceso(userRole, "actualizar") ? [
-      { key: "update", icon: "bi-pencil-square",    label: "Actualizar salida" }
-    ] : []),
-    ...(tieneAcceso(userRole, "eliminar") ? [
-      { key: "delete", icon: "bi-trash3-fill",      label: "Eliminar salida" }
-    ] : [])
-  ], [userRole]);
-
-  const categorySubItems = React.useMemo(() => [
-    ...(tieneAcceso(userRole, "verTabsConsulta") ? [
-      { key: "all",    icon: "bi-list-stars",    label: "Todas las categorias" },
-      { key: "name",   icon: "bi-tag-fill",         label: "Buscar por nombre" },
-      { key: "id",     icon: "bi-tag-fill",         label: "Buscar por ID" }
-    ] : []),
-    ...(tieneAcceso(userRole, "crear") ? [
-      { key: "create", icon: "bi-plus-circle-fill", label: "Registrar categoria" }
-    ] : []),
-    ...(tieneAcceso(userRole, "actualizar") ? [
-      { key: "update", icon: "bi-pencil-square",    label: "Actualizar categoria" }
-    ] : []),
-    ...(tieneAcceso(userRole, "eliminar") ? [
-      { key: "delete", icon: "bi-trash3-fill",      label: "Eliminar categoria" }
-    ] : [])
-  ], [userRole]);
-
-  const countrySubItems = React.useMemo(() => [
-    ...(tieneAcceso(userRole, "verTabsConsulta") ? [
-      { key: "all",    icon: "bi-globe",    label: "Todos los paises" },
-      { key: "name",   icon: "bi-tag-fill",         label: "Buscar por nombre" },
-      { key: "id",     icon: "bi-tag-fill",         label: "Buscar por ID" }
-    ] : []),
-    ...(tieneAcceso(userRole, "crear") ? [
-      { key: "create", icon: "bi-plus-circle-fill", label: "Registrar pais" }
-    ] : []),
-    ...(tieneAcceso(userRole, "actualizar") ? [
-      { key: "update", icon: "bi-pencil-square",    label: "Actualizar pais" }
-    ] : []),
-    ...(tieneAcceso(userRole, "eliminar") ? [
-      { key: "delete", icon: "bi-trash3-fill",      label: "Eliminar pais" }
-    ] : [])
-  ], [userRole]);
-
   return (
       <div className="fb-root">
         {/* SIDEBAR */}
@@ -294,15 +128,8 @@ function Freshbasket({ onLogout }) {
               const isActive = location.pathname === item.path || (item.path !== "/freshbasket" && location.pathname.startsWith(item.path));
               const isMenuOpen = openMenus[item.key] !== undefined ? openMenus[item.key] : isActive;
 
-              const subItemsArr =
-                  item.key === "productos" ? productSubItems :
-                      item.key === "usuarios" ? userSubItems :
-                          item.key === "proveedores" ? supplierSubItems :
-                              item.key === "entradas" ? entrySubItems :
-                                  item.key === "salidas" ? exitSubItems :
-                                      item.key === "categorias" ? categorySubItems :
-                                          item.key === "paises" ? countrySubItems :
-                                              [];
+              // Obtenemos los sub-items de forma limpia mediante la función del Hook
+              const subItemsArr = getSubItems(item.key);
 
               return (
                   <div key={item.key} style={{ width: "100%" }}>
@@ -323,16 +150,15 @@ function Freshbasket({ onLogout }) {
                               entradas: { storage: "active_entries_Tab", event: "entriesTabChanged" },
                               salidas: { storage: "active_exits_Tab", event: "exitsTabChanged" },
                               categorias: { storage: "active_categories_Tab", event: "categoriesTabChanged" },
-                              paises: { storage: "active_countries_Tab", event: "countriesTabChanged" }
+                              paises: { storage: "active_countries_Tab", event: "countriesTabChanged" },
+                              ventas: { storage: "active_sales_Tab", event: "salesTabChanged" }
                             };
 
                             const currentConfig = tabKeys[item.key];
-
                             if (currentConfig) {
                               localStorage.setItem(currentConfig.storage, "none");
                               window.dispatchEvent(new Event(currentConfig.event));
                             }
-
                             navigate(item.path);
                           }
                         }}
@@ -411,33 +237,16 @@ function Freshbasket({ onLogout }) {
               <p style={{ margin: 0 }} className="fb-top-sub">Bienvenido/a </p>
             </div>
 
-            {/* SECCIÓN DERECHA DE LA TOPBAR */}
             <div className="fb-top-right" style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
-
-              {/* BOTÓN E INDICADOR DEL CARRITO */}
-              <button
-                  type="button"
-                  onClick={() => navigate("/freshbasket/cart")}
-                  className="fb-topbar-cart-btn"
-                  title="Ver mi carrito"
-              >
+              <button type="button" onClick={() => navigate("/freshbasket/cart")} className="fb-topbar-cart-btn" title="Ver mi carrito">
                 <i className="bi bi-cart3 text-dark" style={{ fontSize: "1.3rem" }} />
-
-                {totalArticulos > 0 && (
-                    <span className="fb-cart-badge">
-                 {totalArticulos}
-               </span>
-                )}
+                {totalArticulos > 0 && <span className="fb-cart-badge">{totalArticulos}</span>}
               </button>
 
               <NotificationBell isAdmin={isAdmin} />
 
-              {/* CONTENEDOR DE PERFIL */}
               <div className="fb-profile-container" ref={profileRef} style={{ position: "relative" }}>
-                <button
-                    onClick={() => setShowProfileMenu(!showProfileMenu)}
-                    className="fb-logout-btn fb-profile-trigger-btn"
-                >
+                <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="fb-logout-btn fb-profile-trigger-btn">
                   <i className="bi bi-person-circle fb-profile-icon" />
                   <span>Perfil</span>
                   <i className={`bi ${showProfileMenu ? "bi-chevron-up" : "bi-chevron-down"} fb-profile-arrow`} />
@@ -446,22 +255,15 @@ function Freshbasket({ onLogout }) {
                 {showProfileMenu && (
                     <div className="fb-profile-dropdown">
                       <div className="fb-profile-header">
-                        <span className={`fb-role-badge ${userRole.toUpperCase()}`}>
-                          {userRole}
-                        </span>
+                        <span className={`fb-role-badge ${userRole.toUpperCase()}`}>{userRole}</span>
                         <h6 className="fb-profile-name fw-bold text-dark mt-2 mb-1" style={{ fontSize: "0.95rem" }}>
                           {localStorage.getItem("userName") || "Usuario Registrado"}
                         </h6>
-                        <p className="fb-profile-email">
-                          <i className="bi bi-envelope-fill" /> {userEmail}
-                        </p>
+                        <p className="fb-profile-email"><i className="bi bi-envelope-fill" /> {userEmail}</p>
                       </div>
 
                       <button
-                          onClick={() => {
-                            navigate("my-profile");
-                            setShowProfileMenu(false);
-                          }}
+                          onClick={() => { navigate("my-profile"); setShowProfileMenu(false); }}
                           className="fb-profile-edit-btn fb-profile-edit-action-btn mb-2"
                           style={{ width: "100%", textAlign: "left" }}
                       >
@@ -479,22 +281,12 @@ function Freshbasket({ onLogout }) {
 
           {/* VISTA DINÁMICA DE CONTENIDO */}
           <div className="fb-content">
-            {(location.pathname === "/freshbasket" || (isTabNone && !location.pathname.endsWith("my-profile") && !location.pathname.toLowerCase().includes("cart"))) && (
-                <div
-                    className="fb-photo-section"
-                    style={{
-                      display: "flex", justifyContent: "center", alignItems: "center", height: "calc(100vh - 90px)",
-                      width: "100%", boxSizing: "border-box", overflow: "hidden", padding: "2rem"
-                    }}
-                >
-                  <img
-                      src="/logo1.png"
-                      alt="Foto principal FreshBasket"
-                      className="fb-photo"
-                      style={{
-                        width: "100%", maxWidth: "700px", maxHeight: "calc(100vh - 160px)", objectFit: "contain", display: "block"
-                      }}
-                  />
+            {(location.pathname === "/freshbasket" || (isTabNone && !location.pathname.endsWith("my-profile")
+                && !location.pathname.toLowerCase().includes("cart")
+                && !location.pathname.toLowerCase().includes("ventas")
+            )) && (
+                <div className="fb-photo-section" style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "calc(100vh - 90px)", width: "100%", boxSizing: "border-box", overflow: "hidden", padding: "2rem" }}>
+                  <img src="/logo1.png" alt="Foto principal FreshBasket" className="fb-photo" style={{ width: "100%", maxWidth: "700px", maxHeight: "calc(100vh - 160px)", objectFit: "contain", display: "block" }} />
                 </div>
             )}
             <Outlet />

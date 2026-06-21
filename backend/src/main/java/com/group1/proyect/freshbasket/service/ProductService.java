@@ -10,5 +10,7 @@ public interface ProductService extends GenericService<Product, ProductRequestDT
 
     List<ProductResponseDTO> searchProductsByName(String name);
 
+    List<ProductResponseDTO> getProductsByCategory(String categoryName);
+
     List<ProductResponseDTO> getLowStockAlerts();
 }

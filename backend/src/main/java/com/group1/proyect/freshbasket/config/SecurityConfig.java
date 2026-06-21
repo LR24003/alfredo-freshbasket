@@ -69,14 +69,20 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/entries/**", "/api/exits/**").hasAnyAuthority("ADMINISTRADOR", "SOPORTE")
                 .requestMatchers(HttpMethod.DELETE, "/api/entries/**", "/api/exits/**").hasAuthority("ADMINISTRADOR")
 
-                // 5. PERMISOS DEL PERFIL PROPIO (Usuarios autenticados)
+                // PERMISOS DEL PERFIL PROPIO (Usuarios autenticados)
                 .requestMatchers("/api/users/me").authenticated()
 
-
                 // GET lo ve Soporte/Admin. El resto de acciones (POST, PUT, DELETE) solo Admin
-                .requestMatchers(HttpMethod.GET, "/api/users/**").hasAnyAuthority("ADMINISTRADOR", "SOPORTE")
-                .requestMatchers(HttpMethod.POST, "/api/users/**").hasAnyAuthority("ADMINISTRADOR", "SOPORTE")
+                .requestMatchers(HttpMethod.GET, "/api/users/**").hasAnyAuthority("ADMINISTRADOR", "SOPORTE", "EMPLEADO")
+                .requestMatchers(HttpMethod.POST, "/api/users/**").hasAnyAuthority("ADMINISTRADOR", "SOPORTE", "EMPLEADO")
                 .requestMatchers("/api/users/**").hasAuthority("ADMINISTRADOR")
+
+                .requestMatchers(HttpMethod.GET, "/api/sales/my-purchases").hasAnyAuthority("ADMINISTRADOR", "EMPLEADO", "CLIENTE", "SOPORTE")
+                .requestMatchers(HttpMethod.GET, "/api/sales/status/**", "/api/sales", "/api/sales/{id}").hasAnyAuthority("ADMINISTRADOR", "EMPLEADO", "SOPORTE")
+                .requestMatchers(HttpMethod.GET, "/api/sales/{saleId}/details").hasAnyRole("EMPLEADO", "ADMINISTRADOR")
+                .requestMatchers(HttpMethod.POST, "/api/sales/**").hasAnyAuthority("ADMINISTRADOR", "EMPLEADO")
+                .requestMatchers(HttpMethod.PUT, "/api/sales/**").hasAuthority("ADMINISTRADOR")
+                .requestMatchers(HttpMethod.DELETE, "/api/sales/**").hasAuthority("ADMINISTRADOR")
 
                 // Seguridad global
                 .anyRequest().authenticated()

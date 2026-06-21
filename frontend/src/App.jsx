@@ -20,6 +20,7 @@ import Exits from "./pages/exits";
 import Categories from "./pages/categories";
 import Countries from "./pages/countries";
 import Cart from "./pages/Carrito.jsx";
+import Sales from "./pages/Sales.jsx";
 
 // Creación del cliente global de Queries
 const queryClient = new QueryClient({
@@ -29,7 +30,7 @@ const queryClient = new QueryClient({
             refetchOnWindowFocus: false,
             retry: (failureCount, error) => {
                 if (error?.response?.status === 502 || error?.status === 502 || error?.response?.status === 403) {
-                    return false; // Evitamos reintentos si cae en error de permisos o pasarela caída
+                    return false;
                 }
                 return failureCount < 2;
             },
@@ -47,14 +48,13 @@ function App() {
         const token = localStorage.getItem("token");
         setIsAuthenticated(!!token);
         if (!token) {
-            queryClient.clear(); // Limpia la caché de consultas de React Query si la sesión expira
+            queryClient.clear();
         }
     };
 
     useEffect(() => {
         // Escucha cambios desde otras pestañas
         window.addEventListener("storage", checkAuth);
-        // Escucha eventos del mismo hilo (por si haces login/logout directo en la app)
         window.addEventListener("local-storage-change", checkAuth);
 
         return () => {
@@ -65,7 +65,7 @@ function App() {
 
     // Manejador nativo del Logout que se pasa al layout de Freshbasket
     const handleLogout = () => {
-        localStorage.clear(); // O remueve uno por uno si conservas datos independientes
+        localStorage.clear();
         setIsAuthenticated(false);
         queryClient.clear();
     };
@@ -87,7 +87,6 @@ function App() {
                                 !isAuthenticated ? (
                                     <Login setIsAuthenticated={(val) => {
                                         setIsAuthenticated(val);
-                                        // Dispara evento para sincronizar inmediatamente las queries activas
                                         window.dispatchEvent(new Event("local-storage-change"));
                                     }} />
                                 ) : (
@@ -111,6 +110,7 @@ function App() {
                             <Route path="categorias" element={<Categories />} />
                             <Route path="paises" element={<Countries />} />
                             <Route path="cart" element={<Cart />} />
+                            <Route path="ventas" element={<Sales />} />
 
                             <Route
                                 path="my-profile"

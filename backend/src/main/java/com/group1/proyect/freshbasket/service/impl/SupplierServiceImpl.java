@@ -36,9 +36,9 @@ public class SupplierServiceImpl extends GenericServiceImpl<Supplier, SupplierRe
         dto.setEmail(supplier.getEmail());
         dto.setPhone(supplier.getPhone());
         dto.setAddress(supplier.getAddress());
+        dto.setCountryId(supplier.getCountry().getId());
 
         if (supplier.getCountry() != null) {
-            dto.setCountryId(supplier.getCountry().getId());
             dto.setCountryName(supplier.getCountry().getName());
         }
 
@@ -64,8 +64,8 @@ public class SupplierServiceImpl extends GenericServiceImpl<Supplier, SupplierRe
         supplier.setPhone(dto.getPhone());
         supplier.setAddress(dto.getAddress());
 
-        Country country = countryRepository.findById(dto.getCountryId())
-                .orElseThrow(() -> new RuntimeException("País no encontrado con ese ID: " + dto.getCountryId()));
+        Country country = countryRepository.findByNameIgnoreCase(dto.getCountryName())
+                .orElseThrow(() -> new RuntimeException("País no encontrado con ese ID: " + dto.getCountryName()));
 
         supplier.setCountry(country);
     }
@@ -101,7 +101,7 @@ public class SupplierServiceImpl extends GenericServiceImpl<Supplier, SupplierRe
     @Override
     @Transactional(readOnly = true)
     public List<SupplierResponseDTO> searchSuppliersByName(String name) {
-        return supplierRepository.findByNameContainingIgnoreCase(name)
+        return supplierRepository.findByNameIgnoreCase(name)
                 .stream()
                 .filter(Supplier::isActive)
                 .map(this::convertToResponseDto)

@@ -29,6 +29,10 @@ public class Exit implements Identifiable<Long> {
     @Column(name = "exit_date", nullable = false, updatable = false)
     private LocalDateTime exitDate;
 
+    @NotNull(message = "La razón de la salida es obligatoria")
+    @Column(name = "exit_reason", length = 50, nullable = false, updatable = false)
+    private String exitReason;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     @JsonIgnore
@@ -38,6 +42,11 @@ public class Exit implements Identifiable<Long> {
     @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnore
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sale_id", nullable = true)
+    @JsonIgnore
+    private Sale sale;
 
     @Column(name = "active", nullable = false)
     private boolean active = true;

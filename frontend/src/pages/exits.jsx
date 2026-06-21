@@ -22,6 +22,25 @@ export const getExitFields = (isEditMode, activeProducts = [], userLogin = "") =
         step: "1"
     },
     {
+        label: "Motivo de la salida",
+        name: "exitReason",
+        icon: "bi-box-arrow-down-left",
+        type: "select",
+        placeholder: "Seleccione el motivo",
+        required: true,
+        options: [
+            { value: "VENTA", label: "Venta" },
+            { value: "MERMA", label: "Merma (Pérdida/Daño)" }
+        ]
+    },
+    {
+        label: "ID de venta",
+        name: "saleId",
+        icon: "bi-receipt",
+        placeholder: "Salida manual (No asociada a venta)",
+        readOnly: true
+    },
+    {
         label: isEditMode ? "Usuario que actualiza" : "Usuario que registra",
         name: "userName",
         icon: "bi-person",
@@ -66,6 +85,25 @@ function Exits() {
                     <p className="fb-card-user-detail">
                         <i className="bi bi-layers" /> <strong>Cantidad:</strong> {exit.quantity || 0}
                     </p>
+                    <p className="fb-card-user-detail">
+                        <i className="bi bi-box-arrow-down-left text-dangerme-2" />
+                        <strong>Motivo de salida:</strong>
+                        <span className={`badge ms-2 ${
+                            exit.exitReason?.toUpperCase() === 'VENTA' ? 'bg-success' :
+                                exit.exitReason?.toUpperCase() === 'MERMA' ? 'bg-warning text-dark' : 'bg-secondary'
+                        }`}>
+                         {exit.exitReason ? exit.exitReason.replace('_', ' ').toLowerCase() : "No especificado"}
+                     </span>
+                    </p>
+                    {exit.saleId && (
+                    <p className="fb-card-user-detail text-muted">
+                     <i className="bi bi-receipt text-primary" /> <strong>Venta vinculada:</strong>
+                     <span className="badge bg-light text-primary border border-primary ms-2">
+                     #{exit.saleId}
+                     </span>
+                    </p>
+                    )}
+
                     <div className="fb-card-info-row">
                         <i className="bi bi-person" />
                         <div className="fb-card-info-meta">

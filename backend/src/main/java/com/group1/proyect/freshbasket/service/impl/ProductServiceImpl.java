@@ -46,6 +46,7 @@ public class ProductServiceImpl extends GenericServiceImpl<Product, ProductReque
         dto.setDescription(product.getDescription());
         dto.setImageUrl(product.getImageUrl());
         dto.setMinStock(product.getMinStock());
+        dto.setDiscount(product.getDiscount());
 
         dto.setActive(product.isActive());
 
@@ -100,6 +101,7 @@ public class ProductServiceImpl extends GenericServiceImpl<Product, ProductReque
         product.setDescription(dto.getDescription());
         product.setImageUrl(dto.getImageUrl());
         product.setMinStock(dto.getMinStock());
+        product.setDiscount(dto.getDiscount());
 
         String cleanCategoryName = dto.getCategoryName() != null ? dto.getCategoryName().trim() : "";
         Category category = categoryRepository.findByNameIgnoreCase(cleanCategoryName)
@@ -135,6 +137,16 @@ public class ProductServiceImpl extends GenericServiceImpl<Product, ProductReque
                 .map(this::convertToResponseDto)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado o inactivo con ID: " + id));
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductResponseDTO> getProductsByCategory(String categoryName) {
+        return productRepository.findByCategoryNameIgnoreCaseAndActiveTrue(categoryName)
+                .stream()
+                .map(this::convertToResponseDto)
+                .collect(Collectors.toList());
+    }
+
 
     @Override
     @Transactional

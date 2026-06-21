@@ -1,6 +1,8 @@
 package com.group1.proyect.freshbasket.service.impl;
 
 import com.group1.proyect.freshbasket.dto.request.CarritoRequestDTO;
+import com.group1.proyect.freshbasket.dto.request.SaleRequestDTO;
+import com.group1.proyect.freshbasket.dto.request.SaleDetailsRequestDTO;
 import com.group1.proyect.freshbasket.dto.response.CarritoResponseDTO;
 import com.group1.proyect.freshbasket.dto.response.CartResponseDTO;
 import com.group1.proyect.freshbasket.entity.Cart;
@@ -12,6 +14,7 @@ import com.group1.proyect.freshbasket.repository.CarritoRepository;
 import com.group1.proyect.freshbasket.repository.ProductRepository;
 import com.group1.proyect.freshbasket.repository.UserRepository;
 import com.group1.proyect.freshbasket.service.CartService;
+import com.group1.proyect.freshbasket.service.SaleService; // <-- Importación agregada
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,16 +31,19 @@ public class CartServiceImpl extends GenericServiceImpl<Cart, CarritoRequestDTO,
     private final CarritoRepository carritoRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final SaleService saleService;
 
     public CartServiceImpl(CartRepository cartRepository,
                            CarritoRepository carritoRepository,
                            ProductRepository productRepository,
-                           UserRepository userRepository) {
+                           UserRepository userRepository,
+                           SaleService saleService) {
         super(cartRepository);
         this.cartRepository = cartRepository;
         this.carritoRepository = carritoRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
+        this.saleService = saleService;
     }
 
     @Override
@@ -59,6 +65,9 @@ public class CartServiceImpl extends GenericServiceImpl<Cart, CarritoRequestDTO,
                     itemDto.setUnitPrice(price);
                     itemDto.setSubtotal(subtotal);
                     itemDto.setActive(item.isActive());
+                    itemDto.setDiscount(item.getProduct().getDiscount() != null ?
+                            item.getProduct().getDiscount() : BigDecimal.ZERO);
+
                     return itemDto;
                 })
                 .collect(Collectors.toList());
@@ -162,6 +171,16 @@ public class CartServiceImpl extends GenericServiceImpl<Cart, CarritoRequestDTO,
             throw new RuntimeException("El carrito está vacío");
         }
 
+        SaleRequestDTO saleDTO = new SaleRequestDTO();
+        saleDTO.setCustomerId(userId);
+        saleDTO.setEmployeeId(100L);
+
+        saleDTO.setPaymentMethod("TARJETA");
+        saleDTO.setStatus("COMPLETADA");
+
+        List<SaleDetailsRequestDTO> saleDetailsList = new ArrayList<>();
+        BigDecimal totalAmount = BigDecimal.ZERO;
+
         for (Carrito item : itemsActivos) {
             Product product = item.getProduct();
 
@@ -169,14 +188,27 @@ public class CartServiceImpl extends GenericServiceImpl<Cart, CarritoRequestDTO,
                 throw new RuntimeException("El producto " + product.getName() + " no tiene stock suficiente.");
             }
 
+            BigDecimal unitPrice = product.getPrice();
+            BigDecimal qty = BigDecimal.valueOf(item.getQuantity());
+            totalAmount = totalAmount.add(unitPrice.multiply(qty));
 
-            product.setCurrentStock(product.getCurrentStock() - item.getQuantity());
-            productRepository.save(product);
+            SaleDetailsRequestDTO detailDTO = new SaleDetailsRequestDTO();
+            detailDTO.setProductName(product.getName());
+            detailDTO.setQuantity(item.getQuantity());
+            detailDTO.setUnitCost(unitPrice);
+            detailDTO.setDiscount(BigDecimal.ZERO);
+
+            saleDetailsList.add(detailDTO);
 
             item.setActive(false);
             carritoRepository.save(item);
         }
-        
+
+        saleDTO.setTotalAmount(totalAmount);
+        saleDTO.setDetails(saleDetailsList);
+
+        saleService.create(saleDTO);
+
         cart.getItems().clear();
         cartRepository.save(cart);
     }
@@ -186,7 +218,7 @@ public class CartServiceImpl extends GenericServiceImpl<Cart, CarritoRequestDTO,
         return cartRepository.findByUserIdAndActiveTrue(userId)
                 .orElseGet(() -> {
                     User user = userRepository.findById(userId)
-                            .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + userId));
+                            .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ese ID: " + userId));
 
                     Cart newCart = new Cart();
                     newCart.setUser(user);

@@ -46,9 +46,27 @@ public class ProductController extends GenericController<Product, ProductRequest
             summary = "Obtener alertas de stock bajo",
             description = "Retorna una lista de los productos cuyo stock actual está por debajo o igual a su stock mínimo configurado."
     )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Alertas encontradas con éxito"),
+            @ApiResponse(responseCode = "404", description = "No se encontraron coincidencias")
+    })
     @GetMapping("/alerts/low-stock")
     public ResponseEntity<List<ProductResponseDTO>> getLowStockAlerts() {
         List<ProductResponseDTO> alerts = productService.getLowStockAlerts();
         return ResponseEntity.ok(alerts);
+    }
+
+    @Operation(
+            summary = "Obtener productos por categoría",
+            description = "Retorna una lista de todos los productos activos asociados a una categoría específica utilizando su nombre."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Productos de la categoría obtenidos con éxito"),
+            @ApiResponse(responseCode = "404", description = "Categoría no encontrada o vacía")
+    })
+    @GetMapping("/category/{categoryName}")
+    public ResponseEntity<List<ProductResponseDTO>> getProductsByCategory(@PathVariable String categoryName) {
+        List<ProductResponseDTO> products = productService.getProductsByCategory(categoryName);
+        return ResponseEntity.ok(products);
     }
 }

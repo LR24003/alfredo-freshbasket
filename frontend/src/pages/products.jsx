@@ -47,6 +47,17 @@ function Products() {
       required: false
     },
     {
+      label: "Descuento",
+      name: "discount",
+      type: "number",
+      icon: "bi-percent",
+      placeholder: "0.00",
+      required: false,
+      min: 0,
+      step: "0.01",
+      defaultValue: "0.00"
+    },
+    {
       label: "Categoría del producto",
       name: "categoryName",
       icon: "bi-bookmark-star",
@@ -115,6 +126,12 @@ function ProductCard({ p, cart, updateQuantity }) {
   const itemEnCarrito = cart?.items?.find(item => item.productId === productId);
   const cantidadActual = itemEnCarrito ? itemEnCarrito.quantity : 0;
 
+  const precioNumerico = Number(p.price || 0);
+  const porcentajeDescuento = Number(p.discount || 0);
+
+  const dineroDescontado = (precioNumerico * porcentajeDescuento) / 100;
+  const precioFinal = precioNumerico - dineroDescontado;
+
   const handleAgregarAlCarrito = (e) => {
     if (e) {
       e.preventDefault();
@@ -181,6 +198,18 @@ function ProductCard({ p, cart, updateQuantity }) {
               <span className="fb-card-info-value">{p.description || "Sin descripción"}</span>
             </div>
           </div>
+
+          {porcentajeDescuento > 0 && (
+              <div className="fb-card-info-row fb-desc-spacing">
+                <i className="bi bi-percent" />
+                <div className="fb-card-info-meta">
+                  <span className="fb-card-info-label">Descuento:</span>
+                  <span className="fb-card-info-value text-success fw-bold">
+                  {porcentajeDescuento}% (Ahorras: ${dineroDescontado.toFixed(2)})
+                </span>
+                </div>
+              </div>
+          )}
 
           {/* INFO DESPLEGABLE */}
           {isExpanded && (

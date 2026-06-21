@@ -21,6 +21,14 @@ public class ExitRequestDTO {
     @Schema(description = "El nombre exacto o descriptivo del producto", example = "Pollo Indio")
     private String productName;
 
+    @NotNull(message = "La razón de la salida es obligatoria")
+    @Schema(description = "Razón de o motivo de la salida", example = "Venta")
+    private String exitReason;
+
+    @NotNull(message = "El ID de la venta es obligatorio")
+    @Schema(description = "ID de la venta", example = "1")
+    private Long saleId;
+
     @NotNull(message = "El nombre del usuario es obligatorio")
     @Schema(description = "Nombre completo del usuario que registra la operación", example = "Juan Martinez")
     private String userName;
