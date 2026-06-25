@@ -8,7 +8,6 @@ function PaidModal({ isOpen, onClose, onConfirm, totalAmount, isProcessing }) {
         const formData = new FormData(e.target);
         const paymentData = Object.fromEntries(formData.entries());
 
-        // Enviamos los datos recolectados al manejador del padre (POS o Carrito)
         onConfirm(paymentData);
     };
 
@@ -28,19 +27,19 @@ function PaidModal({ isOpen, onClose, onConfirm, totalAmount, isProcessing }) {
                     <form onSubmit={handleSubmit}>
                         <div className="modal-body">
                             <div className="text-center bg-light p-3 rounded-3 mb-3">
-                                <span className="text-muted small d-block">Monto a Liquidar:</span>
+                                <span className="text-muted small d-block">Monto a pagar:</span>
                                 <span className="fs-3 fw-bold text-success">${Number(totalAmount).toFixed(2)}</span>
                             </div>
 
                             {/* Titular */}
                             <div className="mb-2">
-                                <label className="form-label small fw-semibold text-secondary mb-1">Nombre del Titular</label>
+                                <label className="form-label small fw-semibold text-secondary mb-1">Nombre del titular</label>
                                 <input type="text" name="cardName" className="form-control bg-light" placeholder="Ej: Juan Pérez" required disabled={isProcessing} />
                             </div>
 
                             {/* Número de Tarjeta */}
                             <div className="mb-2">
-                                <label className="form-label small fw-semibold text-secondary mb-1">Número de Tarjeta</label>
+                                <label className="form-label small fw-semibold text-secondary mb-1">Número de tarjeta</label>
                                 <div className="input-group">
                                     <span className="input-group-text bg-light border-end-0 text-secondary"><i className="bi bi-credit-card" /></span>
                                     <input type="text" name="cardNumber" maxLength="16" className="form-control bg-light border-start-0" placeholder="0000 0000 0000 0000" required disabled={isProcessing} />
@@ -54,7 +53,7 @@ function PaidModal({ isOpen, onClose, onConfirm, totalAmount, isProcessing }) {
                                     <input type="text" name="cardExpiry" maxLength="5" className="form-control bg-light" placeholder="MM/AA" required disabled={isProcessing} />
                                 </div>
                                 <div className="col-6 mb-2">
-                                    <label className="form-label small fw-semibold text-secondary mb-1">Código de Seguridad (CVC)</label>
+                                    <label className="form-label small fw-semibold text-secondary mb-1">Código de seguridad (CVC)</label>
                                     <input type="password" name="cardCvc" maxLength="3" className="form-control bg-light" placeholder="123" required disabled={isProcessing} />
                                 </div>
                             </div>

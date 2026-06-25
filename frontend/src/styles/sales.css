@@ -1,6 +1,6 @@
-/* ==========================================
-   ESTILOS ESPECÍFICOS DEL MÓDULO DE VENTAS (POS)
-   ========================================== */
+/* ==========================================================================
+   ESTILOS ESPECÍFICOS DEL MÓDULO DE VENTAS (POS) - BASE DESKTOP
+   ========================================================================== */
 
 .fb-pos-layout {
     display: grid;
@@ -268,9 +268,6 @@
     margin-right: 0.4rem;
 }
 
-/* ==========================================================================
-   FORMULARIO DE REGISTRO INTEGRADO EXCLUSIVO (POS)
-   ========================================================================== */
 .fb-pos-custom-register {
     display: flex;
     flex-direction: column;
@@ -299,7 +296,6 @@
 .fb-pos-form-label {
     font-size: 0.85rem;
     font-weight: 600;
-    color: var(--fb-secondary-text, #555);
 }
 
 .fb-pos-form-input {
@@ -335,3 +331,92 @@
 .fb-p-y-05 { padding: 0.5rem 0; }
 .fb-w-100 { width: 100%; }
 .fb-p-04 { padding: 0.4rem; }
+
+@media (max-width: 991.98px) {
+    .fb-pos-layout {
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
+    }
+
+    .fb-pos-grid {
+        max-height: 45vh !important;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+        gap: 0.75rem !important;
+    }
+
+    .fb-product-card {
+        padding: 0.6rem !important;
+    }
+
+    .fb-product-name {
+        font-size: 0.9rem !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis; /* Evita roturas por nombres extremadamente extensos */
+    }
+
+    .fb-product-price {
+        font-size: 0.95rem !important;
+    }
+
+    .fb-product-stock {
+        font-size: 0.7rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    /* 3. Columna del Carrito / Resumen inferior */
+    .fb-pos-summary-column {
+        height: auto !important;
+        margin-top: 0.5rem;
+    }
+
+    /* Prevención de desbordes en tablas del carrito */
+    .fb-pos-cart-container {
+        max-height: 28vh !important;
+        overflow-x: auto !important; /* Habilita el arrastre lateral táctil si las celdas se comprimen */
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .fb-pos-cart-table {
+        min-width: 300px; /* Asegura área mínima para manipulación limpia */
+    }
+
+    .fb-pos-cart-qty-input {
+        width: 42px !important;
+        padding: 4px 2px !important;
+    }
+
+    /* 4. Ajuste de campos de entrada y cajas táctiles */
+    .fb-pos-config-box {
+        gap: 0.65rem !important;
+        padding: 0.7rem !important;
+    }
+
+    .fb-pos-customer-input,
+    .fb-pos-select,
+    .fb-pos-discount-input {
+        padding: 0.55rem 0.5rem !important;
+        font-size: 0.9rem !important;
+    }
+
+    .fb-pos-dropdown {
+        max-height: 130px !important;
+    }
+
+    .fb-pos-form-row {
+        flex-direction: column !important; /* Apila inputs en vez de agruparlos de a pares */
+        gap: 0.75rem !important;
+    }
+
+    .fb-pos-form-group {
+        width: 100% !important;
+    }
+
+    .fb-pos-form-input {
+        padding: 0.65rem !important;
+    }
+
+    .fb-pos-register-actions {
+        margin-top: 1.25rem !important;
+    }
+}

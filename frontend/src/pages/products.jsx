@@ -7,13 +7,11 @@ import { toast } from 'react-hot-toast';
 function Products() {
   const userLogin = localStorage.getItem("userName") || localStorage.getItem("userEmail") || "";
 
-  // Se cargan de manera global las dependencias
   const categories = useEntity("categories");
   const suppliers = useEntity("suppliers");
 
   const { cart, updateQuantity } = useCart();
 
-  // Carga las listas de categorías y proveedores
   const categoriesList = categories.list.data || [];
   const suppliersList = suppliers.list.data || [];
 
@@ -37,7 +35,8 @@ function Products() {
       name: "currentStock",
       icon: "bi-hash",
       type: "number",
-      placeholder: "25"
+      placeholder: "25",
+      disabledOnUpdate: true
     },
     {
       label: "URL de imagen",
@@ -128,9 +127,7 @@ function ProductCard({ p, cart, updateQuantity }) {
 
   const precioNumerico = Number(p.price || 0);
   const porcentajeDescuento = Number(p.discount || 0);
-
   const dineroDescontado = (precioNumerico * porcentajeDescuento) / 100;
-  const precioFinal = precioNumerico - dineroDescontado;
 
   const handleAgregarAlCarrito = (e) => {
     if (e) {
@@ -161,50 +158,59 @@ function ProductCard({ p, cart, updateQuantity }) {
   };
 
   return (
-      <div className="fb-user-display-card">
-        <div className="fb-card-user-info">
-          <h4 className="fb-card-user-title">{p.name || "Producto sin nombre"}</h4>
-          <span className="fb-card-user-id">ID: {productId}</span>
+      <div className="d-flex flex-direction-column justify-content-between h-100 w-100"
+           style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+
+        <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
+          <h6 className="fw-bold text-dark m-0 small lh-sm text-wrap text-truncate"
+              style={{ display: "-webkit-box", WebkitLineClamp: "2", WebkitBoxOrient: "vertical", overflow: "hidden", height: "2.4rem" }}>
+            {p.name || "Producto sin nombre"}
+          </h6>
+          <span className="badge bg-secondary-subtle text-secondary flex-shrink-0 style-id-fallback"
+                style={{ fontSize: "0.7rem", marginTop: "0.1rem" }}>
+          ID: {productId}
+         </span>
         </div>
 
         {/* Imagen del producto */}
-        <div className="fb-product-card-image-wrap">
+        <div className="fb-product-card-image-wrap mb-3 text-center">
           {p.imageUrl ? (
               <img
                   src={p.imageUrl}
                   alt={p.name}
-                  className="fb-product-card-img-element"
+                  className="fb-product-card-img-element rounded"
+                  style={{ width: "100%", height: "140px", objectFit: "contain" }}
                   onError={(e) => {
                     e.currentTarget.onerror = null;
                     e.currentTarget.src = "https://placehold.co/120x120?text=FreshBasket";
                   }}
               />
           ) : (
-              <div className="fb-product-card-img-placeholder">
+              <div className="fb-product-card-img-placeholder d-flex align-items-center justify-content-center bg-light rounded" style={{ height: "140px" }}>
                 <i className="bi bi-image" style={{ fontSize: "2.5rem", color: "#a3b8a3" }} />
               </div>
           )}
         </div>
 
-        <div className="fb-card-user-body">
+        <div className="flex-grow-1 mb-3 d-flex flex-column text-muted" style={{ fontSize: "0.85rem" }}>
           {/* INFO SIEMPRE VISIBLE */}
-          <p className="fb-card-user-detail">
-            <i className="bi bi-currency-dollar" /> <strong>Precio:</strong> ${Number(p.price || 0).toFixed(2)}
+          <p className="mb-2 text-dark">
+            <i className="bi bi-currency-dollar text-success" /> <strong>Precio:</strong> ${precioNumerico.toFixed(2)}
           </p>
-          <div className="fb-card-info-row fb-desc-spacing">
-            <i className="bi bi-justify-left" />
-            <div className="fb-card-info-meta">
-              <span className="fb-card-info-label">Descripción:</span>
-              <span className="fb-card-info-value">{p.description || "Sin descripción"}</span>
+          <div className="d-flex gap-2 align-items-start mb-2">
+            <i className="bi bi-justify-left text-muted mt-1" style={{ fontSize: "0.65rem" }} />
+            <div>
+              <span className="text-muted d-block fw-bold" style={{ fontSize: "0.85rem" }}>Descripción:</span>
+              <span className="text-dark d-block lh-sm">{p.description || "Sin descripción"}</span>
             </div>
           </div>
 
           {porcentajeDescuento > 0 && (
-              <div className="fb-card-info-row fb-desc-spacing">
-                <i className="bi bi-percent" />
-                <div className="fb-card-info-meta">
-                  <span className="fb-card-info-label">Descuento:</span>
-                  <span className="fb-card-info-value text-success fw-bold">
+              <div className="d-flex gap-2 align-items-start mb-2">
+                <i className="bi bi-percent text-danger mt-1" style={{ fontSize: "0.75rem" }} />
+                <div>
+                  <span className="text-muted d-block" style={{ fontSize: "0.75rem" }}>Descuento:</span>
+                  <span className="text-success fw-bold lh-sm">
                   {porcentajeDescuento}% (Ahorras: ${dineroDescontado.toFixed(2)})
                 </span>
                 </div>
@@ -213,54 +219,48 @@ function ProductCard({ p, cart, updateQuantity }) {
 
           {/* INFO DESPLEGABLE */}
           {isExpanded && (
-              <div className="fb-product-card-extra-info">
-                <p className="fb-card-user-detail">
-                  <i className="bi bi-hash" /> <strong>Stock actual:</strong> {p.currentStock ?? p.stockActual ?? p.stock ?? 0}
+              <div className="fb-product-card-extra-info pt-2 border-top mt-auto" style={{ fontSize: "0.8rem" }}>
+                <p className="mb-1">
+                  <i className="bi bi-hash text-muted" /> <strong>Stock actual:</strong> {p.currentStock ?? p.stockActual ?? p.stock ?? 0}
                 </p>
-                <p className="fb-card-user-detail">
-                  <i className="bi bi-bookmark-star" /> <strong>Categoría:</strong> {p.categoryName || "Sin categoría"}
+                <p className="mb-1">
+                  <i className="bi bi-bookmark-star text-muted" /> <strong>Categoría:</strong> {p.categoryName || "Sin categoría"}
                 </p>
-                <div className="fb-card-info-row">
-                  <i className="bi bi-truck" />
-                  <div className="fb-card-info-meta">
-                    <span className="fb-card-info-label">Proveedor:</span>
-                    <span className="fb-card-info-value">{p.supplierName || "Sin proveedor"}</span>
-                  </div>
-                </div>
-                <div className="fb-card-info-row">
-                  <i className="bi bi-person" />
-                  <div className="fb-card-info-meta">
-                    <span className="fb-card-info-label">Registrado por:</span>
-                    <span className="fb-card-info-value">{p.userName || "Sin usuario"}</span>
-                  </div>
-                </div>
+                <p className="mb-1">
+                  <i className="bi bi-truck text-muted" /> <strong>Proveedor:</strong> {p.supplierName || "Sin proveedor"}
+                </p>
+                <p className="mb-1">
+                  <i className="bi bi-person text-muted" /> <strong> Registrado por:</strong> {p.userName || "Sin usuario"}
+                </p>
               </div>
           )}
+        </div>
+        <div className="d-flex justify-content-center align-items-center gap-2 pt-2 border-top mt-auto">
+          {/* BOTÓN AGREGAR */}
+          <button
+              type="button"
+              onClick={(e) => handleAgregarAlCarrito(e)}
+              className="btn btn-primary btn-sm d-flex align-items-center justify-content-center gap-1 flex-fill w-50 py-1"
+              style={{ fontSize: "0.8rem" }}
+          >
+            <i className="bi bi-cart-plus-fill" />
+            <span className="text-truncate">
+            {cantidadActual > 0 ? `Carrito: ${cantidadActual}` : "Agregar"}
+          </span>
+          </button>
 
-          {/* CONTENEDOR UNIFICADO Y CENTRADO DE ACCIONES */}
-          <div className="fb-product-card-actions-row">
-
-            {/* BOTÓN AGREGAR */}
-            <button
-                type="button"
-                onClick={(e) => handleAgregarAlCarrito(e)}
-                className="fb-btn-action-add"
-            >
-              <i className="bi bi-cart-plus-fill" />
-              <span>{cantidadActual > 0 ? `En carrito: ${cantidadActual}` : "Agregar"}</span>
-            </button>
-
-            {/* BOTÓN DETALLES */}
-            <button
-                type="button"
-                onClick={() => setIsExpanded(!isExpanded)}
-                className={`fb-btn-action-toggle ${isExpanded ? 'is-expanded' : 'is-collapsed'}`}
-            >
-              <i className={`bi ${isExpanded ? "bi-chevron-up" : "bi-chevron-down"}`} />
-              <span>{isExpanded ? "Menos" : "Detalles"}</span>
-            </button>
-
-          </div>
+          {/* BOTÓN DETALLES */}
+          <button
+              type="button"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className={`btn btn-sm d-flex align-items-center justify-content-center gap-1 flex-fill w-50 py-1 
+              ${ isExpanded ? "btn-secondary" : "btn-outline-secondary"
+              }`}
+              style={{ fontSize: "0.8rem" }}
+          >
+            <i className={`bi ${isExpanded ? "bi-chevron-up" : "bi-chevron-down"}`} />
+            <span>{isExpanded ? "Menos" : "Detalles"}</span>
+          </button>
         </div>
       </div>
   );

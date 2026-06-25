@@ -7,18 +7,14 @@ function Users() {
   const countries = useEntity("countries");
   const countriesList = countries.list.data || [];
 
-  // 🚀 DETECTAR ORIGEN Y RUTA DE CREACIÓN DIRECTA
   const location = useLocation();
   const navigate = useNavigate();
   const queryParams = new URLSearchParams(location.search);
 
   const isFromVentas = queryParams.get("from") === "ventas";
   const userRoleLogged = localStorage.getItem("userRole")?.toUpperCase();
-
-  // 🌟 Evalúa si estamos en la subruta dedicada al formulario directo o viniendo de caja
   const esCreacionDirecta = location.pathname.endsWith("/nuevo") || isFromVentas;
 
-  // Filtramos o modificamos los campos si el origen es la caja registradora
   let userFields = [
     {
       label: "Nombre",
@@ -73,12 +69,10 @@ function Users() {
     }
   ];
 
-  // 🚀 ADAPTACIÓN EXPRESS PARA EL POS:
   if (isFromVentas) {
     userFields = userFields.filter(field => field.name !== "role");
   }
 
-  // 🛡️ Si entra de forma directa desde ventas, retornamos null para blindar que no se pinte listado secundario
   const renderUserCard = (u2) => {
     if (esCreacionDirecta) return null;
 
@@ -93,25 +87,43 @@ function Users() {
     const countryDisplay = u2.countryName ?? u2.country_name ?? u2.country?.name ?? "Sin país asignado";
 
     return (
-        <div key={userId} className="fb-user-display-card">
-          <div className="fb-card-user-info">
-            <h4 className="fb-card-user-title">{fullName}</h4>
-            <span className="fb-card-user-id">ID: {userId}</span>
+        <div key={userId} className="d-flex flex-column justify-content-between h-100 w-100" style={{ minHeight: "100%" }}>
+          <div>
+            <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
+              <h6 className="fw-bold text-dark m-0 small lh-sm text-wrap text-truncate"
+                  style={{ display: "-webkit-box", WebkitLineClamp: "2", WebkitBoxOrient: "vertical", overflow: "hidden", height: "2.4rem" }}>
+                {fullName}
+              </h6>
+              <span className="badge bg-secondary-subtle text-secondary flex-shrink-0" style={{ fontSize: "0.7rem", marginTop: "0.1rem" }}>
+                ID: {userId}
+              </span>
+            </div>
           </div>
-          <div className="fb-card-user-body">
-            <p className="fb-card-user-detail">
-              <i className="bi bi-envelope" /> {u2.email || "No disponible"}
+          <div className="flex-grow-1 mb-2 d-flex flex-column justify-content-start text-muted" style={{ fontSize: "0.85rem" }}>
+            <p className="mb-2 text-dark text-truncate">
+              <i className="bi bi-envelope text-muted me-2" />
+              {u2.email || "No disponible"}
             </p>
-            <p className="fb-card-user-detail">
-              <i className="bi bi-telephone" /> {u2.phone || "Sin teléfono registrado"}
+            <p className="mb-3 text-dark">
+              <i className="bi bi-telephone text-muted me-2" />
+              {u2.phone || "Sin teléfono registrado"}
             </p>
-            <p className="fb-card-user-detail">
-              <i className="bi bi-person-badge" /> <span className="fb-role-badge">{u2.role || "CLIENTE"}</span>
-            </p>
-            <p className="fb-card-user-detail">
-              <i className="bi-globe" />   <span className="fb-country">{countryDisplay}</span>
-            </p>
+            <div className="d-flex gap-2 align-items-center pt-2 border-top mb-2">
+              <i className="bi bi-person-badge text-muted" style={{ fontSize: "0.75rem" }} />
+              <div>
+              <span className="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-0.5 text-uppercase" style={{ fontSize: '0.65rem' }}>
+              {u2.role || "CLIENTE"}
+               </span>
+              </div>
+            </div>
+            <div className="d-flex gap-2 align-items-center mb-1">
+              <i className="bi bi-globe text-success" style={{ fontSize: "0.75rem" }} />
+              <div>
+                <span className="text-secondary d-block lh-sm fw-semibold">{countryDisplay}</span>
+              </div>
+            </div>
           </div>
+
         </div>
     );
   };
@@ -127,20 +139,22 @@ function Users() {
           renderCard={renderUserCard}
           forcedMode={esCreacionDirecta ? "create" : "list"}
           onBeforeSave={(formData, mode) => {
-            if (mode === "update" && (!formData.password || formData.password.trim() === "")) {
+            const datosListos = { ...formData };
 
+            if (mode === "update") {
+              if (!datosListos.password || datosListos.password.trim() === "" || datosListos.password === "••••••••") {
+                datosListos.password = "NO_CHANGED";
+              }
             }
 
             if (isFromVentas) {
-              formData.role = "CLIENTE";
-
-              if (!formData.password) {
-                formData.password = "ClienteFresh2026*";
+              datosListos.role = "CLIENTE";
+              if (!datosListos.password || datosListos.password === "NO_CHANGED") {
+                datosListos.password = "ClienteFresh2026*";
               }
             }
-            return formData;
+            return datosListos;
           }}
-
           onSuccessHook={() => {
             if (isFromVentas) {
               navigate("/freshbasket/ventas");

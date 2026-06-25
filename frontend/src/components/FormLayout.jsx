@@ -1,5 +1,5 @@
 import "../styles/forms.css";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import toast from "react-hot-toast";
 import { apiService } from "../services/apiService.js";
 import { useEntity } from "../hooks/useEntity.js";
@@ -13,522 +13,406 @@ function FormLayout({
                         searchField,
                         renderCard,
                         userLogin,
-                        article = "el"
+                        article = "el",
+                        forcedMode,
+                        onBeforeSave,
+                        onSuccessHook
                     }) {
     const userRole = localStorage.getItem("userRole") || "USUARIO";
-    const [activeTab, setActiveTab] = useState(() => localStorage.getItem(`active_${resource}_Tab`) || "all");
-    const [showWelcome, setShowWelcome] = useState(activeTab === "home");
 
-    // Filtros de UI locales
-    const [search, setSearch] = useState("");
-    const [searchId, setSearchId] = useState("");
-    const [filteredByName, setFilteredByName] = useState([]);
-    const [filteredById, setFilteredById] = useState(null);
-    const [searchCategory, setSearchCategory] = useState("");
-    const [filteredByCategory, setFilteredByCategory] = useState([]);
+    const esClienteRol = userRole?.toUpperCase().trim() === "CLIENTE" || userRole?.toUpperCase().trim() === "CLIENT";
 
-    // Estado para el formulario de actualización
+    const puedeConsultar = esClienteRol
+        ? (resource === "products" || resource === "productos")
+        : (resource === "users" || resource === "usuarios"
+            ? tieneAcceso(userRole, "verModuloUsuarios")
+            : tieneAcceso(userRole, "verTabsConsulta"));
+
+    const puedeCrear     = tieneAcceso(userRole, "crear");
+    const puedeActualizar = tieneAcceso(userRole, "actualizar");
+    const puedeEliminar   = tieneAcceso(userRole, "eliminar");
+
+    const [filtroTipo, setFiltroTipo] = useState("all");
+    const [busqueda, setBusqueda] = useState("");
+
+    const [modalOpen, setModalOpen] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({});
-    const [idToLoad, setIdToLoad] = useState("");
 
-    // Verifica si el usuario actual es un cliente con permisos limitados
     const isGenuineClient = userRole === "CLIENTE" || userRole === "CLIENT" || userRole === "USUARIO";
     const shouldLoadResource = !isGenuineClient || resource === "products" || resource === "productos";
 
-    // Instanciación de TanStack Query
-    const entity = useEntity(resource, {
-        enabled: shouldLoadResource && activeTab !== "home"
-    });
-
+    const entity = useEntity(resource, { enabled: shouldLoadResource });
     const dataList = entity.list.data || [];
 
-    // Memorizar la resolución de los fields para evitar 
     const fieldsForCreate = useMemo(() => typeof fields === "function" ? fields(false) : fields, [fields]);
     const fieldsForUpdate = useMemo(() => typeof fields === "function" ? fields(true) : fields, [fields]);
 
-    // Helper para extraer el ID de forma segura
+    const [mostrarFiltros, setMostrarFiltros] = useState(false);
+
     const getItemId = (item) => {
         if (!item) return null;
         const singularResource = resource.endsWith('s') ? resource.slice(0, -1) : resource;
-        return item.id ??
-            item[`${resource}_id`] ??
-            item[`${singularResource}Id`] ??
-            item.productId ??
-            item.userId ??
-            item.countryId ??
-            item.categoryId ??
-            item.exitId ??
-            item.entryId;
+        return item.id ?? item[`${resource}_id`] ?? item[`${singularResource}Id`] ?? item.productId ?? item.userId ?? item.countryId ?? item.categoryId ?? item.exitId ?? item.entryId;
     };
 
-    // Sincronización y escucha de pestañas por eventos globales
-    useEffect(() => {
-        const handleTabChange = () => {
-            const tab = localStorage.getItem(`active_${resource}_Tab`) || "home";
-            setActiveTab(tab);
-            setShowWelcome(tab === "home");
+    const registrosFiltrados = useMemo(() => {
+        const cleanQuery = busqueda.trim().toLowerCase();
+        if (!cleanQuery || filtroTipo === "all") return dataList;
 
-            setFilteredByName([]);
-            setFilteredById(null);
-            setSearch("");
-            setSearchId("");
-            setFormData({});
-            setIdToLoad("");
-        };
-
-        window.addEventListener(`${resource}TabChanged`, handleTabChange);
-        return () => window.removeEventListener(`${resource}TabChanged`, handleTabChange);
-    }, [resource]);
-
-    // Seguridad de la matriz de permisos
-    useEffect(() => {
-        if (activeTab === "create" && !tieneAcceso(userRole, "crear")) setActiveTab("all");
-        if (activeTab === "update" && !tieneAcceso(userRole, "actualizar")) setActiveTab("all");
-        if (activeTab === "delete" && !tieneAcceso(userRole, "eliminar")) setActiveTab("all");
-    }, [activeTab, userRole]);
-
-    // Carga los datos del registro en el formulario para poder editar
-    const handleLoadUpdateData = () => {
-        const cleanId = String(idToLoad).trim();
-        if (!cleanId) return toast.error("Por favor, ingresa un ID válido.");
-
-        const encontrado = dataList.find(item => String(getItemId(item)) === cleanId);
-
-        if (!encontrado) {
-            toast.error(`No se encontró ${article === "la" ? "la" : "el"} ${title} con el ID ${cleanId}.`);
-            setFormData({});
-        } else {
-            setFormData({
-                ...encontrado,
-                id: getItemId(encontrado)
+        if (filtroTipo === "id") {
+            return dataList.filter(item => String(getItemId(item)) === cleanQuery);
+        }
+        if (filtroTipo === "name") {
+            return dataList.filter(item => {
+                const valorCampo = item[searchField] || item.name || item.productName || item.userName || "";
+                return String(valorCampo).toLowerCase().includes(cleanQuery);
             });
-            toast.success("Datos cargados correctamente en el formulario.");
         }
+        if (filtroTipo === "category") {
+            return dataList.filter(item => {
+                const valorCat = item.category || item.categoryName || item.categoria || "";
+                return String(valorCat).toLowerCase().includes(cleanQuery);
+            });
+        }
+        return dataList;
+    }, [dataList, filtroTipo, busqueda, searchField]);
+
+    const openCreateModal = () => {
+        setIsEditing(false);
+        setFormData({});
+        setModalOpen(true);
     };
 
-    // Búsqueda por nombre
-    const handleSearchByName = (e) => {
-        e.preventDefault();
-        const cleanSearch = search.trim().toLowerCase();
-        if (!cleanSearch) return setFilteredByName([]);
-
-        const filtrados = dataList.filter(item => {
-            const valorCampo = item[searchField] || item.name || item.productName || item.userName || "";
-            return String(valorCampo).toLowerCase().includes(cleanSearch);
-        });
-
-        if (filtrados.length === 0) {
-            toast.error(`${article === "la" ? "La" : "El"} ${title} con ese nombre no existe.`);
-        }
-        setFilteredByName(filtrados);
+    const openEditModal = (item) => {
+        setIsEditing(true);
+        setFormData({ ...item, id: getItemId(item) });
+        setModalOpen(true);
     };
 
-    // Búsqueda por ID en Caché
-    const handleSearchById = (e) => {
+    const handleFormSubmit = async (e) => {
         e.preventDefault();
-        const cleanId = searchId.trim();
-        if (!cleanId) return setFilteredById(null);
+        let datosAEnviar = { ...formData };
+        if (typeof onBeforeSave === "function") {
+            datosAEnviar = onBeforeSave(datosAEnviar, isEditing ? "update" : "create");
+        }
 
-        const encontrado = dataList.find(item => String(getItemId(item)) === cleanId);
-        if (!encontrado) {
-            toast.error(`${article === "la" ? "La" : "El"} ${title} no existe con ese ID.`);
-            setFilteredById(null);
+        if (isEditing) {
+            try {
+                const { id, ...dataWithoutId } = datosAEnviar;
+                const updatedData = {
+                    ...dataWithoutId,
+                    userName: userLogin || localStorage.getItem("userName") || localStorage.getItem("userEmail") || "Sistema"
+                };
+
+                await entity.update.mutateAsync({ id: formData.id, data: updatedData });
+                toast.success(`¡${article === "la" ? "La" : "El"} ${title} se ha actualizado correctamente!`);
+                setModalOpen(false);
+                if (typeof onSuccessHook === "function") onSuccessHook();
+            } catch (error) {
+                toast.error(error.response?.data?.message || `Error al actualizar ${article === "la" ? "la" : "el"} ${title}`);
+            }
         } else {
-            setFilteredById(encontrado);
-        }
-    };
-
-    // Buscar por categoría
-    const handleSearchByCategory = async (e) => {
-        e.preventDefault();
-        const cleanCategory = searchCategory.trim();
-        if (!cleanCategory) return setFilteredByCategory([]);
-
-        try {
-            const productService = apiService("products");
-            const resultado = await productService.getByCategory(cleanCategory);
-
-            if (!resultado || resultado.length === 0) {
-                toast.error(`No se encontraron productos en la categoría "${cleanCategory}".`);
-                setFilteredByCategory([]);
-            } else {
-                setFilteredByCategory(resultado);
-            }
-        } catch (error) {
-            toast.error("Error al buscar productos por esa categoría.");
-            setFilteredByCategory([]);
-        }
-    };
-
-    // Crear Registro
-    const handleCreateSubmit = async (e) => {
-        e.preventDefault();
-        const formElements = e.target.elements;
-        const payload = {};
-
-        fieldsForCreate.forEach(f => {
-            if (formElements[f.name]) {
-                let valor = formElements[f.name].value;
-                if (f.type === "number") {
-                    valor = valor ? parseFloat(valor) : null;
+            const formElements = e.target.elements;
+            const payload = {};
+            fieldsForCreate.forEach(f => {
+                if (formElements[f.name]) {
+                    let valor = formElements[f.name].value;
+                    if (f.type === "number") valor = valor ? parseFloat(valor) : null;
+                    payload[f.name] = valor !== "" ? valor : null;
                 }
-                payload[f.name] = valor !== "" ? valor : null;
-            }
-        });
+            });
 
-        try {
-            await entity.create.mutateAsync(payload);
-            toast.success(`¡${title.charAt(0).toUpperCase() + title.slice(1)} creado con éxito!`);
-            e.target.reset();
-        } catch (error) {
-            toast.error(`Error al registrar ${article === "la" ? "la" : "el"} ${title}`);
+            const finalPayload = typeof onBeforeSave === "function" ? onBeforeSave(payload, "create") : payload;
+
+            try {
+                await entity.create.mutateAsync(finalPayload);
+                toast.success(`¡${article === "la" ? "La" : "El"} ${title} se ha creado con éxito!`);
+                setModalOpen(false);
+                if (typeof onSuccessHook === "function") onSuccessHook();
+            } catch {
+                toast.error(`Error al registrar ${article === "la" ? "la" : "el"} ${title}`);
+            }
         }
     };
 
-    // Actualizar Registro
-    const handleUpdateSubmit = async (e) => {
-        e.preventDefault();
-        const currentId = formData.id;
-        if (!currentId) return toast.error("Por favor, carga un ID válido usando el botón 'Cargar' antes de guardar.");
+    const handleDeleteClick = (item) => {
+        const idValue = getItemId(item);
+        let nombreVisual = "";
 
-        try {
-            const updatedData = {
-                ...formData,
-                userName: userLogin || localStorage.getItem("userName") || localStorage.getItem("userEmail") || "Sistema"
-            };
-            await entity.update.mutateAsync({ id: currentId, data: updatedData });
-            toast.success(`¡${title.charAt(0).toUpperCase() + title.slice(1)} actualizado correctamente!`);
-            setFormData({});
-            setIdToLoad("");
-        } catch (error) {
-            const mensajeError = error.response?.data?.message || `Error al actualizar ${article === "la" ? "la" : "el"} ${title}`;
-            toast.error(mensajeError);
+        const modulo = title.toLowerCase();
+
+        if (modulo.includes("producto")) {
+            nombreVisual = item.productName || item.product?.name || item.producto?.name || item.name;
+        } else if (modulo.includes("proveedor")) {
+            const nombreProv = item.supplierName || item.supplier?.name || item.proveedor?.name || item.name || "";
+            const apellidoProv = item.lastName || item.last_name || item.supplier?.lastName || "";
+
+            nombreVisual = `${nombreProv} ${apellidoProv}`.trim();
+        } else if (modulo.includes("salida") || modulo.includes("entrada") || modulo.includes("inventario")) {
+            nombreVisual = item.product?.name || item.producto?.name || item.productName || item.name;
         }
+
+        if (!nombreVisual && (item.name || item.userName || item.lastName || item.last_name)) {
+            const nombreUsuario = item.name || item.userName || "";
+            const apellidoUsuario = item.lastName || item.last_name || "";
+            nombreVisual = `${nombreUsuario} ${apellidoUsuario}`.trim();
+        }
+
+        if (!nombreVisual) {
+            nombreVisual = "Este registro";
+        }
+
+        toast((t) => (
+            <div className="text-center" style={{ minWidth: "250px" }}>
+                <p className="text-dark m-0 mb-2">
+                    ¿Seguro que deseas eliminar permanentemente {article} {title.toLowerCase()} <strong>"{nombreVisual}"</strong> con ID: {idValue}?
+                </p>
+                <div className="d-flex justify-content-center gap-2">
+                    <button
+                        className="btn btn-danger btn-sm"
+                        onClick={async () => {
+                            toast.dismiss(t.id);
+                            try {
+                                await entity.remove.mutateAsync(idValue);
+                                toast.success(`Registro eliminado correctamente.`);
+                            } catch {
+                                toast.error(`Error al actualizar ${article === "la" ? "la" : "el"} ${title.toLowerCase()}`);
+                            }
+                        }}
+                    >
+                        Eliminar
+                    </button>
+                    <button className="btn btn-light btn-sm" onClick={() => toast.dismiss(t.id)}>
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        ), { duration: Infinity, position: "top-center" });
     };
 
     return (
-        <div className={`fb-form-container ${activeTab === "home" && showWelcome ? "fb-no-scroll" : ""}`}>
-            {activeTab === "home" && showWelcome && (
-                <div className="fb-photo-section">
-                    <img src="/logo1.png" alt="Logo FreshBasket" className="fb-photo"/>
-                </div>
+        <div className="container-fluid px-3 pb-3 pt-0 fb-form-container position-relative">
+
+            {/* 1. BOTÓN HAMBURGUESA FLOTANTE FIJO */}
+            {puedeConsultar && (
+                <button
+                    className="btn btn-primary rounded-circle shadow position-fixed d-flex align-items-center justify-content-center"
+                    style={{
+                        bottom: "25px",
+                        right: "25px",
+                        width: "55px",
+                        height: "55px",
+                        zIndex: "990",
+                        fontSize: "1.5rem"
+                    }}
+                    onClick={() => setMostrarFiltros(!mostrarFiltros)}
+                    title={mostrarFiltros ? "Cerrar filtros" : "Abrir filtros"}
+                    type="button"
+                >
+                    <i className={`bi ${mostrarFiltros ? "bi-x-lg" : "bi-sliders"}`}></i>
+                </button>
             )}
 
-            {/* MOSTRAR TODOS */}
-            {activeTab === "all" && !showWelcome && (
-                <div className="fb-form-section">
-                    <div className="fb-section-header">
-                        <h3 className="fb-table-title"><i className={`bi ${icon}`}/> Mostrando todos los registros</h3>
-                        <span className="fb-badge">
-                            {entity.list.isLoading ? "Sincronizando..." : `${dataList.length} registros`}
-                        </span>
-                    </div>
-                    <div className="fb-results-grid fb-users-cards-margin">
-                        {dataList.length > 0 ? dataList.map(item => renderCard(item)) : (
-                            <div className="fb-empty fb-grid-full-width">
-                                <i className="bi bi-inbox"/><p>No hay registros disponibles</p>
+            {/* 2. PANEL DE FILTROS DESPLEGABLE */}
+            {puedeConsultar && mostrarFiltros && (
+                <div
+                    className="position-sticky bg-transparent pb-2 mb-3 w-100"
+                    style={{
+                        top: "-24px",
+
+                        paddingTop: "4px"
+                    }}
+                >
+                    <div className="card p-3 mb-0 shadow border-0 bg-white">
+                        <div className="row g-3 align-items-end p-2 bg-light rounded shadow-inner">
+
+                            {/* Selector de Filtro */}
+                            <div className="col-md-4">
+                                <label className="form-label fw-bold text-muted small">Filtrar por:</label>
+                                <select
+                                    className="form-select bg-white text-dark"
+                                    value={filtroTipo}
+                                    onChange={(e) => { setFiltroTipo(e.target.value); setBusqueda(""); }}
+                                >
+                                    <option value="all">Mostrar todos los registros</option>
+                                    <option value="name">Buscar por nombre</option>
+                                    <option value="id">Buscar por ID</option>
+                                    {resource === "products" && <option value="category">Buscar por categoría</option>}
+                                </select>
                             </div>
-                        )}
-                    </div>
-                </div>
-            )}
 
-            {/* BUSCAR POR NOMBRE */}
-            {activeTab === "name" && !showWelcome && (
-                <div className="fb-form-section">
-                    <div className="fb-form-card">
-                        <h3 className="fb-form-title"><i className="bi bi-search"/> Buscar por nombre</h3>
-                        <form onSubmit={handleSearchByName} className="fb-search-form">
-                            <div className="fb-search-input-wrap">
-                                <i className="bi bi-fonts fb-search-icon"/>
-                                <input type="text" className="fb-search-input" placeholder="Escriba un nombre"
-                                       value={search} onChange={(e) => setSearch(e.target.value)}/>
-                            </div>
-                            <button type="submit" className="fb-search-btn">Buscar</button>
-                        </form>
-                    </div>
-                    {filteredByName.length > 0 && (
-                        <div className="fb-results-grid fb-users-cards-margin mt-4">
-                            {filteredByName.map(item => renderCard(item))}
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* BUSCAR POR ID */}
-            {activeTab === "id" && !showWelcome && (
-                <div className="fb-form-section">
-                    <div className="fb-form-card">
-                        <h3 className="fb-form-title"><i className="bi bi-search"/> Buscar por ID</h3>
-                        <form onSubmit={handleSearchById} className="fb-search-form">
-                            <div className="fb-search-input-wrap">
-                                <i className="bi bi-hash fb-search-icon"/>
-                                <input type="number" className="fb-search-input" placeholder="Ingrese ID"
-                                       value={searchId} onChange={(e) => setSearchId(e.target.value)}/>
-                            </div>
-                            <button type="submit" className="fb-search-btn">Buscar</button>
-                        </form>
-                    </div>
-                    {filteredById && <div className="fb-results-grid fb-users-cards-margin mt-4">{renderCard(filteredById)}</div>}
-                </div>
-            )}
-
-            {/* BUSCAR POR CATEGORÍA */}
-            {activeTab === "category" && resource === "products" && !showWelcome && (
-                <div className="fb-form-section">
-                    <div className="fb-form-card">
-                        <h3 className="fb-form-title"><i className="bi bi-grid-3x3-gap"/> Buscar por categoría</h3>
-                        <form onSubmit={handleSearchByCategory} className="fb-search-form">
-                            <div className="fb-search-input-wrap">
-                                <i className="bi bi-tag fb-search-icon"/>
-                                <input
-                                    type="text"
-                                    className="fb-search-input"
-                                    placeholder="Ej: Lácteos, Verduras, Frutas..."
-                                    value={searchCategory}
-                                    onChange={(e) => setSearchCategory(e.target.value)}
-                                />
-                            </div>
-                            <button type="submit" className="fb-search-btn">Buscar</button>
-                        </form>
-                    </div>
-
-                    <div className="fb-results-grid fb-users-cards-margin mt-4">
-                        {filteredByCategory.length > 0 &&
-                            filteredByCategory.map(item => renderCard(item))
-                        }
-                    </div>
-                </div>
-            )}
-
-            {/* FORMULARIO CREAR */}
-            {activeTab === "create" && (
-                <div className="fb-form-section fb-tab-create">
-                    <div className="fb-form-card">
-                        <h3 className="fb-form-title"><i className="bi bi-plus-circle"/> Registrar {title}</h3>
-                        <form onSubmit={handleCreateSubmit} className="fb-crud-form">
-                            <div className="fb-crud-grid">
-                                {fieldsForCreate.map(f => (
-                                    <div key={f.name} className="fb-crud-field">
-                                        <label className="fb-crud-label">{f.label}</label>
-                                        <div className="fb-crud-input-wrap">
-                                            <i className={`bi ${f.icon} fb-crud-input-icon`}/>
-
-                                            {f.type === "select" ? (
-                                                <select
-                                                    name={f.name}
-                                                    className="fb-crud-input"
-                                                    required={f.required !== false}
-                                                    disabled={f.disabled || entity.create.isPending}
-                                                    defaultValue={f.defaultValue ?? ""}
-                                                >
-                                                    <option value="" disabled>{f.placeholder || "Seleccione una opción"}</option>
-                                                    {f.options && f.options.map((opt, idx) => (
-                                                        <option key={idx} value={opt.value ?? opt}>{opt.label ?? opt}</option>
-                                                    ))}
-                                                </select>
-                                            ) : (
-                                                <input
-                                                    type={f.type || "text"}
-                                                    name={f.name}
-                                                    className="fb-crud-input"
-                                                    placeholder={f.placeholder}
-                                                    required={f.required !== false}
-                                                    disabled={f.disabled || entity.create.isPending}
-                                                    readOnly={f.readOnly || f.name === "userName"}
-                                                    defaultValue={f.defaultValue ?? ""}
-                                                    step={f.step}
-                                                    list={f.list}
-                                                    autoComplete={f.list ? "off" : "on"}
-                                                />
-                                            )}
-
-                                            {f.type !== "select" && f.list && f.options && (
-                                                <datalist id={f.list}>
-                                                    {f.options.map((opt, idx) => <option key={idx} value={opt}/>)}
-                                                </datalist>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            <button
-                                type="submit"
-                                className="fb-action-btn"
-                                style={{background: "linear-gradient(135deg, #1a6b3a, #2ecc71)", marginTop: "1.5rem"}}
-                                disabled={entity.create?.isPending}
-                            >
-                                <i className="bi bi-check-circle-fill" style={{marginRight: "0.5rem"}}/>
-                                {entity.create?.isPending ? "Registrando..." : `Registrar ${title}`}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* FORM ACTUALIZAR */}
-            {activeTab === "update" && !showWelcome && (
-                <div className="fb-form-section fb-tab-update">
-                    <div className="fb-form-card">
-                        <h3 className="fb-form-title"><i className="bi bi-pencil-square"/> Actualizar {title}</h3>
-                        <form onSubmit={handleUpdateSubmit} className="fb-crud-form">
-                            <div className="fb-crud-grid">
-                                <div className="fb-crud-field fb-id-field-full">
-                                    <label className="fb-crud-label">ID del {title}</label>
-                                    <div className="fb-inline-search-wrapper">
-                                        <div className="fb-input-relative-container">
-                                            <i className="bi bi-hash fb-crud-input-icon"/>
-                                            <input
-                                                type="number"
-                                                className="fb-crud-input"
-                                                placeholder="Ingrese un ID"
-                                                value={idToLoad}
-                                                onChange={(e) => setIdToLoad(e.target.value)}
-                                                required
-                                            />
-                                        </div>
-                                        <button type="button" className="fb-load-inline-btn" onClick={handleLoadUpdateData}>
-                                            Cargar
-                                        </button>
+                            {/* Input de Búsqueda Dinámico */}
+                            {filtroTipo !== "all" && (
+                                <div className="col-md-8">
+                                    <label className="form-label fw-bold text-muted small">Valor de búsqueda:</label>
+                                    <div className="position-relative w-100">
+                                        <i
+                                            className="bi bi-search text-muted position-absolute"
+                                            style={{ left: "12px", top: "50%", transform: "translateY(-50%)", zIndex: "5", fontSize: "0.95rem" }}
+                                        />
+                                        <input
+                                            type={filtroTipo === "id" ? "number" : "text"}
+                                            className="form-control bg-white text-dark"
+                                            placeholder={`Escribe para buscar por ${filtroTipo}...`}
+                                            value={busqueda}
+                                            onChange={(e) => setBusqueda(e.target.value)}
+                                            style={{ paddingLeft: "35px" }}
+                                        />
                                     </div>
                                 </div>
-                                {fieldsForUpdate.map(f => {
-                                    if (f.hideOnUpdate) return null;
-                                    const isUserNameField = f.name === "userName";
-                                    const currentUser = userLogin || localStorage.getItem("userName") || localStorage.getItem("userEmail") || "Sin usuario";
-                                    const inputValue = isUserNameField ? currentUser : (formData[f.name] ?? "");
-
-                                    return (
-                                        <div key={f.name} className="fb-crud-field">
-                                            <label className="fb-crud-label">{f.label}</label>
-                                            <div className="fb-crud-input-wrap">
-                                                <i className={`bi ${f.icon} fb-crud-input-icon`}/>
-
-                                                {f.type === "select" ? (
-                                                    <select
-                                                        name={f.name}
-                                                        className="fb-crud-input"
-                                                        value={inputValue}
-                                                        onChange={(e) => {
-                                                            setFormData({...formData, [f.name]: e.target.value});
-                                                        }}
-                                                        required={f.requiredOnUpdate !== false && f.required !== false}
-                                                        disabled={f.disabled || f.disabledOnUpdate || entity.update.isPending}
-                                                    >
-                                                        <option value="" disabled>{f.placeholder || "Seleccione una opción"}</option>
-                                                        {f.options && f.options.map((opt, idx) => (
-                                                            <option key={idx} value={opt.value ?? opt}>{opt.label ?? opt}</option>
-                                                        ))}
-                                                    </select>
-                                                ) : (
-                                                    <input
-                                                        type={f.type || "text"}
-                                                        name={f.name}
-                                                        className="fb-crud-input"
-                                                        placeholder={f.placeholder}
-                                                        value={inputValue}
-                                                        onChange={(e) => {
-                                                            if (!isUserNameField) {
-                                                                setFormData({...formData, [f.name]: e.target.value});
-                                                            }
-                                                        }}
-                                                        required={f.requiredOnUpdate !== false && f.required !== false}
-                                                        disabled={f.disabled || f.disabledOnUpdate || entity.update.isPending}
-                                                        readOnly={f.readOnly || isUserNameField}
-                                                        step={f.step}
-                                                        list={f.list}
-                                                        autoComplete={f.list ? "off" : "on"}
-                                                    />
-                                                )}
-
-                                                {f.type !== "select" && f.list && f.options && (
-                                                    <datalist id={f.list}>
-                                                        {f.options.map((opt, idx) => <option key={idx} value={opt}/>)}
-                                                    </datalist>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                            <button
-                                type="submit"
-                                className="fb-action-btn"
-                                style={{background: "linear-gradient(135deg, #1a6b3a, #2ecc71)", marginTop: "1.5rem"}}
-                                disabled={entity.update.isPending || !formData.id}
-                            >
-                                <i className="bi bi-arrow-clockwise" style={{marginRight: "0.5rem"}}/>
-                                {entity.update.isPending ? "Actualizando..." : "Guardar Cambios"}
-                            </button>
-                        </form>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
+            <div
+                className="fb-section-header d-flex justify-content-between align-items-center mb-3 mt-2 p-3 bg-white rounded shadow-sm"
+                style={{ position: "sticky", top: "0", zIndex: "100",
+                }}
+            >
+            <span className="text-muted fw-semibold">
+             {entity.list.isLoading ? "Sincronizando con el servidor..." : `Mostrando ${registrosFiltrados.length} registros`}
+              </span>
+                {puedeCrear && (
+                    <button
+                        className="btn btn-success btn-sm d-flex align-items-center gap-2 px-3 py-2 shadow-sm"
+                        style={{ fontSize: "0.85rem", height: "38px" }}
+                        onClick={openCreateModal}
+                        type="button"
+                    >
+                        <i className="bi bi-plus-circle-fill"></i> Registrar {title}
+                    </button>
+                )}
+            </div>
 
-            {/* ELIMINAR */}
-            {activeTab === "delete" && !showWelcome && (
-                <div className="fb-form-section">
-                    <div className="fb-form-card" style={{borderTop: "4px solid #dc3545"}}>
-                        <h3 className="fb-form-title" style={{color: "#dc3545", marginBottom: "0.5rem"}}>
-                            <i className="bi bi-trash3-fill" style={{marginRight: "0.5rem"}}/> Eliminar {title}
-                        </h3>
-                        <div className="alert alert-danger d-flex align-items-center gap-2" style={{fontSize: "0.9rem", padding: "0.75rem 1rem", borderRadius: "8px", marginBottom: "1.5rem"}}>
-                            <i className="bi bi-exclamation-triangle-fill" style={{fontSize: "1.1rem"}}/>
-                            <span>
-                                <strong>Atención:</strong> Al eliminar {article === "la" ? "la" : "el"} {title}, se borrará permanentemente de la base de datos.
-                            </span>
-                        </div>
-                        <form onSubmit={async (e) => {
-                            e.preventDefault();
-                            const idValue = e.target.id.value;
-                            const registroAEliminar = dataList.find(i => String(getItemId(i)) === String(idValue));
-                            if (!registroAEliminar) return toast.error(`No existe el ${title} con ID ${idValue}`);
-
-                            const apellidoStr = registroAEliminar.lastName || registroAEliminar.last_name || "";
-                            const nombreVisual =
-                                (registroAEliminar.name ? `${registroAEliminar.name} ${apellidoStr}`.trim() : null) ||
-                                registroAEliminar.productName ||
-                                registroAEliminar.supplierName ||
-                                registroAEliminar.userName ||
-                                registroAEliminar.categoryName ||
-                                registroAEliminar.countryName ||
-                                "Elemento";
-
-                            toast((t) => (
-                                <div className="text-center" style={{minWidth: "250px"}}>
-                                    <p className="text-dark">
-                                        ¿Seguro que deseas eliminar {article === "la" ? "la" : "el"} {title}{" "}
-                                        <strong>"{nombreVisual}"</strong> con{" "}
-                                        <strong>ID {idValue}</strong> permanentemente?
-                                    </p>
-                                    <div className="d-flex justify-content-center gap-2 mt-2">
-                                        <button className="btn btn-danger btn-sm" disabled={entity.remove.isPending}
-                                                onClick={async () => {
-                                                    toast.dismiss(t.id);
-                                                    try {
-                                                        await entity.remove.mutateAsync(idValue);
-                                                        toast.success(`${article === "la" ? "La" : "el"} ${title} ha sido eliminado correctamente.`);
-                                                        e.target.reset();
-                                                    } catch {
-                                                        toast.error("Error al eliminar el registro.");
-                                                    }
-                                                }}>Eliminar
-                                        </button>
-                                        <button className="btn btn-light btn-sm" onClick={() => toast.dismiss(t.id)}>Cancelar</button>
-                                    </div>
+            {/* 4. GRID DE TARJETAS */}
+            <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xxl-4 g-4">
+                {registrosFiltrados.length > 0 ? (
+                    registrosFiltrados.map(item => (
+                        <div className="col" key={getItemId(item)}>
+                            <div className="card h-100 shadow-sm hover-card border-0 position-relative">
+                                <div className="card-body p-3">
+                                    {renderCard(item)}
                                 </div>
-                            ), {duration: Infinity, position: "top-center"});
-                        }} className="fb-search-form">
-                            <div className="fb-search-input-wrap">
-                                <i className="bi bi-hash fb-search-icon"/>
-                                <input type="number" name="id" className="fb-search-input" placeholder="Ingrese el ID a eliminar" required/>
+                                <div className="card-footer bg-light border-0 d-flex justify-content-center gap-1 py-2">
+                                    {puedeActualizar && (
+                                        <button className="btn btn-sm btn-outline-success d-flex align-items-center gap-1" onClick={() => openEditModal(item)} title="Editar">
+                                            <i className="bi bi-pencil-square"></i> Editar
+                                        </button>
+                                    )}
+                                    {puedeEliminar && (
+                                        <button className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" onClick={() => handleDeleteClick(item)} title="Eliminar">
+                                            <i className="bi bi-trash3-fill"></i> Eliminar
+                                        </button>
+                                    )}
+                                </div>
                             </div>
-                            <button type="submit" className="fb-search-btn" style={{background: "linear-gradient(135deg, #a61a1a, #e74c3c)", marginTop: 0}} disabled={entity.remove.isPending}>
-                                <i className="bi bi-trash-fill" style={{marginRight: "0.3rem"}}/> Eliminar
-                            </button>
-                        </form>
+                        </div>
+                    ))
+                ) : (
+                    <div className="col-12 w-100 d-flex justify-content-center align-items-center py-5" style={{ minHeight: "50vh" }}>
+                        <div className="text-center text-muted fs-4">
+                            <i className="bi bi-inbox display-4 d-block mb-2" style={{ lineHeight: "1" }}></i>
+                            <span>No se encontraron registros</span>
+                        </div>
                     </div>
-                </div>
+                )}
+            </div>
+
+            {/* 5. MODAL DE CREACIÓN / EDICIÓN */}
+            {modalOpen && (
+                <>
+                    <div className="modal-backdrop fade show" style={{ zIndex: 1040 }}></div>
+                    <div className="modal d-block" tabIndex="-1" style={{ zIndex: 1050 }}>
+                        <div className="modal-dialog modal-dialog-centered modal-lg">
+                            <div className="modal-content shadow-lg border-0 bg-white">
+                                <div className="modal-header bg-dark text-white p-3">
+                                    <h5 className="modal-title d-flex align-items-center gap-2">
+                                        <i className={`bi ${isEditing ? "bi-pencil-square" : "bi-plus-circle"}`}></i>
+                                        {isEditing ? `Actualizar ${title}` : `Registrar ${title}`}
+                                    </h5>
+                                    <button type="button" className="btn-close btn-close-white" onClick={() => setModalOpen(false)} aria-label="Close"></button>
+                                </div>
+                                <form onSubmit={handleFormSubmit}>
+                                    <div className="modal-body p-4 bg-white text-dark">
+                                        <div className="row g-3">
+                                            {(isEditing ? fieldsForUpdate : fieldsForCreate).map(f => {
+                                                if (isEditing && f.hideOnUpdate) return null;
+                                                const isUserNameField = f.name === "userName";
+                                                const currentUser = userLogin || localStorage.getItem("userName") || localStorage.getItem("userEmail") || "Sistema";
+                                                const inputValue = isEditing
+                                                    ? (isUserNameField ? currentUser : (formData[f.name] ?? ""))
+                                                    : undefined;
+                                                return (
+                                                    <div key={f.name} className={f.hideOnUpdate && isEditing ? "" : "col-md-6"}>
+                                                        <label className="form-label fw-semibold small text-secondary">{f.label}</label>
+                                                        <div className="input-group">
+                                                            <span className="input-group-text bg-light"><i className={`bi ${f.icon} text-muted`}></i></span>
+                                                            {f.type === "select" ? (
+                                                                <select
+                                                                    name={f.name}
+                                                                    className="form-select bg-white text-dark"
+                                                                    required={f.required !== false}
+                                                                    disabled={f.disabled || (isEditing && f.disabledOnUpdate) || entity.create.isPending}
+                                                                    value={inputValue}
+                                                                    defaultValue={!isEditing ? (f.defaultValue ?? "") : undefined}
+                                                                    onChange={(e) => isEditing && setFormData({...formData, [f.name]: e.target.value})}
+                                                                >
+                                                                    <option value="" disabled>{f.placeholder || "Seleccione una opción"}</option>
+                                                                    {f.options && f.options.map((opt, idx) => (
+                                                                        <option key={idx} value={opt.value ?? opt}>{opt.label ?? opt}</option>
+                                                                    ))}
+                                                                </select>
+                                                            ) : (
+                                                                <>
+                                                                    <input
+                                                                        type={f.type || "text"}
+                                                                        name={f.name}
+                                                                        className="form-control bg-white text-dark"
+                                                                        placeholder={f.placeholder}
+                                                                        required={f.required !== false}
+                                                                        disabled={f.disabled || (isEditing && f.disabledOnUpdate) || entity.create.isPending}
+                                                                        readOnly={f.readOnly || isUserNameField}
+                                                                        value={inputValue}
+                                                                        defaultValue={!isEditing ? (f.defaultValue ?? "") : undefined}
+                                                                        onChange={(e) => isEditing && !isUserNameField && setFormData({...formData, [f.name]: e.target.value})}
+                                                                        step={f.step}
+                                                                        list={f.list}
+                                                                    />
+                                                                    {f.list && f.options && (
+                                                                        <datalist id={f.list}>
+                                                                            {f.options.map((opt, idx) => {
+                                                                                const val = opt?.value ?? opt;
+                                                                                const lbl = opt?.label ?? opt;
+                                                                                return (
+                                                                                    <option key={idx} value={val}>
+                                                                                        {lbl}
+                                                                                    </option>
+                                                                                );
+                                                                            })}
+                                                                        </datalist>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                    <div className="modal-footer bg-light p-3 border-0">
+                                        <button type="button" className="btn btn-secondary px-4" onClick={() => setModalOpen(false)}>Cancelar</button>
+                                        <button type="submit" className="btn btn-success px-4" disabled={entity.create.isPending || entity.update.isPending}>
+                                            <i className="bi bi-cloud-arrow-up-fill me-1"></i>
+                                            {isEditing ? "Registrar cambios" : "Registrar"}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </>
             )}
         </div>
     );

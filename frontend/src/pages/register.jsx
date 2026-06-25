@@ -10,7 +10,7 @@ function Register() {
   const [loading, setLoading] = useState(false);
   const [countriesList, setCountriesList] = useState([]);
 
-  // Cargar la lista de países dinámicamente al montar el componente (Ruta Pública)
+  // Cargar la lista de países dinámicamente al montar el componente
   useEffect(() => {
     const fetchCountries = async () => {
       try {
@@ -154,13 +154,13 @@ function Register() {
                   {/* Correo */}
                   <div className="mb-2">
                     <label className="form-label fw-semibold small text-secondary mb-1">Correo Electrónico</label>
-                    <input type="email" name="email" autocomplete="username" className="form-control bg-light py-2 rounded-3" placeholder="correo@ejemplo.com" required />
+                    <input type="email" name="email" autoComplete="username" className="form-control bg-light py-2 rounded-3" placeholder="correo@ejemplo.com" required />
                   </div>
 
                   {/* Contraseña */}
                   <div className="mb-3">
                     <label className="form-label fw-semibold small text-secondary mb-1">Contraseña</label>
-                    <input type="password" name="password" autocomplete="new-password" className="form-control bg-light py-2 rounded-3" placeholder="••••••••" required />
+                    <input type="password" name="password" autoComplete="new-password" className="form-control bg-light py-2 rounded-3" placeholder="••••••••" required />
                   </div>
 
                   {/* Botón de Enviar */}

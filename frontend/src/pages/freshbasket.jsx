@@ -4,6 +4,7 @@ import { useCart } from "../hooks/useCart";
 import { useMenu } from "../hooks/useMenu";
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
+import { tieneAcceso } from "../Config/permissions";
 
 function Freshbasket({ onLogout }) {
   const navigate = useNavigate();
@@ -12,9 +13,7 @@ function Freshbasket({ onLogout }) {
   const userRole = (localStorage.getItem("userRole") || "USUARIO").toUpperCase().trim();
   const userEmail = localStorage.getItem("userEmail") || "correodeejemplo@mail.com";
 
-  // Consumimos el hook que acabamos de crear pasándole el rol actual
-  const { menuItems, getSubItems } = useMenu(userRole);
-
+  const { menuItems } = useMenu(userRole);
   const { cart, refetch } = useCart();
   const totalArticulos = cart?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
@@ -22,73 +21,10 @@ function Freshbasket({ onLogout }) {
     if (refetch) refetch();
   }, [location.pathname, refetch]);
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [isTabNone, setIsTabNone] = useState(true);
-
-  const [openMenus, setOpenMenus] = useState({
-    [location.pathname.split("/")[2]]: true
-  });
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isAdmin = userRole === "ADMINISTRADOR" || userRole === "ADMIN";
-
-  const getActiveTabForCurrentModule = (path) => {
-    const currentModule = path.split("/")[2];
-    if (!currentModule) return "none";
-
-    const mapping = {
-      productos: "active_products_Tab",
-      usuarios: "active_users_Tab",
-      proveedores: "active_suppliers_Tab",
-      entradas: "active_entries_Tab",
-      salidas: "active_exits_Tab",
-      categorias: "active_categories_Tab",
-      paises: "active_countries_Tab",
-      ventas: "active_sales_Tab"
-    };
-    return localStorage.getItem(mapping[currentModule]) || "none";
-  };
-
-  useEffect(() => {
-    const currentModule = location.pathname.split("/")[2];
-    setOpenMenus(() => {
-      if (!currentModule) return {};
-      return { [currentModule]: true };
-    });
-
-    const activeTab = getActiveTabForCurrentModule(location.pathname);
-    setIsTabNone(activeTab === "none");
-  }, [location.pathname]);
-
-  useEffect(() => {
-    const handleTabChange = () => {
-      const activeTab = getActiveTabForCurrentModule(window.location.pathname);
-      setIsTabNone(activeTab === "none");
-    };
-
-    const events = [
-      "productsTabChanged", "usersTabChanged", "suppliersTabChanged",
-      "entriesTabChanged", "exitsTabChanged", "categoriesTabChanged",
-      "countriesTabChanged", "salesTabChanged"
-    ];
-
-    events.forEach(evt => window.addEventListener(evt, handleTabChange));
-    return () => {
-      events.forEach(evt => window.removeEventListener(evt, handleTabChange));
-    };
-  }, [location.pathname]);
-
-  useEffect(() => {
-    const modules = [
-      "active_products_Tab", "active_users_Tab", "active_suppliers_Tab",
-      "active_entries_Tab", "active_exits_Tab", "active_categories_Tab",
-      "active_countries_Tab", "active_sales_Tab"
-    ];
-    modules.forEach(key => {
-      if (!localStorage.getItem(key)) localStorage.setItem(key, "none");
-    });
-  }, [userRole]);
-
   const profileRef = useRef(null);
 
   useEffect(() => {
@@ -116,110 +52,39 @@ function Freshbasket({ onLogout }) {
 
   return (
       <div className="fb-root">
+        {mobileMenuOpen && (
+            <div className="fb-sidebar-overlay" onClick={() => setMobileMenuOpen(false)} />
+        )}
         {/* SIDEBAR */}
-        <div className="fb-sidebar">
+        <div className={`fb-sidebar ${mobileMenuOpen ? "open" : ""}`}>
           <div className="fb-sidebar-brand">
-            <i className="bi bi-basket3-fill fb-sidebar-brand-icon" />
-            <span className="fb-sidebar-brand-name">FreshBasket</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <i className="bi bi-basket3-fill fb-sidebar-brand-icon" />
+              <span className="fb-sidebar-brand-name">FreshBasket</span>
+            </div>
+            <button className="fb-sidebar-close-btn" onClick={() => setMobileMenuOpen(false)} aria-label="Cerrar menú">
+              <i className="bi bi-x-lg" />
+            </button>
           </div>
           <div className="fb-sidebar-section">MÓDULOS</div>
-          <nav className="fb-nav">
+          <nav className="fb-nav fb-nav-mobile-stack">
             {menuItems.map((item) => {
               const isActive = location.pathname === item.path || (item.path !== "/freshbasket" && location.pathname.startsWith(item.path));
-              const isMenuOpen = openMenus[item.key] !== undefined ? openMenus[item.key] : isActive;
-
-              // Obtenemos los sub-items de forma limpia mediante la función del Hook
-              const subItemsArr = getSubItems(item.key);
 
               return (
                   <div key={item.key} style={{ width: "100%" }}>
                     <button
                         className={`fb-nav-item ${isActive ? "fb-nav-item-active" : ""}`}
                         onClick={() => {
-                          if (isActive) {
-                            setOpenMenus((prev) => ({ ...prev, [item.key]: !isMenuOpen }));
-                          } else {
-                            setOpenMenus((prev) => ({ ...prev, [item.key]: true }));
-                          }
-
-                          if (item.path) {
-                            const tabKeys = {
-                              productos: { storage: "active_products_Tab", event: "productsTabChanged" },
-                              usuarios: { storage: "active_users_Tab", event: "usersTabChanged" },
-                              proveedores: { storage: "active_suppliers_Tab", event: "suppliersTabChanged" },
-                              entradas: { storage: "active_entries_Tab", event: "entriesTabChanged" },
-                              salidas: { storage: "active_exits_Tab", event: "exitsTabChanged" },
-                              categorias: { storage: "active_categories_Tab", event: "categoriesTabChanged" },
-                              paises: { storage: "active_countries_Tab", event: "countriesTabChanged" },
-                              ventas: { storage: "active_sales_Tab", event: "salesTabChanged" }
-                            };
-
-                            const currentConfig = tabKeys[item.key];
-                            if (currentConfig) {
-                              localStorage.setItem(currentConfig.storage, "none");
-                              window.dispatchEvent(new Event(currentConfig.event));
-                            }
-                            navigate(item.path);
-                          }
+                          if (item.path) navigate(item.path);
+                          setMobileMenuOpen(false);
                         }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flex: 1 }}>
+                      <div className="fb-nav-item-content" style={{ display: "flex", alignItems: "center", gap: "0.75rem", flex: 1 }}>
                         {item.icon && <i className={`bi ${item.icon} fb-nav-icon`} style={{ fontSize: "1.1rem" }} />}
                         <span>{item.label}</span>
                       </div>
-                      {item.hasSubmenu && subItemsArr.length > 0 && (
-                          <i className={`bi ${isMenuOpen ? "bi-chevron-up" : "bi-chevron-down"} fb-profile-arrow`} style={{ fontSize: "0.8rem" }} />
-                      )}
                     </button>
-
-                    {/* SUB-MENÚ DINÁMICO */}
-                    {item.hasSubmenu && isMenuOpen && subItemsArr.length > 0 && (
-                        <div className="fb-sidebar-submenu" style={{ paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.25rem", marginTop: "0.25rem" }}>
-                          {subItemsArr.map((sub) => {
-                            const storageKey =
-                                item.key === "productos" ? "active_products_Tab" :
-                                    item.key === "usuarios" ? "active_users_Tab" :
-                                        item.key === "proveedores" ? "active_suppliers_Tab" :
-                                            item.key === "entradas" ? "active_entries_Tab" :
-                                                item.key === "salidas" ? "active_exits_Tab" :
-                                                    item.key === "categorias" ? "active_categories_Tab" :
-                                                        item.key === "paises" ? "active_countries_Tab" : "";
-
-                            const currentActiveTab = localStorage.getItem(storageKey) || "none";
-                            const isSubActive = currentActiveTab === sub.key;
-                            return (
-                                <button
-                                    key={sub.key}
-                                    className="fb-nav-item"
-                                    style={{
-                                      fontSize: "0.85rem", padding: "0.5rem 0.75rem", background: isSubActive ? "rgba(255,255,255,0.1)" : "transparent",
-                                      border: "none", fontWeight: isSubActive ? "bold" : "normal"
-                                    }}
-                                    onClick={() => {
-                                      const tabKeys = {
-                                        productos: { storage: "active_products_Tab", event: "productsTabChanged" },
-                                        usuarios: { storage: "active_users_Tab", event: "usersTabChanged" },
-                                        proveedores: { storage: "active_suppliers_Tab", event: "suppliersTabChanged" },
-                                        entradas: { storage: "active_entries_Tab", event: "entriesTabChanged" },
-                                        salidas: { storage: "active_exits_Tab", event: "exitsTabChanged" },
-                                        categorias: { storage: "active_categories_Tab", event: "categoriesTabChanged" },
-                                        paises: { storage: "active_countries_Tab", event: "countriesTabChanged" }
-                                      };
-                                      const currentConfig = tabKeys[item.key];
-                                      if (currentConfig) {
-                                        localStorage.setItem(currentConfig.storage, sub.key);
-                                        window.dispatchEvent(new Event(currentConfig.event));
-                                      }
-                                      navigate(item.path);
-                                    }}
-                                >
-                                  <i className={`bi ${sub.icon}`} style={{ marginRight: "0.5rem", fontSize: "1rem" }} />
-                                  <span>{sub.label}</span>
-                                </button>
-                            );
-                          })}
-                        </div>
-                    )}
                   </div>
               );
             })}
@@ -228,50 +93,52 @@ function Freshbasket({ onLogout }) {
 
         {/* PANEL CONTENT AREA */}
         <div className="fb-main">
-          {/* TOPBAR */}
           <div className="fb-topbar">
-            <div>
-              <h2 className="fb-top-title">
-                {location.pathname.toLowerCase().includes("cart") ? "Mi Carrito" : (menuItems.find(m => location.pathname === m.path)?.label || "Panel")}
-              </h2>
-              <p style={{ margin: 0 }} className="fb-top-sub">Bienvenido/a </p>
-            </div>
-
-            <div className="fb-top-right" style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
-              <button type="button" onClick={() => navigate("/freshbasket/cart")} className="fb-topbar-cart-btn" title="Ver mi carrito">
-                <i className="bi bi-cart3 text-dark" style={{ fontSize: "1.3rem" }} />
-                {totalArticulos > 0 && <span className="fb-cart-badge">{totalArticulos}</span>}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <button className="fb-hamburger-btn" onClick={() => setMobileMenuOpen(true)} aria-label="Abrir menú">
+                <i className="bi bi-list" />
               </button>
-
+              <div className="fb-mobile-logo">
+                <i className="bi bi-basket3-fill" />
+                <span className="fb-mobile-brand-title">FreshBasket</span>
+              </div>
+              <div className="fb-desktop-titles">
+                <h2 className="fb-top-title">
+                  {location.pathname.toLowerCase().includes("cart") ? "Mi Carrito" : (menuItems.find(m => location.pathname === m.path)?.label || "Panel")}
+                </h2>
+                <p style={{ margin: 0 }} className="fb-top-sub">Bienvenido/a</p>
+              </div>
+            </div>
+            <div className="fb-top-right" style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
+              {tieneAcceso(userRole, "puedeUsarCarrito") && (
+                  <button type="button" onClick={() => navigate("/freshbasket/cart")} className="fb-topbar-cart-btn" title="Ver mi carrito">
+                    <i className="bi bi-cart3 text-dark" style={{ fontSize: "1.3rem" }} />
+                    {totalArticulos > 0 && <span className="fb-cart-badge">{totalArticulos}</span>}
+                  </button>
+              )}
               <NotificationBell isAdmin={isAdmin} />
-
               <div className="fb-profile-container" ref={profileRef} style={{ position: "relative" }}>
                 <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="fb-logout-btn fb-profile-trigger-btn">
                   <i className="bi bi-person-circle fb-profile-icon" />
-                  <span>Perfil</span>
+                  <span className="fb-profile-text-desktop">Perfil</span>
                   <i className={`bi ${showProfileMenu ? "bi-chevron-up" : "bi-chevron-down"} fb-profile-arrow`} />
                 </button>
-
                 {showProfileMenu && (
                     <div className="fb-profile-dropdown">
                       <div className="fb-profile-header">
-                        <span className={`fb-role-badge ${userRole.toUpperCase()}`}>{userRole}</span>
+                        <span className={`fb-role-badge ${userRole}`}>{userRole}</span>
                         <h6 className="fb-profile-name fw-bold text-dark mt-2 mb-1" style={{ fontSize: "0.95rem" }}>
                           {localStorage.getItem("userName") || "Usuario Registrado"}
                         </h6>
                         <p className="fb-profile-email"><i className="bi bi-envelope-fill" /> {userEmail}</p>
                       </div>
-
-                      <button
-                          onClick={() => { navigate("my-profile"); setShowProfileMenu(false); }}
-                          className="fb-profile-edit-btn fb-profile-edit-action-btn mb-2"
-                          style={{ width: "100%", textAlign: "left" }}
-                      >
+                      <button onClick={() => { navigate("my-profile"); setShowProfileMenu(false); }}
+                              className="fb-profile-edit-btn fb-profile-edit-action-btn mb-2"
+                              style={{ width: "100%", textAlign: "left" }}>
                         <i className="bi bi-gear-fill" /> Actualizar datos
                       </button>
-
                       <button onClick={handleLogout} className="fb-logout-btn fb-profile-logout-action-btn">
-                        <i className="bi bi-box-arrow-left" /> Cerrar sesión
+                        <i className="bi bi-box-arrow-left" /> Salir
                       </button>
                     </div>
                 )}
@@ -281,12 +148,9 @@ function Freshbasket({ onLogout }) {
 
           {/* VISTA DINÁMICA DE CONTENIDO */}
           <div className="fb-content">
-            {(location.pathname === "/freshbasket" || (isTabNone && !location.pathname.endsWith("my-profile")
-                && !location.pathname.toLowerCase().includes("cart")
-                && !location.pathname.toLowerCase().includes("ventas")
-            )) && (
-                <div className="fb-photo-section" style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "calc(100vh - 90px)", width: "100%", boxSizing: "border-box", overflow: "hidden", padding: "2rem" }}>
-                  <img src="/logo1.png" alt="Foto principal FreshBasket" className="fb-photo" style={{ width: "100%", maxWidth: "700px", maxHeight: "calc(100vh - 160px)", objectFit: "contain", display: "block" }} />
+            {location.pathname === "/freshbasket" && (
+                <div className="fb-photo-section" style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "calc(100vh - 90px)", width: "100%", padding: "2rem" }}>
+                  <img src="/logo1.png" alt="Foto principal FreshBasket" className="fb-photo" style={{ width: "100%", maxWidth: "700px", objectFit: "contain" }} />
                 </div>
             )}
             <Outlet />

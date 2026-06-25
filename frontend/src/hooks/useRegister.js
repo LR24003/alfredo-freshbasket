@@ -38,16 +38,13 @@ export function useRegister(redirectPath = "/login") {
             role: formDataObject.role || "CLIENTE",
             countryName: countryValue
         };
-
         try {
             await axios.post("/api/auth/register", newUser);
             toast.success("¡Cuenta creada correctamente!");
 
-
             if (onSuccessCallback) {
                 onSuccessCallback(newUser);
             } else if (redirectPath) {
-                // Si no, hace la redirección tradicional por defecto
                 setTimeout(() => {
                     navigate(redirectPath);
                 }, 1500);

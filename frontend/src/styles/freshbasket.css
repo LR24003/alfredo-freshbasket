@@ -40,7 +40,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Contenedor Raíz */
 .fb-root {
   display: flex;
   flex-direction: column;
@@ -49,9 +48,6 @@ body {
   overflow: hidden;
 }
 
-/* ==========================================================================
-   BARRA LATERAL (Sidebar)
-   ========================================================================== */
 .fb-sidebar {
   width: 100%;
   background-color: var(--bg-sidebar);
@@ -130,13 +126,9 @@ body {
   font-size: 1rem;
 }
 
-/* Submenú del Sidebar */
 .fb-sidebar-submenu {
 }
 
-/* ==========================================================================
-   ESPACIO DE TRABAJO, TOPBAR Y CONTENIDOS
-   ========================================================================== */
 .fb-main {
   flex: 1;
   display: flex;
@@ -186,10 +178,9 @@ body {
   width: 100%;
 }
 
-/* BOTÓN DEL CARRITO */
 .fb-topbar-cart-btn {
   position: relative;
-  background: transparent !important; /* Evita fondos azules de Bootstrap */
+  background: transparent !important;
   border: none;
   color: #212529 !important;
   cursor: pointer;
@@ -210,7 +201,6 @@ body {
   color: #212529 !important;
 }
 
-/* Efectos visuales de interacción (Escala) */
 .fb-topbar-cart-btn:hover {
   transform: scale(1.1);
   background: transparent !important;
@@ -221,7 +211,6 @@ body {
   background: transparent !important;
 }
 
-/* Limpieza estricta de estados de enfoque */
 .fb-topbar-cart-btn:focus,
 .fb-topbar-cart-btn:focus-visible {
   outline: none !important;
@@ -229,7 +218,6 @@ body {
   background-color: transparent !important;
 }
 
-/* INDICADOR (BADGE) EN LA ESQUINA SUPERIOR IZQUIERDA */
 .fb-topbar-cart-btn .fb-cart-badge {
   position: absolute;
   top: 2px;
@@ -250,9 +238,7 @@ body {
   pointer-events: none;
   transition: transform 0.2s ease;
 }
-/* ==========================================================================
-   COMPONENTES DE FORMULARIOS Y TARJETAS
-   ========================================================================== */
+
 .fb-form-section {
   animation: fadeIn 0.3s ease-in-out;
 }
@@ -346,9 +332,6 @@ body {
   width: 100%;
 }
 
-/* ==========================================================================
-   BÚSQUEDAS Y TARJETAS DE RESULTADOS
-   ========================================================================== */
 .fb-search-form {
   display: flex;
   flex-direction: column;
@@ -385,11 +368,13 @@ body {
 }
 
 .fb-section-header {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5rem;
+  display: flex !important;
+  flex-direction: row !important; /* CORREGIDO: Los pone en una sola línea horizontal */
+  align-items: center !important;  /* CORREGIDO: Los alinea perfectamente a la misma altura */
+  justify-content: space-between !important; /* Separa el título a la izquierda y el botón/badge a la derecha */
+  gap: 1rem;
   margin-bottom: 1rem;
+  width: 100%;
 }
 
 .fb-badge {
@@ -416,20 +401,16 @@ body {
   color: var(--text-muted);
 }
 
-/* ==========================================================================
-   PERFIL Y DROPDOWN MENÚ
-   ========================================================================== */
 .fb-profile-container {
   position: relative;
 }
 
-/* Botón de Perfil Principal (Verde) */
 .fb-logout-btn.fb-profile-trigger-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.4rem 0.7rem !important;
+  padding: 0.4rem 0.3rem !important;
   font-size: 0.85rem;
   font-weight: 600;
   background-color: #198754 !important;
@@ -452,7 +433,6 @@ body {
   color: #ffffff;
 }
 
-/* Desplegable */
 .fb-profile-dropdown {
   position: absolute;
   top: 125%;
@@ -476,7 +456,6 @@ body {
   margin-bottom: 0.4rem;
 }
 
-/* Roles */
 .fb-role-badge {
   display: inline-block;
   padding: 3px 10px;
@@ -516,7 +495,6 @@ body {
   gap: 0.3rem;
 }
 
-/* Acciones internas del Dropdown */
 .fb-profile-edit-btn {
   width: 100%;
   padding: 0.4rem;
@@ -545,7 +523,7 @@ body {
   width: 100%;
   justify-content: center;
   align-items: center;
-  padding: 0.4rem;
+  padding: 0.4rem!important;
   font-size: 0.85rem;
   font-weight: 600;
   background-color: #198754;
@@ -560,14 +538,10 @@ body {
   background-color: #dc3545;
 }
 
-/* Sección de Foto Bienvenida */
 .fb-photo-section {
   animation: fadeIn 0.4s ease-in-out;
 }
 
-/* ==========================================================================
-   ANIMACIONES
-   ========================================================================== */
 @keyframes fbFadeInDropdown {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
@@ -578,88 +552,416 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ==========================================================================
-   MEDIA QUERIES: RESPONSIVE (Escritorios y Pantallas Grandes)
-   ========================================================================== */
 @media (min-width: 768px) {
+  .fb-hamburger-btn,
+  .fb-mobile-logo,
+  .fb-sidebar-close-btn,
+  .fb-sidebar-overlay {
+    display: none !important;
+  }
+
   .fb-root {
-    flex-direction: row;
+    flex-direction: row !important;
   }
 
   .fb-sidebar {
-    width: var(--sidebar-width);
-    height: 100vh;
-    position: sticky;
-    top: 0;
-  }
-
-  .fb-sidebar-brand {
-    padding: 0.6rem 1rem;
+    width: var(--sidebar-width) !important;
+    height: 100vh !important;
+    display: flex !important;
   }
 
   .fb-sidebar-section {
-    display: block;
-    padding: 0.75rem 1rem 0.25rem 1rem;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--text-light);
-    letter-spacing: 1px;
+    display: block !important;
   }
 
   .fb-nav {
-    flex-direction: column;
-    overflow-x: visible;
-    padding: 0.25rem 1rem 1rem 1rem;
+    flex-direction: column !important;
+    overflow-x: visible !important;
+    white-space: normal !important;
   }
 
   .fb-nav-item {
-    width: 100%;
-    font-size: 0.95rem;
-    padding: 0.75rem 1rem;
+    width: 100% !important;
+  }
+
+  .fb-sidebar-submenu {
+    display: flex !important;
+    flex-direction: column !important;
+    padding-left: 1rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+
+  .fb-desktop-titles,
+  .fb-sidebar-section {
+    display: none !important;
+  }
+
+  .fb-root {
+    display: block !important;
+    position: relative !important;
+    width: 100% !important;
+    height: 100vh !important;
+  }
+
+  .fb-main {
+    width: 100% !important;
+    margin-top: 60px !important;
+    height: calc(100vh - 60px) !important;
+    display: block !important;
   }
 
   .fb-topbar {
-    padding: 1.25rem 2rem;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 60px !important;
+    background-color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0 1rem !important;
+    z-index: 2000 !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
   }
 
-  .fb-content {
-    padding: 2rem;
+  .fb-hamburger-btn {
+    display: block !important;
+    background: transparent !important;
+    border: none !important;
+    font-size: 1.7rem !important;
+    color: var(--primary-dark) !important;
+    cursor: pointer;
+    padding: 0 !important;
   }
 
-  .fb-form-card {
-    padding: 2rem;
+  .fb-mobile-logo {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
   }
 
-  .fb-crud-grid {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  .fb-mobile-logo i {
+    font-size: 1.3rem !important;
+    color: var(--primary-dark) !important;
   }
 
-  .fb-action-btn {
-    width: auto;
+  .fb-mobile-brand-title {
+    color: var(--primary-dark) !important;
+    font-weight: 700 !important;
+    font-size: 1.1rem !important;
+    letter-spacing: 0.5px !important;
   }
 
-  .fb-search-form {
-    flex-direction: row;
+  .fb-top-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.8rem !important;
   }
 
-  .fb-search-btn {
-    width: auto;
+  .fb-topbar-cart-btn {
+    font-size: 1.4rem !important;
+    color: var(--primary-dark) !important;
   }
 
-  .fb-section-header {
-    flex-direction: row;
-    justify-content: space-between;
+  .fb-topbar-cart-btn i {
+    color: var(--primary-dark) !important;
   }
 
-  .fb-results-grid {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  .fb-profile-text-desktop {
+    display: none !important;
   }
 
+  .fb-profile-trigger-btn {
+    background: transparent !important;
+    border: none !important;
+  }
+
+  .fb-profile-icon {
+    font-size: 1.5rem !important;
+    color: var(--primary-dark) !important;
+  }
+
+  .fb-profile-dropdown {
+    top: 55px !important;
+    right: 10px !important;
+    width: 240px !important;
+    z-index: 3000 !important;
+  }
+
+  .fb-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 50% !important;
+    height: 100vh !important;
+    z-index: 2050 !important;
+    background-color: var(--primary-dark) !important;
+    transition: left 0.3s ease-in-out !important;
+    display: block !important;
+  }
+
+  .fb-sidebar.open {
+    left: 0 !important;
+    width: 50% !important;
+  }
+
+  .fb-sidebar-brand {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 1.2rem 1rem !important;
+    background-color: #14532d !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  }
+
+  .fb-sidebar-brand-name {
+    color: #ffffff !important;
+    font-size: 1.3rem !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  .fb-sidebar-close-btn {
+    display: block !important;
+    background: none !important;
+    border: none !important;
+    color: #ffffff !important;
+    font-size: 1.5rem !important;
+    cursor: pointer;
+  }
+
+  .fb-sidebar nav.fb-nav {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0.5rem 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    white-space: normal !important;
+  }
+
+  .fb-sidebar nav.fb-nav > div {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: none !important;
+    float: none !important;
+    clear: both !important;
+  }
+
+  .fb-nav-wrapper {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .fb-sidebar .fb-nav-item {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 1rem 1.2rem !important;
+    background: transparent !important;
+    color: #ffffff !important;
+    font-size: 1rem !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 0 !important;
+    box-sizing: border-box !important;
+    float: none !important;
+    clear: both !important;
+  }
+
+  .fb-nav-item-content {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+  }
+
+  .fb-nav-icon {
+    font-size: 1.2rem !important;
+    color: #ffffff !important;
+  }
+
+  .fb-sidebar-submenu {
+    display: block !important;
+    width: 100% !important;
+    background-color: rgba(0, 0, 0, 0.15) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .fb-submenu-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    width: 100% !important;
+    padding: 0.8rem 1rem 0.8rem 2.5rem !important;
+    background: transparent !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
+    text-align: left !important;
+    box-sizing: border-box !important;
+  }
+
+  .fb-sidebar-overlay {
+    display: block !important;
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2040;
+  }
   .fb-logout-btn.fb-profile-trigger-btn {
-    padding: 0.5rem 0.7rem !important;
-  }
-
-  .fb-logout-btn.fb-profile-logout-action-btn {
-    padding: 0.4rem !important;
+    padding: 0.4rem 0.3rem !important;
   }
 }
+
+@media (max-width: 767.98px) {
+  .fb-sidebar nav.fb-nav,
+  .fb-sidebar nav.fb-nav * {
+    box-sizing: border-box !important;
+  }
+
+  .fb-sidebar nav.fb-nav {
+    display: block !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .fb-sidebar nav.fb-nav > div {
+    display: block !important;
+    width: 100% !important;
+    flex-basis: 100% !important;
+    flex-grow: 0 !important;
+    flex-shrink: 0 !important;
+  }
+
+  .fb-sidebar nav.fb-nav > div > .fb-nav-item {
+    display: flex !important;
+    width: 100% !important;
+    flex-basis: 100% !important;
+  }
+
+  .fb-sidebar .fb-sidebar-submenu {
+    display: block !important;
+    width: 100% !important;
+    flex-basis: 100% !important;
+  }
+
+  .fb-sidebar .fb-sidebar-submenu .fb-submenu-item {
+    display: flex !important;
+    width: 100% !important;
+    flex-basis: 100% !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .fb-content {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .fb-photo-section {
+    height: auto !important;
+    min-height: calc(100vh - 60px - 2rem) !important;
+    flex: 1 !important;
+    padding: 1rem !important;
+  }
+
+  .fb-photo-section .fb-photo {
+    max-height: calc(100vh - 60px - 4rem) !important;
+  }
+
+  /* El menú móvil debe superponerse, nunca empujar el contenido */
+  .fb-main {
+    position: relative !important;
+    z-index: 1 !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .fb-content {
+    min-height: calc(100vh - 60px) !important;
+    height: auto !important;
+  }
+
+  .fb-content > * {
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    margin-top: 0 !important;
+  }
+
+  .fb-form-section,
+  .fb-form-container,
+  .fb-crud-form {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  html body .fb-root > .fb-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: -100% !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    flex: none !important;
+  }
+
+  html body .fb-root > .fb-sidebar.open {
+    left: 0 !important;
+  }
+
+
+  html body .fb-root {
+    display: block !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+  }
+
+  html body .fb-root > .fb-main {
+    position: relative !important;
+    width: 100% !important;
+    margin: 0 !important;
+    margin-top: 60px !important;
+    height: calc(100vh - 60px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  html body .fb-root > .fb-main > .fb-content {
+    overflow-y: visible !important;
+    height: auto !important;
+    min-height: 100% !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  body div.fb-root div.fb-sidebar,
+  body .fb-root > .fb-sidebar,
+  .fb-root .fb-sidebar.fb-sidebar {
+    position: fixed !important;
+    top: 0px !important;
+    bottom: 0px !important;
+    left: -100% !important;
+    right: auto !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+  }
+
+  body div.fb-root div.fb-sidebar.open,
+  body .fb-root > .fb-sidebar.open,
+  .fb-root .fb-sidebar.fb-sidebar.open {
+    left: 0px !important;
+  }
+}
+

@@ -16,7 +16,6 @@ function ForgotPassword() {
 
         setLoading(true);
         try {
-            // Hacemos la petición real al backend
             const response = await fetch("/api/auth/recover-password", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -90,7 +89,7 @@ function ForgotPassword() {
                   {loading ? (
                    <span className="spinner-border spinner-border-sm me-2"></span>
                   ) : (
-                    "Enviar Enlace de Recuperación"
+                    "Enviar enlace de recuperación"
                    )}
                  </button>
                 </div>
@@ -102,7 +101,7 @@ function ForgotPassword() {
                className="fw-semibold text-decoration-none small"
                style={{ color: "#1a6b3a" }}
                >
-              <i className="bi bi-arrow-left me-1"></i> Volver al inicio de Sesión
+              <i className="bi bi-arrow-left me-1"></i> Volver al inicio de sesión
              </a>
             </div>
            </div>

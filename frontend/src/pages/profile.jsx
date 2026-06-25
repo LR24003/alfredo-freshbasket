@@ -56,7 +56,6 @@ const Profile = () => {
 
         const { name, lastName, phone, email, password, role, countryName } = profileData;
 
-        // Validación estricta en el Frontend
         if (!name?.trim() || !lastName?.trim() || !phone?.trim() || !countryName?.trim()) {
             toast.error("Por favor, completa todos los campos obligatorios.");
             return;
@@ -121,7 +120,7 @@ const Profile = () => {
                             <label className="fb-crud-label">Email</label>
                             <div className="fb-crud-input-wrap">
                                 <i className="bi bi-envelope fb-crud-input-icon" />
-                                <input type="email" name="email" autoComplete="username" className="fb-crud-input field-disabled" value={profileData.email} disabled />
+                                <input type="email" name="email" autoComplete="username" className="fb-crud-input field-disabled" value={profileData.email} disabled={false} />
                             </div>
                         </div>
                         <div className="fb-crud-field">
@@ -140,7 +139,7 @@ const Profile = () => {
                             </div>
                         </div>
                         <div className="fb-crud-field">
-                            <label className="fb-crud-label">Rol / Credenciales</label>
+                            <label className="fb-crud-label">Rol</label>
                             <div className="fb-crud-input-wrap">
                                 <i className="bi bi-shield-lock fb-crud-input-icon" />
                                 <input type="text" name="role" className="fb-crud-input field-disabled" value={profileData.role} disabled />
@@ -155,7 +154,7 @@ const Profile = () => {
                         </div>
                     </div>
                     <button type="submit" className="fb-action-btn" style={{ background: "linear-gradient(135deg,#1a6b3a,#2ecc71)", marginTop: "1.5rem" }}>
-                        <i className="bi bi-save-fill" /> Guardar Cambios
+                        <i className="bi bi-save-fill" /> Guardar cambios
                     </button>
                 </form>
             </div>

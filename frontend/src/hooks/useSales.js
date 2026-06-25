@@ -29,22 +29,19 @@ export const useSales = () => {
         } catch (e) { console.error("Error JWT", e); }
     }
 
-    // Query: Catálogo de Productos
     const productsQuery = useQuery({
         queryKey: ['products'],
         queryFn: async () => { const { data } = await axios.get('/api/products'); return data; },
         staleTime: 1000 * 30,
     });
 
-    // Query: Catálogo de Usuarios del Sistema
     const usersQuery = useQuery({
         queryKey: ['users'],
         queryFn: async () => {
             const { data } = await axios.get('/api/users');
             return data;
         },
-        // 🌟 CAMBIO CRÍTICO: Bajamos el staleTime a 0 y habilitamos refetch para que al
-        // regresar de registrar un cliente, React Query dispare el GET inmediatamente.
+
         staleTime: 0,
         refetchOnMount: true,
     });
@@ -58,7 +55,7 @@ export const useSales = () => {
         (p.name.toLowerCase().includes(search.toLowerCase()) || String(p.id).includes(search))
     );
 
-    // Filtro predictivo de clientes (Busca por nombre o apellido)
+    // Filtro predictivo de clientes
     const filteredCustomers = users.filter(u => {
         const isCliente = u.role?.toUpperCase() === "CLIENTE" || u.rol?.toUpperCase() === "CLIENTE" || u.roleId === 3;
         const nombreCompleto = `${u.name || ''} ${u.lastName || u.apellido || ''}`.trim().toLowerCase();
@@ -72,7 +69,7 @@ export const useSales = () => {
     const discountAmount = (subtotalAmount * discount) / 100;
     const totalAmount = subtotalAmount - discountAmount;
 
-    // 🚀 MUTACIÓN PRINCIPAL: Procesa la venta incluyendo el descuento mapeado
+    // Procesa la venta incluyendo el descuento mapeado
     const processSaleMutation = useMutation({
         mutationFn: async () => {
             if (!employeeId) throw new Error("Empleado no identificado");
@@ -83,8 +80,6 @@ export const useSales = () => {
                 paymentMethod: paymentMethod,
                 date: new Date().toISOString(),
                 status: "COMPLETADA",
-
-                // ATRIBUTOS ENVIADOS: Se añade el total recalculado y el descuento
                 discount: discount,
                 totalAmount: totalAmount,
 
@@ -106,9 +101,9 @@ export const useSales = () => {
             setSelectedCustomer({ id: 1, name: "Cliente General / Mostrador" });
             setCustomerSearch("Cliente General / Mostrador");
             setPaymentMethod("EFECTIVO");
-            setDiscount(0); // Limpiamos el descuento para la próxima venta
-            queryClient.invalidateQueries({ queryKey: ['products'] }); // Sincroniza stock disminuido
-            queryClient.invalidateQueries({ queryKey: ['users'] });    // Limpia caché de usuarios por seguridad
+            setDiscount(0);
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+            queryClient.invalidateQueries({ queryKey: ['users'] });
         },
         onError: (error) => {
             console.error("Error capturado de Spring Boot:", error.response?.data);
@@ -150,8 +145,6 @@ export const useSales = () => {
         addToCart,
         updateQuantity,
         removeFromCart,
-
-        // RETORNOS DE DESCUENTO Y VALORES CALCULADOS
         discount,
         setDiscount,
         subtotalAmount,

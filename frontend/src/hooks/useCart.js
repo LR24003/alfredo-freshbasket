@@ -82,7 +82,6 @@ export const useCart = () => {
         }
     });
 
-    // Cambios aplicados aquí 👇
     const checkoutMutation = useMutation({
         mutationFn: async () => {
             if (!userId) throw new Error("Usuario no autenticado");
@@ -105,7 +104,6 @@ export const useCart = () => {
         isLoading: cartQuery.isLoading,
         isError: cartQuery.isError || !userId,
         error: cartQuery.error,
-
         updateQuantity: updateQuantityMutation.mutate,
         removeItem: removeItemMutation.mutate,
         checkout: checkoutMutation.mutate,

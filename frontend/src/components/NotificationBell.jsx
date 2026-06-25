@@ -62,9 +62,9 @@ export function NotificationBell({ isAdmin }) {
                                         <small className="text-muted">ID: {product.id}</small>
                                     </div>
                                     <div className="text-end">
-                    <span className="badge bg-danger-subtle text-danger fw-bold d-block">
-                      Cant: {product.currentStock}
-                    </span>
+                                     <span className="badge bg-danger-subtle text-danger fw-bold d-block">
+                                      Cant: {product.currentStock}
+                                       </span>
                                         <small style={{ fontSize: "0.75rem" }} className="text-secondary">
                                             Min: {product.minStock}
                                         </small>

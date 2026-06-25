@@ -1,4 +1,3 @@
-
 import React from "react";
 import FormLayout from "../components/FormLayout.jsx";
 import { useEntity } from "../hooks/useEntity.js";
@@ -38,21 +37,21 @@ export const getExitFields = (isEditMode, activeProducts = [], userLogin = "") =
         name: "saleId",
         icon: "bi-receipt",
         placeholder: "Salida manual (No asociada a venta)",
-        readOnly: true
+        disabled: true // Cambiado a disabled para consistencia visual en el modal
     },
     {
-        label: isEditMode ? "Usuario que actualiza" : "Usuario que registra",
+        label: isEditMode ? "Usuario que actualiza:" : "Usuario que registra:",
         name: "userName",
         icon: "bi-person",
         defaultValue: userLogin,
-        readOnly: true
+        disabled: true // Consistencia visual en campos automáticos
     }
 ];
 
 function Exits() {
     const userLogin = localStorage.getItem("userName") || localStorage.getItem("userEmail") || "";
 
-    // Carga el catálogo global de productos
+    // Carga el catálogo global de productos mediante TanStack Query
     const products = useEntity("products");
 
     // Filtrado de los productos activos
@@ -64,7 +63,7 @@ function Exits() {
         return getExitFields(isEditMode, activeProducts, userLogin);
     };
 
-    // Renderizador estético de tarjetas
+    // Renderizador estético de tarjetas unificado
     const renderExitCard = (exit) => {
         const exitId = exit.id ?? exit.exitId ?? exit.exits_id;
 
@@ -73,46 +72,52 @@ function Exits() {
             : "No disponible";
 
         return (
-            <div key={exitId} className="fb-user-display-card">
-                <div className="fb-card-user-info">
-                    <h4 className="fb-card-user-title">{exit.productName || "Producto desconocido"}</h4>
-                    <span className="fb-card-user-id">ID: {exitId}</span>
+            <div key={exitId} className="d-flex flex-column justify-content-between h-100 w-100" style={{ minHeight: "100%" }}>
+                <div>
+                    <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
+                        <h6 className="fw-bold text-dark m-0 small lh-sm text-wrap text-truncate"
+                            style={{ display: "-webkit-box", WebkitLineClamp: "2", WebkitBoxOrient: "vertical", overflow: "hidden", height: "2.4rem" }}>
+                            {exit.productName || "Producto desconocido"}
+                        </h6>
+                        <span className="badge bg-secondary-subtle text-secondary flex-shrink-0"
+                              style={{ fontSize: "0.7rem", marginTop: "0.1rem" }}>
+                    ID: {exitId}
+                </span>
+                    </div>
                 </div>
-                <div className="fb-card-user-body">
-                    <p className="fb-card-user-detail">
-                        <i className="bi bi-calendar-event" /> <strong>Fecha registro:</strong> {formattedDate}
+                <div className="flex-grow-1 mb-2 d-flex flex-column justify-content-start text-muted" style={{ fontSize: "0.85rem" }}>
+                    <p className="mb-2 text-dark">
+                        <i className="bi bi-calendar-event text-muted me-2" />
+                        <strong>Fecha registro:</strong> {formattedDate}
                     </p>
-                    <p className="fb-card-user-detail">
-                        <i className="bi bi-layers" /> <strong>Cantidad:</strong> {exit.quantity || 0}
+                    <p className="mb-2 text-dark">
+                        <i className="bi bi-layers text-muted me-2" />
+                        <strong>Cantidad:</strong> {exit.quantity || 0}
                     </p>
-                    <p className="fb-card-user-detail">
-                        <i className="bi bi-box-arrow-down-left text-dangerme-2" />
-                        <strong>Motivo de salida:</strong>
-                        <span className={`badge ms-2 ${
-                            exit.exitReason?.toUpperCase() === 'VENTA' ? 'bg-success' :
-                                exit.exitReason?.toUpperCase() === 'MERMA' ? 'bg-warning text-dark' : 'bg-secondary'
-                        }`}>
-                         {exit.exitReason ? exit.exitReason.replace('_', ' ').toLowerCase() : "No especificado"}
-                     </span>
+                    <p className="mb-3 text-dark d-flex align-items-center">
+                        <i className="bi bi-box-arrow-down-left text-danger me-2" />
+                        <strong>Motivo:</strong>
+                        <span className={`badge ms-2 text-capitalize ${
+                            exit.exitReason?.toUpperCase() === 'VENTA' ? 'bg-success-subtle text-success border border-success' :
+                                exit.exitReason?.toUpperCase() === 'MERMA' ? 'bg-danger text-white fw-bold shadow-sm' : 'bg-secondary-subtle text-secondary'
+                        }`} style={{ fontSize: '0.7rem' }}>
+                       {exit.exitReason ? exit.exitReason.replace('_', ' ').toLowerCase() : "No especificado"}
+                        </span>
                     </p>
                     {exit.saleId && (
-                    <p className="fb-card-user-detail text-muted">
-                     <i className="bi bi-receipt text-primary" /> <strong>Venta vinculada:</strong>
-                     <span className="badge bg-light text-primary border border-primary ms-2">
-                     #{exit.saleId}
-                     </span>
-                    </p>
+                        <p className="mb-2 text-dark fw-bold" style={{ fontSize: "0.8rem" }}>
+                            <i className="bi bi-receipt text-primary me-2" />
+                            <strong>Venta vinculada:</strong>
+                            <span className="badge bg-light text-primary border border-primary ms-2" style={{ fontSize: "0.7rem" }}>
+                        #{exit.saleId}
+                    </span>
+                        </p>
                     )}
-
-                    <div className="fb-card-info-row">
-                        <i className="bi bi-person" />
-                        <div className="fb-card-info-meta">
-                        <span className="fb-card-info-label">
-                         Registrado por:
-                          </span>
-                            <span className="fb-card-info-value">
-                             {exit.userName || "Sin usuario"}
-                           </span>
+                    <div className="d-flex gap-2 align-items-start pt-2 border-top mt-auto mb-1">
+                        <i className="bi bi-person text-muted mt-1" style={{ fontSize: "0.75rem" }} />
+                        <div>
+                            <span className="mb-2 text-dark fw-bold" style={{ fontSize: "0.75rem" }}>Registrado por:</span>
+                            <span className="text-dark d-block lh-sm">{exit.userName || "Sin usuario"}</span>
                         </div>
                     </div>
                 </div>

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSales } from "../hooks/useSales.js";
 import { useRegister } from "../hooks/useRegister.js";
-import PaidModal from "../components/PaidModal.jsx"; // 👇 Nombre actualizado aquí
+import PaidModal from "../components/PaidModal.jsx";
 import { toast } from "react-hot-toast";
 import "../styles/sales.css";
 
@@ -36,16 +36,16 @@ function Sales() {
     } = useSales();
 
     const [showRegisterModal, setShowRegisterModal] = useState(false);
-    const [showPaidModal, setShowPaidModal] = useState(false); // 👇 Cambiado a PaidModal
+    const [showPaidModal, setShowPaidModal] = useState(false);
 
     const { countriesList, loading: isRegistering, registerUser } = useRegister(null);
 
     // Interceptor del botón de cobro
     const handleCheckoutClick = () => {
         if (paymentMethod === "TARJETA") {
-            setShowPaidModal(true); // Despliega la plantilla de cobro electrónico
+            setShowPaidModal(true);
         } else {
-            handleProcessSale(); // Efectivo, Bitcoin, etc. procesan directo
+            handleProcessSale();
         }
     };
 
@@ -84,17 +84,15 @@ function Sales() {
     return (
         <div className="fb-form-container" onClick={() => setShowCustomerDropdown(false)}>
             <div className="fb-pos-layout">
-
-                {/* SECCIÓN IZQUIERDA: CATÁLOGO DE PRODUCTOS */}
                 <div className="fb-pos-catalog-column">
                     <div className="fb-form-card fb-mb-1">
-                        <h3 className="fb-form-title"><i className="bi bi-search"/> Módulo de Ventas (POS)</h3>
+                        <h3 className="fb-form-title"><i className="bi bi-search"/> Buscar por nombre:</h3>
                         <div className="fb-search-input-wrap">
                             <i className="bi bi-fonts fb-search-icon"/>
                             <input
                                 type="text"
                                 className="fb-search-input"
-                                placeholder="Buscar por artículo o ID..."
+                                placeholder="Buscar por nombre del producto"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 disabled={isLoadingProducts}
@@ -117,9 +115,12 @@ function Sales() {
                                 return (
                                     <div key={product.id} className="fb-form-card fb-product-card position-relative">
                                         {dcto > 0 && (
-                                            <span className="badge bg-danger position-absolute top-0 end-0 m-2 p-1 small">
-                                                -{dcto}%
-                                            </span>
+                                            <span
+                                                className="badge bg-danger position-absolute top-50 translate-middle-y p-1 small"
+                                                style={{ right: '8px', left: 'auto', zIndex: 5 }}
+                                            >
+                                           -{dcto}%
+                                         </span>
                                         )}
                                         <h4 className="fb-product-name">{product.name}</h4>
                                         <div className="fb-mb-05">
@@ -240,7 +241,7 @@ function Sales() {
                     <div className="fb-pos-checkout-footer">
                         <div className="fb-pos-row-subtotal"><span>Subtotal:</span><span>${subtotalAmount.toFixed(2)}</span></div>
                         {discount > 0 && <div className="fb-pos-row-discount"><span>Descuento ({discount}%):</span><span>-${discountAmount.toFixed(2)}</span></div>}
-                        <div className="fb-pos-row-total"><span>Importe Total:</span><span className="fb-total-green">${totalAmount.toFixed(2)}</span></div>
+                        <div className="fb-pos-row-total"><span>Monto total:</span><span className="fb-total-green">${totalAmount.toFixed(2)}</span></div>
 
                         <button className="fb-action-btn fb-pos-submit-btn" onClick={handleCheckoutClick} disabled={isProcessingSale || cart.length === 0}>
                             <i className="bi bi-cash-coin"/> {isProcessingSale ? "Liquidando Caja..." : "Ejecutar Transacción"}
@@ -248,8 +249,6 @@ function Sales() {
                     </div>
                 </div>
             </div>
-
-            {/* 💳 MODAL SEPARADO GLOBAL RENOMBRADO */}
             <PaidModal
                 isOpen={showPaidModal}
                 onClose={() => setShowPaidModal(false)}
@@ -264,7 +263,7 @@ function Sales() {
                     <div className="modal-dialog modal-dialog-centered">
                         <div className="modal-content text-dark px-3 py-2" style={{ borderRadius: '16px' }}>
                             <div className="modal-header border-0 pb-0">
-                                <h5 className="modal-title fw-bold text-success"><i className="bi bi-person-plus-fill me-2" /> Registrar Nuevo Cliente</h5>
+                                <h5 className="modal-title fw-bold text-success"><i className="bi bi-person-plus-fill me-2" /> Registrar cliente</h5>
                                 <button type="button" className="btn-close" onClick={() => setShowRegisterModal(false)} />
                             </div>
                             <form onSubmit={handlePosRegisterSubmit}>
@@ -281,12 +280,13 @@ function Sales() {
                                             <datalist id="modal-countries">{countriesList.map((c, i) => <option key={i} value={c.name || c.countryName} />)}</datalist>
                                         </div>
                                     </div>
-                                    <div className="mb-2"><label className="form-label small fw-semibold text-secondary mb-1">Correo</label><input type="email" name="email" className="form-control bg-light" required /></div>
-                                    <div className="mb-2"><label className="form-label small fw-semibold text-secondary mb-1">Clave Temporal</label><input type="password" name="password" className="form-control bg-light" required /></div>
+                                    <div className="mb-2"><label className="form-label small fw-semibold text-secondary mb-1">Correo</label><input type="email" name="email"
+                                    autoComplete="username" className="form-control bg-light" required /></div>
+                                    <div className="mb-2"><label className="form-label small fw-semibold text-secondary mb-1">Clave temporal</label><input type="password" name="password" autoComplete="new-password" className="form-control bg-light" required /></div>
                                 </div>
                                 <div className="modal-footer border-0 pt-0">
                                     <button type="button" className="btn btn-outline-secondary" onClick={() => setShowRegisterModal(false)}>Cancelar</button>
-                                    <button type="submit" className="btn btn-success px-4">Confirmar y Seleccionar</button>
+                                    <button type="submit" className="btn btn-success px-4">Guardar y seleccionar</button>
                                 </div>
                             </form>
                         </div>
