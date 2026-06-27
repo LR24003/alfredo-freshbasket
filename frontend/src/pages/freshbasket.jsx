@@ -50,6 +50,16 @@ function Freshbasket({ onLogout }) {
     navigate("/login");
   };
 
+  // Helper dinámico para resolver el título sin romper la navegación por subrutas
+  const getTopbarTitle = () => {
+    const path = location.pathname.toLowerCase();
+    if (path.includes("cart")) return "Mi Carrito";
+    if (path.includes("reportes")) return "Reportes";
+
+    const coincidenciaMenu = menuItems.find(m => path === m.path.toLowerCase());
+    return coincidenciaMenu ? coincidenciaMenu.label : "Panel";
+  };
+
   return (
       <div className="fb-root">
         {mobileMenuOpen && (
@@ -103,9 +113,8 @@ function Freshbasket({ onLogout }) {
                 <span className="fb-mobile-brand-title">FreshBasket</span>
               </div>
               <div className="fb-desktop-titles">
-                <h2 className="fb-top-title">
-                  {location.pathname.toLowerCase().includes("cart") ? "Mi Carrito" : (menuItems.find(m => location.pathname === m.path)?.label || "Panel")}
-                </h2>
+                {/* 🌟 Título dinámico corregido y protegido */}
+                <h2 className="fb-top-title">{getTopbarTitle()}</h2>
                 <p style={{ margin: 0 }} className="fb-top-sub">Bienvenido/a</p>
               </div>
             </div>

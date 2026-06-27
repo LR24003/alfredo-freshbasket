@@ -25,6 +25,10 @@ export function useMenu(userRole) {
             ...(tieneAcceso(userRole, "verModuloUsuarios") ? [
                 { key: "usuarios",     icon: "bi-people",             label: "Usuarios",     path: "/freshbasket/usuarios" }
             ] : []),
+
+            ...(tieneAcceso(userRole, "verReportes") ? [
+                { key: "reportes",     icon: "bi-file-earmark-bar-graph", label: "Reportes", path: "/freshbasket/reportes" }
+            ] : []),
         ];
     }, [userRole]);
 

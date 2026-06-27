@@ -2,18 +2,70 @@
    ESTILOS ESPECÍFICOS DEL MÓDULO DE VENTAS (POS) - BASE DESKTOP
    ========================================================================== */
 
-.fb-pos-layout {
-    display: grid;
-    grid-template-columns: 1.2fr 0.8fr;
-    gap: 1.5rem;
-    margin-top: 0.5rem;
+@media (min-width: 992px) {
+    /* CORRECCIÓN: Ahora el bloqueo de scroll SOLO se aplica cuando estás dentro del POS */
+    .fb-form-container:has(.fb-pos-layout) {
+        height: calc(100vh - 110px) !important;
+        overflow: hidden !important;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .fb-pos-layout {
+        display: grid;
+        grid-template-columns: 1.2fr 380px;
+        gap: 1rem;
+        margin-top: 0.5rem;
+        height: 100%;
+        align-items: stretch;
+        overflow: hidden;
+    }
+
+    /* Columna Izquierda (Buscador + Tabla) */
+    .fb-pos-catalog-column {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    /* Único scroll permitido en la tabla si se llena de productos */
+    .fb-pos-catalog-column > .fb-form-card:last-child {
+        flex: 1;
+        overflow-y: auto !important;
+    }
+
+    /* Columna Derecha (Resumen de Caja completo) */
+    .fb-pos-summary-column {
+        height: 100% !important;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow: hidden !important;
+        margin: 0;
+        padding: 0.8rem !important;
+    }
+
+    .fb-pos-config-box {
+        flex: none !important;
+        overflow-y: visible !important;
+        gap: 0.5rem !important;
+        padding: 0.6rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .fb-pos-checkout-footer {
+        margin-top: auto !important;
+        flex-shrink: 0;
+        padding-top: 0.5rem !important;
+    }
+
+    .fb-pos-row-total {
+        margin-bottom: 0.5rem !important;
+    }
 }
 
-/* Catálogo Izquierdo */
-.fb-pos-catalog-column {
-    display: flex;
-    flex-direction: column;
-}
+/* --- ESTILOS COMPARTIDOS Y BASES ORIGINALES --- */
 
 .fb-pos-loading {
     text-align: center;
@@ -21,84 +73,11 @@
     color: #7f8c8d;
 }
 
-.fb-pos-grid {
-    max-height: 60vh;
-    overflow-y: auto;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-    gap: 1rem;
-}
-
-.fb-product-card {
-    padding: 0.8rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.fb-product-name {
-    font-size: 1rem;
-    margin: 0 0 0.3rem 0;
-}
-
-.fb-product-price {
-    color: #2ecc71;
-    font-weight: bold;
-    margin: 0 0 0.2rem 0;
-}
-
-.fb-product-stock {
-    font-size: 0.75rem;
-    color: #7f8c8d;
-    margin: 0 0 0.8rem 0;
-}
-
-/* Columna de Resumen Derecha */
-.fb-pos-summary-column {
-    height: fit-content;
-}
-
 .fb-summary-title {
     border-bottom: 2px solid #f4f6f7;
     padding-bottom: 0.5rem;
 }
 
-/* Carrito de Compras */
-.fb-pos-cart-container {
-    max-height: 25vh;
-    overflow-y: auto;
-    margin: 1rem 0;
-}
-
-.fb-pos-cart-empty {
-    text-align: center;
-    color: #95a5a6;
-    padding: 1.5rem 0;
-}
-
-.fb-pos-cart-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.85rem;
-}
-
-.fb-pos-cart-table tr {
-    border-bottom: 1px solid #f4f6f7;
-}
-
-.fb-pos-cart-qty-input {
-    width: 45px;
-    padding: 2px;
-}
-
-.fb-pos-cart-remove-btn {
-    background: none;
-    border: none;
-    color: #e74c3c;
-    cursor: pointer;
-}
-
-/* Caja de configuraciones internas */
 .fb-pos-config-box {
     background: #f8f9fa;
     padding: 0.8rem;
@@ -109,7 +88,6 @@
     gap: 0.8rem;
 }
 
-/* Selector del Cliente */
 .fb-pos-customer-wrap {
     position: relative;
 }
@@ -129,13 +107,16 @@
     color: #495057;
 }
 
+/* BOTÓN REGISTRAR CLIENTE: TEXTO VERDE ORIGINAL EN ESCRITORIO */
 .fb-pos-add-customer-btn {
-    background: none;
-    border: none;
-    color: #27ae60;
+    background: none !important;
+    border: none !important;
+    color: #27ae60 !important;
     font-size: 0.75rem;
     font-weight: bold;
     cursor: pointer;
+    padding: 0 !important;
+    box-shadow: none !important;
 }
 
 .fb-pos-customer-search-row {
@@ -174,7 +155,6 @@
     font-weight: 500;
 }
 
-/* Menú desplegable predictivo */
 .fb-pos-dropdown {
     position: absolute;
     top: 100%;
@@ -196,23 +176,10 @@
     border-bottom: 1px solid #eee;
 }
 
-.fb-pos-dropdown-item span {
-    font-size: 0.7rem;
-    color: #95a5a6;
-}
-
 .fb-pos-dropdown-default {
     background-color: #f1f2f6;
 }
 
-.fb-pos-dropdown-empty {
-    padding: 0.5rem 0.6rem;
-    font-size: 0.85rem;
-    color: #7f8c8d;
-    text-align: center;
-}
-
-/* Campos de entrada genéricos */
 .fb-pos-select,
 .fb-pos-discount-input {
     width: 100%;
@@ -222,7 +189,6 @@
     font-size: 0.85rem;
 }
 
-/* Sección de checkout del pie */
 .fb-pos-checkout-footer {
     border-top: 2px solid #f4f6f7;
     padding-top: 0.8rem;
@@ -258,16 +224,23 @@
     color: #27ae60;
 }
 
+/* BOTÓN DE COBRAR ORIGINAL: AZUL SÓLIDO */
 .fb-pos-submit-btn {
-    background: linear-gradient(135deg, #1a6b3a, #2ecc71);
+    background: #27ae60 !important;
+    color: #ffffff !important;
     width: 100%;
     margin: 0;
+    border: none !important;
+    padding: 0.6rem !important;
+    border-radius: 4px;
+    font-weight: bold;
 }
 
 .fb-pos-submit-btn i {
     margin-right: 0.4rem;
 }
 
+/* ─── RESTAURACIÓN: FORMULARIO INTERNO DE REGISTRO DE CLIENTES ─── */
 .fb-pos-custom-register {
     display: flex;
     flex-direction: column;
@@ -315,108 +288,99 @@
     background-color: #fff;
 }
 
-.fb-mb-15 {
-    margin-bottom: 1.5rem;
-}
-
-.fb-pos-register-actions {
-    margin-top: auto;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Clases Utilitarias rápidas */
+.fb-mb-15 { margin-bottom: 1.5rem; }
 .fb-mb-1 { margin-bottom: 1rem; }
 .fb-mt-2 { margin-top: 0.5rem; }
-.fb-p-y-05 { padding: 0.5rem 0; }
 .fb-w-100 { width: 100%; }
-.fb-p-04 { padding: 0.4rem; }
 
+/* ==========================================================================
+   RESPONSIVE - MÓVILES (MANTIENE SU FLUJO ORIGINAL)
+   ========================================================================== */
 @media (max-width: 991.98px) {
     .fb-pos-layout {
-        grid-template-columns: 1fr !important;
+        display: flex;
+        flex-direction: column;
         gap: 1.5rem !important;
     }
 
-    .fb-pos-grid {
-        max-height: 45vh !important;
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
-        gap: 0.75rem !important;
-    }
-
-    .fb-product-card {
-        padding: 0.6rem !important;
-    }
-
-    .fb-product-name {
-        font-size: 0.9rem !important;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis; /* Evita roturas por nombres extremadamente extensos */
-    }
-
-    .fb-product-price {
-        font-size: 0.95rem !important;
-    }
-
-    .fb-product-stock {
-        font-size: 0.7rem !important;
-        margin-bottom: 0.5rem !important;
-    }
-
-    /* 3. Columna del Carrito / Resumen inferior */
     .fb-pos-summary-column {
         height: auto !important;
         margin-top: 0.5rem;
     }
 
-    /* Prevención de desbordes en tablas del carrito */
-    .fb-pos-cart-container {
-        max-height: 28vh !important;
-        overflow-x: auto !important; /* Habilita el arrastre lateral táctil si las celdas se comprimen */
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .fb-pos-cart-table {
-        min-width: 300px; /* Asegura área mínima para manipulación limpia */
-    }
-
-    .fb-pos-cart-qty-input {
-        width: 42px !important;
-        padding: 4px 2px !important;
-    }
-
-    /* 4. Ajuste de campos de entrada y cajas táctiles */
     .fb-pos-config-box {
         gap: 0.65rem !important;
         padding: 0.7rem !important;
     }
 
     .fb-pos-customer-input,
-    .fb-pos-select,
-    .fb-pos-discount-input {
+    .fb-pos-select {
         padding: 0.55rem 0.5rem !important;
         font-size: 0.9rem !important;
     }
 
-    .fb-pos-dropdown {
-        max-height: 130px !important;
-    }
-
     .fb-pos-form-row {
-        flex-direction: column !important; /* Apila inputs en vez de agruparlos de a pares */
+        flex-direction: column !important;
         gap: 0.75rem !important;
     }
+}
+/* ==========================================================================
+   CORRECCIÓN INMEDIATA PARA EL MODAL DE REGISTRO DE CLIENTES
+   ========================================================================== */
 
-    .fb-pos-form-group {
-        width: 100% !important;
-    }
+.fb-pos-modal-fix form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
 
-    .fb-pos-form-input {
-        padding: 0.65rem !important;
-    }
+.fb-pos-modal-row {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+}
 
-    .fb-pos-register-actions {
-        margin-top: 1.25rem !important;
+.fb-pos-modal-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 0.3rem;
+}
+
+.fb-pos-modal-group.full-width {
+    width: 100%;
+}
+
+/* Forzar que los inputs se vean como cajas reales y estilizadas */
+.fb-pos-modal-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #495057 !important;
+}
+
+.fb-pos-modal-group input {
+    width: 100% !important;
+    padding: 0.55rem 0.75rem !important;
+    font-size: 0.9rem !important;
+    border: 1px solid #ced4da !important;
+    border-radius: 6px !important;
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    transition: border-color 0.15s ease-in-out, background-color 0.15s ease-in-out;
+}
+
+/* Efecto focus cuando el usuario escribe */
+.fb-pos-modal-group input:focus {
+    border-color: #198754 !important;
+    background-color: #ffffff !important;
+}
+
+/* Corrección para dispositivos móviles en el modal */
+@media (max-width: 576px) {
+    .fb-pos-modal-row {
+        flex-direction: column;
+        gap: 0.9rem;
     }
 }

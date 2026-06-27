@@ -1,6 +1,7 @@
 package com.group1.proyect.freshbasket.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -25,7 +26,7 @@ public class ExitRequestDTO {
     @Schema(description = "Razón de o motivo de la salida", example = "Venta")
     private String exitReason;
 
-    @NotNull(message = "El ID de la venta es obligatorio")
+    @Valid
     @Schema(description = "ID de la venta", example = "1")
     private Long saleId;
 

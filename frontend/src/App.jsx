@@ -19,8 +19,10 @@ import Entries from "./pages/entries";
 import Exits from "./pages/exits";
 import Categories from "./pages/categories";
 import Countries from "./pages/countries";
-import Cart from "./pages/Carrito.jsx";
-import Sales from "./pages/Sales.jsx";
+import Cart from "./pages/Carrito";
+import Sales from "./pages/Sales";
+import AuditLogReport from "./pages/AuditLogReport";
+import Reports from "./components/Reports.jsx"
 
 // Creación del cliente global de Queries
 const queryClient = new QueryClient({
@@ -111,6 +113,8 @@ function App() {
                             <Route path="paises" element={<Countries />} />
                             <Route path="cart" element={<Cart />} />
                             <Route path="ventas" element={<Sales />} />
+                            <Route path="Reportes" element={<Reports />} />
+                            <Route path="Reportes/auditoria" element={<AuditLogReport />} />
 
                             <Route
                                 path="my-profile"

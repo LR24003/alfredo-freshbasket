@@ -37,14 +37,14 @@ export const getExitFields = (isEditMode, activeProducts = [], userLogin = "") =
         name: "saleId",
         icon: "bi-receipt",
         placeholder: "Salida manual (No asociada a venta)",
-        disabled: true // Cambiado a disabled para consistencia visual en el modal
+        disabled: true
     },
     {
         label: isEditMode ? "Usuario que actualiza:" : "Usuario que registra:",
         name: "userName",
         icon: "bi-person",
         defaultValue: userLogin,
-        disabled: true // Consistencia visual en campos automáticos
+        disabled: true
     }
 ];
 
@@ -132,8 +132,17 @@ function Exits() {
             article="la"
             icon="bi-box-arrow-up"
             searchField="productName"
-            fields={handleGetFields}
             renderCard={renderExitCard}
+            fields={handleGetFields}
+            onBeforeSave={(payload, mode) => {
+                if (mode === "create") {
+                    if (!payload.saleId || payload.type !== "VENTA") {
+                        payload.saleId = null;
+                    }
+                }
+                return payload;
+            }}
+
         />
     );
 }

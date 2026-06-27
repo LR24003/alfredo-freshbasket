@@ -220,7 +220,6 @@ function FormLayout({
                     className="position-sticky bg-transparent pb-2 mb-3 w-100"
                     style={{
                         top: "-24px",
-
                         paddingTop: "4px"
                     }}
                 >
@@ -241,8 +240,6 @@ function FormLayout({
                                     {resource === "products" && <option value="category">Buscar por categoría</option>}
                                 </select>
                             </div>
-
-                            {/* Input de Búsqueda Dinámico */}
                             {filtroTipo !== "all" && (
                                 <div className="col-md-8">
                                     <label className="form-label fw-bold text-muted small">Valor de búsqueda:</label>
@@ -251,14 +248,33 @@ function FormLayout({
                                             className="bi bi-search text-muted position-absolute"
                                             style={{ left: "12px", top: "50%", transform: "translateY(-50%)", zIndex: "5", fontSize: "0.95rem" }}
                                         />
-                                        <input
-                                            type={filtroTipo === "id" ? "number" : "text"}
-                                            className="form-control bg-white text-dark"
-                                            placeholder={`Escribe para buscar por ${filtroTipo}...`}
-                                            value={busqueda}
-                                            onChange={(e) => setBusqueda(e.target.value)}
-                                            style={{ paddingLeft: "35px" }}
-                                        />
+                                        {resource === "products" && filtroTipo === "category" ? (
+                                            <select
+                                                className="form-select bg-white text-dark"
+                                                value={busqueda}
+                                                onChange={(e) => setBusqueda(e.target.value)}
+                                                style={{ paddingLeft: "35px" }}
+                                            >
+                                                <option value="">-- Selecciona una categoría disponible --</option>
+                                                {[...new Set(dataList.map(item => item.category || item.categoryName || item.categoria))]
+                                                    .filter(Boolean)
+                                                    .map((cat, idx) => (
+                                                        <option key={idx} value={cat}>
+                                                            {cat}
+                                                        </option>
+                                                    ))
+                                                }
+                                            </select>
+                                        ) : (
+                                            <input
+                                                type={filtroTipo === "id" ? "number" : "text"}
+                                                className="form-control bg-white text-dark"
+                                                placeholder={`Escribe para buscar por ${filtroTipo}...`}
+                                                value={busqueda}
+                                                onChange={(e) => setBusqueda(e.target.value)}
+                                                style={{ paddingLeft: "35px" }}
+                                            />
+                                        )}
                                     </div>
                                 </div>
                             )}
