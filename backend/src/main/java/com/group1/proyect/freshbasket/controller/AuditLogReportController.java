@@ -5,6 +5,8 @@ import com.group1.proyect.freshbasket.service.AuditLogReportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,5 +42,27 @@ public class AuditLogReportController {
     @Operation(summary = "Filtrar registros de auditoría por acción exacta (INSERT, UPDATE, DELETE)")
     public ResponseEntity<List<AuditLogReportResponseDTO>> getByAction(@RequestParam String action) {
         return ResponseEntity.ok(auditLogReportService.getByAction(action));
+    }
+
+    @GetMapping("/export/excel")
+    @Operation(summary = "Exportar el reporte completo de auditoría a formato Excel (.xlsx)")
+    public ResponseEntity<byte[]> exportToExcel() {
+        byte[] reportBytes = auditLogReportService.exportExcel();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=Reporte_Auditoria.xlsx")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(reportBytes);
+    }
+
+    @GetMapping("/export/pdf")
+    @Operation(summary = "Exportar el reporte completo de auditoría a formato PDF")
+    public ResponseEntity<byte[]> exportToPdf() {
+        byte[] reportBytes = auditLogReportService.exportPdf();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=Reporte_Auditoria.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(reportBytes);
     }
 }

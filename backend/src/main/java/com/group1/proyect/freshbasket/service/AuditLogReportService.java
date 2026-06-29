@@ -9,4 +9,7 @@ public interface AuditLogReportService {
     AuditLogReportResponseDTO getById(Long id);
     List<AuditLogReportResponseDTO> getByUserName(String userName);
     List<AuditLogReportResponseDTO> getByAction(String action);
+
+    byte[] exportExcel();
+    byte[] exportPdf();
 }

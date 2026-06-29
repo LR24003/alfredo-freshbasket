@@ -14,7 +14,15 @@ export default function Reports() {
             enabled: true,
             path: '/freshbasket/reportes/auditoria'
         },
-        { id: 'ventas', titulo: 'Reporte de Ventas', descripcion: 'Análisis de ingresos, métodos de pago más usados y cierres de caja.', icon: 'bi-graph-up-arrow', color: 'text-muted', bg: 'bg-light', enabled: false },
+        { id: 'ventas',
+          titulo: 'Reporte de compras por cliente (Fidelidad)',
+          descripcion: 'Análisis de ventas, total de compras por clientes fieles.',
+          icon: 'bi-graph-up-arrow',
+          color: 'text-muted',
+          bg: 'bg-light',
+          enabled: true,
+            path: '/freshbasket/reportes/ventas'
+        },
         { id: 'inventario', titulo: 'Stock e Inventario', descripcion: 'Balance de existencias, productos próximos a agotarse y alertas de reposición.', icon: 'bi-box-seam', color: 'text-muted', bg: 'bg-light', enabled: false },
         { id: 'productos', titulo: 'Productos más Vendidos', descripcion: 'Top de artículos con mayor salida del almacén y márgenes de ganancia.', icon: 'bi-stars', color: 'text-muted', bg: 'bg-light', enabled: false },
         { id: 'entradas', titulo: 'Historial de Entradas', descripcion: 'Registro consolidado de abastecimientos y compras a proveedores.', icon: 'bi-arrow-up-circle', color: 'text-muted', bg: 'bg-light', enabled: false },

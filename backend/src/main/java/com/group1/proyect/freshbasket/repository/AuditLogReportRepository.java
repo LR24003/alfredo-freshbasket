@@ -7,10 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-// Debe heredar de JpaRepository especificando <Entidad, TipoID> igual que SaleRepository
 public interface AuditLogReportRepository extends JpaRepository<AuditLogReport, Long> {
 
-    // Agrega esto en tu AuditLogReportRepository si no lo tenías antes:
     List<AuditLogReport> findByUserNameContainingIgnoreCase(String userName);
+
     List<AuditLogReport> findByActionIgnoreCase(String action);
 }
