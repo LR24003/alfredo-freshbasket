@@ -1,8 +1,6 @@
 package com.group1.proyect.freshbasket.service;
 
 import com.group1.proyect.freshbasket.dto.response.CustomerLoyalResponseDTO;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 
 public interface CustomerLoyalService {

@@ -56,6 +56,13 @@ body {
   flex-shrink: 0;
   z-index: 10;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+
+  /* MODIFICADO: Scroll ultra sutil para Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
 }
 
 .fb-sidebar-brand {
@@ -64,6 +71,7 @@ body {
   gap: 0.75rem;
   padding: 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
 }
 
 .fb-sidebar-brand-icon {
@@ -85,16 +93,33 @@ body {
 
 .fb-nav {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  overflow-x: auto;
-  white-space: nowrap;
-  -webkit-overflow-scrolling: touch;
+  overflow-y: visible;
+  overflow-x: hidden;
+  white-space: normal;
 }
 
-.fb-nav::-webkit-scrollbar {
-  display: none;
+/* MODIFICADO: Barra de scroll inteligente para Chrome, Safari y Edge */
+.fb-sidebar::-webkit-scrollbar {
+  width: 4px; /* Más delgada para no estorbar visualmente */
+  transition: all 0.3s ease;
+}
+
+/* El "tirador" de la barra solo se nota ligeramente */
+.fb-sidebar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+}
+
+/* Al pasar el mouse por encima de la barra lateral, se vuelve un poquito más visible */
+.fb-sidebar:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.fb-sidebar::-webkit-scrollbar-track {
+  background: transparent; /* Fondo transparente absoluto */
 }
 
 .fb-nav-item {
@@ -110,6 +135,7 @@ body {
   border-radius: var(--radius);
   cursor: pointer;
   transition: var(--transition);
+  width: 100%;
 }
 
 .fb-nav-item:hover {
@@ -369,9 +395,9 @@ body {
 
 .fb-section-header {
   display: flex !important;
-  flex-direction: row !important; /* CORREGIDO: Los pone en una sola línea horizontal */
-  align-items: center !important;  /* CORREGIDO: Los alinea perfectamente a la misma altura */
-  justify-content: space-between !important; /* Separa el título a la izquierda y el botón/badge a la derecha */
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
   gap: 1rem;
   margin-bottom: 1rem;
   width: 100%;
@@ -692,21 +718,35 @@ body {
     z-index: 3000 !important;
   }
 
-  .fb-sidebar {
+  body div.fb-root div.fb-sidebar,
+  body .fb-root > .fb-sidebar,
+  .fb-root .fb-sidebar.fb-sidebar {
     position: fixed !important;
-    top: 0 !important;
+    top: 0px !important;
+    bottom: 0px !important;
     left: -100% !important;
-    width: 50% !important;
+    right: auto !important;
+    width: 280px !important;
     height: 100vh !important;
-    z-index: 2050 !important;
+    max-height: 100vh !important;
+    z-index: 2500 !important;
     background-color: var(--primary-dark) !important;
     transition: left 0.3s ease-in-out !important;
-    display: block !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+
+    /* MODIFICADO: Scroll ultra sutil para Firefox móvil */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
   }
 
-  .fb-sidebar.open {
-    left: 0 !important;
-    width: 50% !important;
+  body div.fb-root div.fb-sidebar.open,
+  body .fb-root > .fb-sidebar.open,
+  .fb-root .fb-sidebar.fb-sidebar.open {
+    left: 0px !important;
   }
 
   .fb-sidebar-brand {
@@ -716,6 +756,7 @@ body {
     padding: 1.2rem 1rem !important;
     background-color: #14532d !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    flex-shrink: 0 !important;
   }
 
   .fb-sidebar-brand-name {
@@ -734,11 +775,12 @@ body {
   }
 
   .fb-sidebar nav.fb-nav {
-    display: block !important;
+    display: flex !important;
+    flex-direction: column !important;
     width: 100% !important;
     max-width: 100% !important;
     padding: 0.5rem 0 !important;
-    overflow-y: auto !important;
+    overflow-y: visible !important;
     overflow-x: hidden !important;
     white-space: normal !important;
   }
@@ -760,7 +802,8 @@ body {
   .fb-sidebar .fb-nav-item {
     display: flex !important;
     align-items: center !important;
-    justify-content: space-between !important;
+    justify-content: flex-start !important;
+    gap: 0.75rem !important;
     width: 100% !important;
     max-width: 100% !important;
     padding: 1rem 1.2rem !important;
@@ -773,6 +816,8 @@ body {
     box-sizing: border-box !important;
     float: none !important;
     clear: both !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
   }
 
   .fb-nav-item-content {
@@ -787,7 +832,8 @@ body {
   }
 
   .fb-sidebar-submenu {
-    display: block !important;
+    display: flex !important;
+    flex-direction: column !important;
     width: 100% !important;
     background-color: rgba(0, 0, 0, 0.15) !important;
     padding: 0 !important;
@@ -806,6 +852,8 @@ body {
     border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
     text-align: left !important;
     box-sizing: border-box !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
   }
 
   .fb-sidebar-overlay {
@@ -816,8 +864,9 @@ body {
     width: 100vw;
     height: 100vh;
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 2040;
+    z-index: 2400 !important;
   }
+
   .fb-logout-btn.fb-profile-trigger-btn {
     padding: 0.4rem 0.3rem !important;
   }
@@ -878,7 +927,6 @@ body {
     max-height: calc(100vh - 60px - 4rem) !important;
   }
 
-  /* El menú móvil debe superponerse, nunca empujar el contenido */
   .fb-main {
     position: relative !important;
     z-index: 1 !important;
@@ -919,7 +967,6 @@ body {
   html body .fb-root > .fb-sidebar.open {
     left: 0 !important;
   }
-
 
   html body .fb-root {
     display: block !important;
@@ -964,4 +1011,3 @@ body {
     left: 0px !important;
   }
 }
-

@@ -46,7 +46,6 @@ public class ExportDocUtil {
             Color greenZebraLight = new Color(240, 245, 241);
             Color grayBorder = new Color(230, 235, 232);
 
-            // Fuentes estandarizadas
             Font fontHeaderTitle = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 22, navyPrimary);
             Font fontSubtitle = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, greenFresh);
             Font fontTableHeader = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.WHITE);
@@ -73,11 +72,9 @@ public class ExportDocUtil {
             spacer.setSpacingAfter(10);
             document.add(spacer);
 
-            // Inicialización segura de la Tabla Principal
             PdfPTable table = new PdfPTable(headers.length);
             table.setWidthPercentage(100);
 
-            // Validación robusta de anchos de columnas
             if (widths != null && widths.length == headers.length) {
                 table.setWidths(widths);
             } else {
@@ -86,7 +83,6 @@ public class ExportDocUtil {
                 table.setWidths(defaultWidths);
             }
 
-            // Construcción del Header del PDF
             for (String header : headers) {
                 PdfPCell cell = new PdfPCell(new Phrase(header.toUpperCase(), fontTableHeader));
                 cell.setBackgroundColor(greenDarkHeader);
@@ -98,7 +94,6 @@ public class ExportDocUtil {
                 table.addCell(cell);
             }
 
-            // Construcción del Cuerpo de la Tabla
             int rowIndex = 0;
             for (List<String> row : rows) {
                 rowIndex++;
@@ -108,22 +103,16 @@ public class ExportDocUtil {
                     String cellValue = (colIndex < row.size()) ? row.get(colIndex) : "";
                     if (cellValue == null) cellValue = "";
 
-                    // INTERCEPCIÓN Y FORMATEO DE FECHAS EN PDF (Formato 24 Horas: dd/MM/yyyy HH:mm)
                     if (cellValue.contains("T") && cellValue.split("-").length >= 3) {
                         try {
-                            // Remueve nanosegundos (.164910) si vienen de la BD
                             String cleanTarget = cellValue.contains(".") ? cellValue.split("\\.")[0] : cellValue;
-
                             java.time.LocalDateTime dateTime = java.time.LocalDateTime.parse(cleanTarget);
                             java.time.format.DateTimeFormatter customFormatter =
                                     java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm", java.util.Locale.ENGLISH);
-
                             cellValue = dateTime.format(customFormatter);
-                        } catch (Exception e) {
-                        }
+                        } catch (Exception e) {}
                     }
 
-                    // Detección de moneda para aplicar color verde destacado
                     boolean isMoney = cellValue.trim().startsWith("$");
                     Font currentFont = isMoney ? fontMoneyColumn : fontTableBody;
 
@@ -133,17 +122,19 @@ public class ExportDocUtil {
 
                     String currentHeader = headers[colIndex].toUpperCase();
 
+                    // --- AJUSTE DE ALINEACIÓN EN PDF ---
                     if (isMoney || currentHeader.contains("TOTAL") || currentHeader.contains("PRECIO") || currentHeader.contains("GASTADO")) {
                         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
                     } else if (currentHeader.equals("ID") || currentHeader.contains("CÓDIGO") || currentHeader.contains("ENTIDAD")) {
                         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                    } else if (currentHeader.contains("FECHA") || currentHeader.contains("HORA") || currentHeader.contains("ACCIÓN") || currentHeader.contains("ACCIÓN")) {
+                    } else if (currentHeader.contains("FECHA") || currentHeader.contains("HORA") || currentHeader.contains("ACCIÓN")) {
                         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    } else if (currentHeader.contains("INVENTARIO") || currentHeader.contains("DISPONIBLE") || currentHeader.contains("STOCK")) {
+                        cell.setHorizontalAlignment(Element.ALIGN_CENTER); // Centrar stock/inventario disponible
                     } else {
-                        cell.setHorizontalAlignment(Element.ALIGN_LEFT); // Textos y nombres a la izquierda
+                        cell.setHorizontalAlignment(Element.ALIGN_LEFT);
                     }
 
-                    // Estilo visual de la celda (Cebra y Bordes Inferiores)
                     cell.setBackgroundColor(isEven ? greenZebraLight : Color.WHITE);
                     cell.setBorder(Rectangle.BOTTOM);
                     cell.setBorderColor(grayBorder);
@@ -162,10 +153,6 @@ public class ExportDocUtil {
         }
     }
 
-
-    /**
-     * Exporta datos a un archivo Excel altamente dinámico y adaptable.
-     */
     public static byte[] toExcel(String sheetName, String[] headers, List<Map<String, Object>> rows) {
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet(sheetName);
@@ -194,7 +181,6 @@ public class ExportDocUtil {
             headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             headerStyle.setFont(headerFont);
 
-            // --- ESTILOS CENTRADOS (Números, IDs, Totales) ---
             CellStyle cellStyleCenterNormal = workbook.createCellStyle();
             cellStyleCenterNormal.setFont(dataFont);
             cellStyleCenterNormal.setAlignment(HorizontalAlignment.CENTER);
@@ -207,7 +193,6 @@ public class ExportDocUtil {
             cellStyleCenterZebra.setAlignment(HorizontalAlignment.CENTER);
             cellStyleCenterZebra.setVerticalAlignment(VerticalAlignment.CENTER);
 
-            // --- NUEVOS ESTILOS IZQUIERDA (Nombres, Correos, Entidades) ---
             CellStyle cellStyleLeftNormal = workbook.createCellStyle();
             cellStyleLeftNormal.setFont(dataFont);
             cellStyleLeftNormal.setAlignment(HorizontalAlignment.LEFT);
@@ -219,6 +204,7 @@ public class ExportDocUtil {
             cellStyleLeftZebra.setFont(dataFont);
             cellStyleLeftZebra.setAlignment(HorizontalAlignment.LEFT);
             cellStyleLeftZebra.setVerticalAlignment(VerticalAlignment.CENTER);
+
             CellStyle moneyStyleNormal = workbook.createCellStyle();
             moneyStyleNormal.setFont(moneyFont);
             moneyStyleNormal.setDataFormat(workbook.createDataFormat().getFormat("$#,##0.00"));
@@ -233,7 +219,6 @@ public class ExportDocUtil {
             moneyStyleZebra.setAlignment(HorizontalAlignment.CENTER);
             moneyStyleZebra.setVerticalAlignment(VerticalAlignment.CENTER);
 
-            // Crear fila de encabezados
             org.apache.poi.ss.usermodel.Row headerRow = sheet.createRow(0);
             headerRow.setHeightInPoints(25);
             for (int i = 0; i < headers.length; i++) {
@@ -242,7 +227,6 @@ public class ExportDocUtil {
                 cell.setCellStyle(headerStyle);
             }
 
-            // Procesar Filas
             int rowIdx = 1;
             for (Map<String, Object> rowData : rows) {
                 org.apache.poi.ss.usermodel.Row row = sheet.createRow(rowIdx++);
@@ -263,8 +247,13 @@ public class ExportDocUtil {
                     if (val instanceof Number) {
                         cell.setCellValue(((Number) val).doubleValue());
 
+                        // --- AJUSTE DE DETECCIÓN DE DINERO EN EXCEL ---
                         if ((currentHeader.contains("PRECIO") || currentHeader.contains("TOTAL") || currentHeader.contains("MONTO") || currentHeader.contains("GASTADO"))
-                                && !currentHeader.contains("COMPRAS") && !currentHeader.contains("CANTIDAD") && !currentHeader.contains("UNIDADES")) {
+                                && !currentHeader.contains("COMPRAS")
+                                && !currentHeader.contains("CANTIDAD")
+                                && !currentHeader.contains("UNIDADES")
+                                && !currentHeader.contains("ENTRADAS")
+                                && !currentHeader.contains("SALIDAS")) {  
                             isMoney = true;
                         }
                     } else {
@@ -306,7 +295,6 @@ public class ExportDocUtil {
                 }
             }
 
-            // Auto-ajuste de columnas
             for (int i = 0; i < headers.length; i++) {
                 sheet.autoSizeColumn(i);
                 sheet.setColumnWidth(i, sheet.getColumnWidth(i) + 1200);

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { useAuditLogs } from '../hooks/useAuditLogs';
-import { downloadReportFile } from '../utils/downloadHelper.js';
+import { useInventoryReport } from '../hooks/useInventoryReport';
+import { downloadReportFile } from '../utils/downloadHelper';
 
-export default function AuditLogReport() {
+export default function InventoryReport() {
     const [filterType, setFilterType] = useState('all');
     const [filterValue, setFilterValue] = useState('');
     const [mostrarFiltros, setMostrarFiltros] = useState(false);
 
-    const { data: logs, isLoading, isError, error } = useAuditLogs(filterType, filterValue);
+    // Pasamos los filtros al hook para que realice la petición al servidor en cada cambio
+    const { data: logs, isLoading, isError, error } = useInventoryReport(filterType, filterValue);
     const dataList = logs || [];
 
     const handleFilterTypeChange = (e) => {
@@ -15,15 +16,26 @@ export default function AuditLogReport() {
         setFilterValue('');
     };
 
+    const getBadgeColor = (stockAvailable) => {
+        const stock = Number(stockAvailable);
+
+        if (isNaN(stock)) return 'bg-secondary text-white';
+
+        if (stock >= 0 && stock <= 5) {
+            return 'bg-danger text-white';
+        } else if (stock >= 6 && stock <= 25) {
+            return 'bg-warning text-dark';
+        } else {
+            return 'bg-success text-white';
+        }
+    };
+
     return (
         <div className="container-fluid px-3 pb-3 pt-0 fb-form-container position-relative">
             {/* Botón flotante para filtros */}
             <button
                 className="btn btn-primary rounded-circle shadow position-fixed d-flex align-items-center justify-content-center"
-                style={{
-                    bottom: "25px", right: "25px", width: "55px", height: "55px",
-                    zIndex: "990", fontSize: "1.5rem"
-                }}
+                style={{ bottom: "25px", right: "25px", width: "55px", height: "55px", zIndex: "990", fontSize: "1.5rem" }}
                 onClick={() => setMostrarFiltros(!mostrarFiltros)}
                 title={mostrarFiltros ? "Cerrar filtros" : "Abrir filtros"}
                 type="button"
@@ -44,8 +56,8 @@ export default function AuditLogReport() {
                                     style={{ fontSize: '0.875rem' }}
                                 >
                                     <option value="all">Mostrar todos los registros</option>
-                                    <option value="username">Buscar por usuario</option>
-                                    <option value="action">Buscar por acción</option>
+                                    <option value="productname">Buscar por producto</option>
+                                    <option value="stockavailable">Buscar por inventario disponible</option>
                                 </select>
                             </div>
 
@@ -54,15 +66,12 @@ export default function AuditLogReport() {
                                 <div className="col-md-8">
                                     <label className="form-label fw-bold text-muted small">Valor de búsqueda:</label>
                                     <div className="position-relative w-100">
-                                        <i
-                                            className="bi bi-search text-muted position-absolute"
-                                            style={{ left: "12px", top: "50%", transform: "translateY(-50%)", zIndex: "5", fontSize: "0.85rem" }}
-                                        />
-                                        {filterType === 'username' ? (
+                                        <i className="bi bi-search text-muted position-absolute" style={{ left: "12px", top: "50%", transform: "translateY(-50%)", zIndex: "5", fontSize: "0.85rem" }} />
+                                        {filterType === 'productname' ? (
                                             <input
                                                 type="text"
                                                 className="form-control bg-white text-dark small"
-                                                placeholder="Escribe el nombre del usuario..."
+                                                placeholder="Escribe el nombre del producto"
                                                 value={filterValue}
                                                 onChange={(e) => setFilterValue(e.target.value)}
                                                 style={{ paddingLeft: "35px", fontSize: '0.875rem' }}
@@ -74,10 +83,12 @@ export default function AuditLogReport() {
                                                 onChange={(e) => setFilterValue(e.target.value)}
                                                 style={{ paddingLeft: "35px", fontSize: '0.875rem' }}
                                             >
-                                                <option value="">-- Selecciona una acción --</option>
-                                                <option value="INSERT">INSERT</option>
-                                                <option value="UPDATE">UPDATE</option>
-                                                <option value="DELETE">DELETE</option>
+                                                <option value="">-- Selecciona un rango --</option>
+                                                <option value="0 a 5">0 a 5</option>
+                                                <option value="6 a 25">6 a 25</option>
+                                                <option value="26 a 50">26 a 50</option>
+                                                <option value="51 a 100">51 a 100</option>
+                                                <option value="101+">Más de 100</option>
                                             </select>
                                         )}
                                     </div>
@@ -89,13 +100,16 @@ export default function AuditLogReport() {
             )}
 
             {/* CABECERA STICKY UNIFORME */}
-            <div className="fb-section-header d-flex justify-content-between align-items-center mb-3 mt-2 p-2 px-3 bg-white rounded shadow-sm" style={{ position: "sticky", top: "0", zIndex: "100" }}>
+            <div className="fb-section-header d-flex justify-content-between align-items-center mb-3 mt-2 p-2 px-3 bg-white rounded shadow-sm"
+                 style={{ position: "sticky", top: "0", zIndex: "100" }}>
                 <span className="text-secondary fw-bold small" style={{ fontSize: '0.95rem' }}>
-                    {isLoading ? "Sincronizando con el servidor..." : `Mostrando ${dataList.length} registros de auditoría`}
+                    {isLoading ? "Sincronizando con el servidor..." : `Mostrando ${dataList.length} registros de inventario.`}
                 </span>
+
+                {/* GRUPO DE BOTONES DE EXPORTACIÓN */}
                 <div className="d-flex gap-2">
                     <button
-                        onClick={() => downloadReportFile('/api/audit-logs-report/export/excel', 'Reporte_Auditoria_FreshBasket.xlsx')}
+                        onClick={() => downloadReportFile('/api/inventory-report/export/excel', 'Reporte_Inventario.xlsx')}
                         className="btn btn-outline-success btn-sm d-flex align-items-center gap-1 px-2 fw-semibold"
                         style={{ fontSize: '0.8rem' }}
                         disabled={isLoading || dataList.length === 0}
@@ -103,7 +117,7 @@ export default function AuditLogReport() {
                         <i className="bi bi-file-earmark-excel-fill"></i> Excel
                     </button>
                     <button
-                        onClick={() => downloadReportFile('/api/audit-logs-report/export/pdf', 'Reporte_Auditoria_FreshBasket.pdf')}
+                        onClick={() => downloadReportFile('/api/inventory-report/export/pdf', 'Reporte_Inventario.pdf')}
                         className="btn btn-outline-danger btn-sm d-flex align-items-center gap-1 px-2 fw-semibold"
                         style={{ fontSize: '0.8rem' }}
                         disabled={isLoading || dataList.length === 0}
@@ -119,7 +133,7 @@ export default function AuditLogReport() {
                     {isError ? (
                         <div className="alert alert-danger m-3 small" role="alert">
                             <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                            Error al cargar reportes: {error.message}
+                            Error al cargar el reporte: {error.message}
                         </div>
                     ) : dataList.length === 0 && !isLoading ? (
                         <div className="col-12 w-100 d-flex justify-content-center align-items-center py-5" style={{ minHeight: "40vh" }}>
@@ -134,66 +148,33 @@ export default function AuditLogReport() {
                                 <thead className="table-dark text-uppercase" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>
                                 <tr>
                                     <th scope="col" className="text-center py-2" style={{ width: '80px' }}>ID</th>
-                                    <th scope="col" className="text-start py-2 ps-4">Entidad</th>
-                                    <th scope="col" className="text-center py-2">ID ENTIDAD</th>
-                                    <th scope="col" className="text-start py-2 ps-4">Usuario que modificó</th>
-                                    <th scope="col" className="text-center py-2">Acción</th>
-                                    <th scope="col" className="text-center py-2">Fecha / Hora</th>
+                                    <th scope="col" className="text-start py-2 ps-4">NOMBRE DEL PRODUCTO</th>
+                                    <th scope="col" className="text-center py-2 pe-4">PRECIO ACTUAL</th>
+                                    <th scope="col" className="text-center py-2">TOTAL ENTRADAS</th>
+                                    <th scope="col" className="text-center py-2">TOTAL SALIDAS</th>
+                                    <th scope="col" className="text-center py-2">INVENTARIO ACTUAL</th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {dataList.map((log) => (
-                                    <tr key={log.id}>
-                                        <td className="fw-bold text-secondary text-center py-2">{log.id}</td>
+                                {dataList.map((stock) => (
+                                    <tr key={stock.id}>
+                                        <td className="fw-bold text-secondary text-center py-2">{stock.id}</td>
                                         <td className="text-start fw-semibold text-primary ps-4 py-2">
-                                            <i className="me-2"></i>{log.entity}
+                                            {stock.productName}
+                                        </td>
+                                        <td className="text-center fw-bold text-success pe-4 py-2">
+                                            ${Number(stock.currentPrice || 0).toLocaleString('es-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </td>
+                                        <td className="text-center fw-semibold text-dark py-2">
+                                            {stock.totalEntries}
+                                        </td>
+                                        <td className="text-center fw-semibold text-dark py-2">
+                                            {stock.totalExits}
                                         </td>
                                         <td className="text-center py-2">
-                                            <span className="badge bg-light text-dark border px-2 py-1" style={{ fontSize: '0.75rem' }}>
-                                                ID: {log.entityId}
+                                            <span className={`badge px-2.5 py-1.5 rounded-pill ${getBadgeColor(stock.stockAvailable)}`} style={{ fontSize: '0.75rem' }}>
+                                                {stock.stockAvailable} Unidades
                                             </span>
-                                        </td>
-                                        <td className="text-start fw-semibold text-dark ps-4 py-2">
-                                            <i className="me-2 text-muted"></i>{log.userName}
-                                        </td>
-                                        <td className="text-center py-2">
-                                            <span className={`badge px-2.5 py-1.5 rounded-pill ${
-                                                log.action === 'INSERT' ? 'bg-success text-white' :
-                                                    log.action === 'UPDATE' ? 'bg-warning text-dark' :
-                                                        'bg-danger text-white'
-                                            }`} style={{ fontSize: '0.75rem' }}>
-                                                {log.action}
-                                            </span>
-                                        </td>
-                                        <td className="text-muted text-center py-2" style={{ fontSize: '0.8rem' }}>
-                                            {(() => {
-                                                if (!log.createdAt) return "Sin fecha";
-
-                                                try {
-                                                    let fechaNormalizada = log.createdAt;
-
-                                                    if (typeof fechaNormalizada === "string") {
-                                                        fechaNormalizada = fechaNormalizada.replace(" ", "T");
-                                                        const partes = fechaNormalizada.split(".");
-                                                        if (partes.length > 1) {
-                                                            fechaNormalizada = partes[0] + "." + partes[1].substring(0, 3);
-                                                        }
-                                                    }
-
-                                                    const fechaObj = new Date(fechaNormalizada);
-
-                                                    if (isNaN(fechaObj.getTime())) {
-                                                        return String(log.createdAt);
-                                                    }
-
-                                                    return fechaObj.toLocaleString('es-US', {
-                                                        year: 'numeric', month: '2-digit', day: '2-digit',
-                                                        hour: '2-digit', minute: '2-digit', second: '2-digit'
-                                                    });
-                                                } catch (e) {
-                                                    return String(log.createdAt);
-                                                }
-                                            })()}
                                         </td>
                                     </tr>
                                 ))}

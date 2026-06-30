@@ -21,9 +21,17 @@ export default function Reports() {
           color: 'text-muted',
           bg: 'bg-light',
           enabled: true,
-            path: '/freshbasket/reportes/ventas'
+          path: '/freshbasket/reportes/ventas'
         },
-        { id: 'inventario', titulo: 'Stock e Inventario', descripcion: 'Balance de existencias, productos próximos a agotarse y alertas de reposición.', icon: 'bi-box-seam', color: 'text-muted', bg: 'bg-light', enabled: false },
+        { id: 'inventario',
+          titulo: 'Reporte de inventario de productos',
+          descripcion: 'Balance de existencias, productos próximos a agotarse y alertas de reposición.',
+          icon: 'bi-box-seam',
+          color: 'text-muted',
+          bg: 'bg-light',
+          enabled: true,
+          path: '/freshbasket/reportes/inventario'
+        },
         { id: 'productos', titulo: 'Productos más Vendidos', descripcion: 'Top de artículos con mayor salida del almacén y márgenes de ganancia.', icon: 'bi-stars', color: 'text-muted', bg: 'bg-light', enabled: false },
         { id: 'entradas', titulo: 'Historial de Entradas', descripcion: 'Registro consolidado de abastecimientos y compras a proveedores.', icon: 'bi-arrow-up-circle', color: 'text-muted', bg: 'bg-light', enabled: false },
         { id: 'salidas', titulo: 'Historial de Salidas', descripcion: 'Bitácora completa de mermas, pérdidas o retiros de stock.', icon: 'bi-arrow-right-circle', color: 'text-muted', bg: 'bg-light', enabled: false },

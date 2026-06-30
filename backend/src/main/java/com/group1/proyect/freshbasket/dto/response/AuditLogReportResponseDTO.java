@@ -2,6 +2,8 @@ package com.group1.proyect.freshbasket.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,6 +11,7 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,6 +19,7 @@ import java.time.LocalDateTime;
 @Schema(description = "DTO para enviar los datos del reporte de logs de auditoría (Vista)")
 public class AuditLogReportResponseDTO {
 
+    @Id
     @Schema(description = "ID del registro de auditoría", example = "1")
     private Long id;
 

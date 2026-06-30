@@ -1,6 +1,8 @@
 package com.group1.proyect.freshbasket.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,6 +10,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,6 +18,7 @@ import java.math.BigDecimal;
 @Schema(description = "DTO para enviar los datos del reporte de clientes con mas compras (Vista)")
 public class CustomerLoyalResponseDTO {
 
+    @Id
     @Schema(description = "ID del registro de reporte", example = "1")
     private Long id;
 

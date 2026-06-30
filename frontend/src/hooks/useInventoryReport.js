@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from '../services/axiosConfig';
 
-const RESOURCE_URL = '/api/customer-loyal-report';
+const RESOURCE_URL = '/api/inventory-report';
 const getTimestamp = () => new Date().getTime();
 
-export const useCustomerLoyal = (filterType, filterValue) => {
+export const useInventoryReport = (filterType, filterValue) => {
     return useQuery({
-        queryKey: ['customer-loyal-report', filterType, filterValue],
+        queryKey: ['inventory-report', filterType, filterValue],
         queryFn: async ({ queryKey }) => {
             const [_, type, value] = queryKey;
 
@@ -15,20 +15,20 @@ export const useCustomerLoyal = (filterType, filterValue) => {
                 return response.data;
             }
 
-            if (type === 'customername') {
-                const response = await axios.get(`${RESOURCE_URL}/search/customername`, {
+            if (type === 'productname') {
+                const response = await axios.get(`${RESOURCE_URL}/search/productname`, {
                     params: {
-                        customerName: value.trim(),
+                        productName: value.trim(),
                         t: getTimestamp(),
                     }
                 });
                 return response.data;
             }
 
-            if (type === 'totalpurchases') {
-                const response = await axios.get(`${RESOURCE_URL}/search/totalpurchases`, {
+            if (type === 'stockavailable') {
+                const response = await axios.get(`${RESOURCE_URL}/search/stockavailable`, {
                     params: {
-                        totalPurchases: value,
+                        stockAvailable: value,
                         t: getTimestamp()
                     }
                 });
