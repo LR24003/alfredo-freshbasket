@@ -25,6 +25,7 @@ import AuditLogReport from "./pages/AuditLogReport";
 import Reports from "./components/Reports"
 import CustomerLoyal from "./pages/CustomerLoyal";
 import InventoryReport from "./pages/InventoryReport";
+import SalesReport from "./pages/SalesReport";
 
 // Creación del cliente global de Queries
 const queryClient = new QueryClient({
@@ -117,8 +118,9 @@ function App() {
                             <Route path="ventas" element={<Sales />} />
                             <Route path="Reportes" element={<Reports />} />
                             <Route path="Reportes/auditoria" element={<AuditLogReport />} />
-                            <Route path="Reportes/ventas" element={<CustomerLoyal />} />
+                            <Route path="Reportes/clientes" element={<CustomerLoyal />} />
                             <Route path="Reportes/inventario" element={<InventoryReport />} />
+                            <Route path="Reportes/ventas" element={<SalesReport />} />
 
                             <Route
                                 path="my-profile"
