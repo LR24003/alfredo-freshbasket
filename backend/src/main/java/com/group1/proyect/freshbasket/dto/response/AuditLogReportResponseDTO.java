@@ -2,16 +2,13 @@ package com.group1.proyect.freshbasket.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.time.LocalDateTime;
 
-@Entity
 @Getter
 @Setter
 @NoArgsConstructor
@@ -29,7 +26,7 @@ public class AuditLogReportResponseDTO {
     @Schema(description = "ID del registro específico que fue afectado en esa entidad", example = "45")
     private Long entityId;
 
-    @Schema(description = "Nombre del usuario o empleado que realizó la acción", example = "Martin Einsten Jaramillo")
+    @Schema(description = "Nombre del usuario o empleado que realizó la acción", example = "Martin Einstein Jaramillo")
     private String userName;
 
     @Schema(description = "Acción realizada sobre el registro", example = "INSERT, UPDATE, DELETE")

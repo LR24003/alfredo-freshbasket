@@ -1,7 +1,6 @@
 package com.group1.proyect.freshbasket.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,7 +9,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 
-@Entity
+
 @Getter
 @Setter
 @NoArgsConstructor
