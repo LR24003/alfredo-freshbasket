@@ -129,7 +129,7 @@ public class ExportDocUtil {
                         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
                     } else if (currentHeader.contains("FECHA") || currentHeader.contains("HORA") || currentHeader.contains("ACCIÓN")|| currentHeader.contains("PAIS")) {
                         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                    } else if (currentHeader.contains("INVENTARIO") || currentHeader.contains("DISPONIBLE") || currentHeader.contains("ESTADO")|| currentHeader.contains("UNIDADES")) {
+                    } else if (currentHeader.contains("INVENTARIO") || currentHeader.contains("RAZON") || currentHeader.contains("ESTADO")|| currentHeader.contains("UNIDADES")) {
                         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
                     } else {
                         cell.setHorizontalAlignment(Element.ALIGN_LEFT);
