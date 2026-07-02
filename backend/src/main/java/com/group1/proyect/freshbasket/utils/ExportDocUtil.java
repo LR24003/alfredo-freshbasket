@@ -46,7 +46,7 @@ public class ExportDocUtil {
             Color greenZebraLight = new Color(240, 245, 241);
             Color grayBorder = new Color(230, 235, 232);
 
-            Font fontHeaderTitle = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 22, navyPrimary);
+            Font fontHeaderTitle = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, navyPrimary);
             Font fontSubtitle = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, greenFresh);
             Font fontTableHeader = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.WHITE);
             Font fontTableBody = FontFactory.getFont(FontFactory.HELVETICA, 9, slateDarkText);
@@ -125,12 +125,12 @@ public class ExportDocUtil {
                     // --- AJUSTE DE ALINEACIÓN EN PDF ---
                     if (isMoney || currentHeader.contains("TOTAL") || currentHeader.contains("PRECIO") || currentHeader.contains("GASTADO")) {
                         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                    } else if (currentHeader.equals("ID") || currentHeader.contains("CÓDIGO") || currentHeader.contains("ENTIDAD")) {
+                    } else if (currentHeader.equals("ID") || currentHeader.contains("CORREO") || currentHeader.contains("ENTIDAD")|| currentHeader.contains("ROL")) {
                         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                    } else if (currentHeader.contains("FECHA") || currentHeader.contains("HORA") || currentHeader.contains("ACCIÓN")) {
+                    } else if (currentHeader.contains("FECHA") || currentHeader.contains("HORA") || currentHeader.contains("ACCIÓN")|| currentHeader.contains("PAIS")) {
                         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                    } else if (currentHeader.contains("INVENTARIO") || currentHeader.contains("DISPONIBLE") || currentHeader.contains("STOCK")) {
-                        cell.setHorizontalAlignment(Element.ALIGN_CENTER); // Centrar stock/inventario disponible
+                    } else if (currentHeader.contains("INVENTARIO") || currentHeader.contains("DISPONIBLE") || currentHeader.contains("ESTADO")|| currentHeader.contains("UNIDADES")) {
+                        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
                     } else {
                         cell.setHorizontalAlignment(Element.ALIGN_LEFT);
                     }

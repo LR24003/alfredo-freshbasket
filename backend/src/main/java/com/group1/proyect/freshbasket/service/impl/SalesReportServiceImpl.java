@@ -38,7 +38,7 @@ public class SalesReportServiceImpl implements SalesReportService {
     public List<SalesReportResponseDTO> getAll(){
         return salesReportRepository.findAll()
                 .stream()
-                .map(this::convertToResponseDto)
+            .map(this::convertToResponseDto)
                 .collect(Collectors.toList());
     }
 
@@ -104,12 +104,8 @@ public class SalesReportServiceImpl implements SalesReportService {
                 .collect(Collectors.toList());
     }
 
-
-
-
     @Override
     public List<SalesReportResponseDTO> getFilteredSalesByDateRange(LocalDateTime startDate, LocalDateTime endDate, String paymentMethod) {
-        // Validación de rango de fechas
         if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
             throw new IllegalArgumentException("La fecha de inicio no puede ser posterior a la fecha de fin");
         }
@@ -168,7 +164,7 @@ public class SalesReportServiceImpl implements SalesReportService {
     @Override
     public byte[] exportExcel(){
         List<SalesReportResponseDTO> data = this.getAll();
-        String[] headers = {"Id", "Fecha venta", "Precio total", "Método pago", "Estado", "Nombre empleado", "Correo empleado"};
+        String[] headers = {"Id", "Fecha venta", "Precio total", "Método pago", "Estado", "Nombre empleado", "Correo"};
 
         List<Map<String, Object>> rows = new ArrayList<>();
         for (SalesReportResponseDTO dto : data) {
@@ -190,7 +186,7 @@ public class SalesReportServiceImpl implements SalesReportService {
     @Transactional(readOnly = true)
     public byte[] exportPdf() {
         List<SalesReportResponseDTO> data = this.getAll();
-        String[] headers = {"Id", "Fecha venta", "Precio total", "Método pago", "Estado", "Nombre empleado", "Correo empleado"};
+        String[] headers = {"Id", "Fecha venta", "Precio total", "Método pago", "Estado", "Nombre empleado", "Correo"};
 
         List<List<String>> rows = new ArrayList<>();
         for (SalesReportResponseDTO dto : data) {

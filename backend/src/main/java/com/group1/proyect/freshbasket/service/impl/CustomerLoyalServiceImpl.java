@@ -101,7 +101,7 @@ public class CustomerLoyalServiceImpl implements CustomerLoyalService {
     @Override
     public byte[] exportExcel() {
         List<CustomerLoyalResponseDTO> data = this.getAll();
-        String[] headers = {"ID", "Nombre Cliente", "Correo Electronico", "Total Compras", "Total Gastado"};
+        String[] headers = {"ID", "Nombre Cliente", "Correo", "Total Compras", "Total Gastado"};
 
         List<Map<String, Object>> rows = new ArrayList<>();
         for (CustomerLoyalResponseDTO dto : data) {
@@ -121,7 +121,7 @@ public class CustomerLoyalServiceImpl implements CustomerLoyalService {
     @Transactional(readOnly = true)
     public byte[] exportPdf() {
         List<CustomerLoyalResponseDTO> data = this.getAll();
-        String[] headers = {"ID", "Nombre Cliente", "Email", "Total Compras", "Total Gastado"};
+        String[] headers = {"ID", "Nombre Cliente", "Correo", "Total Compras", "Total Gastado"};
 
         List<List<String>> rows = new ArrayList<>();
         for (CustomerLoyalResponseDTO dto : data) {

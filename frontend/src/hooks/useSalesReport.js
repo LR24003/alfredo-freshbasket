@@ -50,7 +50,6 @@ export const useSalesReport = (filterType, filterValues = {}) => {
             if (type === 'date-range') {
                 const { startDate, endDate, paymentMethod } = values;
 
-                // Si no se han definido fechas, no disparamos el filtro por rango
                 if (!startDate && !endDate) return [];
 
                 const response = await axios.get(`${RESOURCE_URL}/filter-by-range`, {

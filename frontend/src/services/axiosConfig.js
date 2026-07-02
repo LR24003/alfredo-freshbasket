@@ -2,7 +2,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 const api = axios.create({
-    baseURL: "", // Mantenlo vacío si manejas el proxy desde vite.config.js
+    baseURL: "",
     timeout: 10000
 });
 
@@ -22,11 +22,11 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        // Extraemos url y method de forma segura arriba del todo para que existan en todo el scope del error
         const url = error.config?.url || "";
         const method = error.config?.method || "";
 
-        // Flag para identificar si la petición pertenece al módulo del carrito
+        const skipGlobalError = error.config?._skipGlobalError || false;
+
         const isCartRequest = url.includes("/api/cart") || url.includes("/cart");
 
         if (error.response) {
@@ -34,14 +34,14 @@ api.interceptors.response.use(
             const serverMessage = error.response.data?.message;
 
             const isAuthRequest = url.includes("/auth/login") || url.includes("/login");
-            const isIdRequest = /\/\d+$/.test(url) && method.toLowerCase() === "get" && !isCartRequest;
 
-            // 🌟 Si es del carrito, del Auth, o consulta por ID individual, delegamos el error al hook local
-            if (isAuthRequest || isIdRequest || isCartRequest || (status === 403 && url.includes("/users"))) {
+            const isIdRequest = /\/\d+(\?.*)?$/.test(url) && method.toLowerCase() === "get" && !isCartRequest;
+
+            if (skipGlobalError || isAuthRequest || isIdRequest || isCartRequest || (status === 403 && url.includes("/users"))) {
                 return Promise.reject(error);
             }
 
-            // Sistema centralizado de control de errores con toast (Para el resto de la app)
+            // Sistema centralizado de control de errores con toast
             switch (status) {
                 case 401:
                     toast.error(serverMessage || "Sesión expirada. Por favor, inicia sesión de nuevo.");
@@ -63,12 +63,11 @@ api.interceptors.response.use(
                     toast.error(serverMessage || "Ocurrió un error inesperado.");
             }
         } else if (error.request) {
-            // Evaluado de forma segura gracias al scope superiorizado de la variable url
-            if (!isCartRequest) {
+            if (!isCartRequest && !skipGlobalError) {
                 toast.error("No se pudo conectar con el servidor. Verifica tu conexión.");
             }
         } else {
-            if (!isCartRequest) {
+            if (!isCartRequest && !skipGlobalError) {
                 toast.error("Error al procesar la solicitud.");
             }
         }

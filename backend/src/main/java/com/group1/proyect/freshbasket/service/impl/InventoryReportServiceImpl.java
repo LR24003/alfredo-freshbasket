@@ -15,12 +15,12 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class InventoryReportServiceImpl implements InventoryReportService {
 
     private final InventoryReportRepository inventoryReportRepository;
 
     @Override
-    @Transactional(readOnly = true)
     public List<InventoryReportResponseDTO> getAll(){
         return inventoryReportRepository.findAll()
                 .stream()
@@ -30,7 +30,6 @@ public class InventoryReportServiceImpl implements InventoryReportService {
 
 
     @Override
-    @Transactional(readOnly = true)
     public InventoryReportResponseDTO getById(Long id){
         return inventoryReportRepository.findById(id)
                 .map(this::convertToResponseDto)
@@ -38,7 +37,6 @@ public class InventoryReportServiceImpl implements InventoryReportService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<InventoryReportResponseDTO> getByProductName(String productName) {
         return inventoryReportRepository.findByProductNameContainingIgnoreCase(productName)
                 .stream()
@@ -47,7 +45,6 @@ public class InventoryReportServiceImpl implements InventoryReportService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<InventoryReportResponseDTO> getByStockAvailable(String stockAvailableRange){
         int min = 0;
         int max = Integer.MAX_VALUE;
@@ -98,10 +95,9 @@ public class InventoryReportServiceImpl implements InventoryReportService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public byte[] exportExcel(){
         List<InventoryReportResponseDTO> data = this.getAll();
-        String[] headers = {"Id", "Nombre del producto", "Precio actual", "Total Entradas","Total Salidas", "Inventario disponible"};
+        String[] headers = {"Id", "Nombre del producto", "Precio actual", "Total Entradas", "Total Salidas", "Inventario disponible"};
 
         List<Map<String, Object>> rows = new ArrayList<>();
         for (InventoryReportResponseDTO dto : data) {
@@ -119,10 +115,9 @@ public class InventoryReportServiceImpl implements InventoryReportService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public byte[] exportPdf(){
         List<InventoryReportResponseDTO> data = this.getAll();
-        String[] headers = {"Id", "Nombre del producto", "Precio actual", "Total Entradas","Total Salidas", "Inventario disponible"};
+        String[] headers = {"Id", "Nombre del producto", "Precio actual", "Total Entradas", "Total Salidas", "Inventario disponible"};
 
         List<List<String>> rows = new ArrayList<>();
         for (InventoryReportResponseDTO dto : data) {

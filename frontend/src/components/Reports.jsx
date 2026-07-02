@@ -39,11 +39,35 @@ export default function Reports() {
           color: 'text-white',
           bg: 'bg-primary',
           enabled: true,
-            path: '/freshbasket/reportes/ventas'
+          path: '/freshbasket/reportes/ventas'
         },
-        { id: 'entradas', titulo: 'Historial de Entradas', descripcion: 'Registro consolidado de abastecimientos y compras a proveedores.', icon: 'bi-arrow-up-circle', color: 'text-muted', bg: 'bg-light', enabled: false },
-        { id: 'salidas', titulo: 'Historial de Salidas', descripcion: 'Bitácora completa de mermas, pérdidas o retiros de stock.', icon: 'bi-arrow-right-circle', color: 'text-muted', bg: 'bg-light', enabled: false },
-        { id: 'usuarios', titulo: 'Actividad de Usuarios', descripcion: 'Resumen de sesiones iniciadas, perfiles creados y roles activos.', icon: 'bi-people', color: 'text-muted', bg: 'bg-light', enabled: false },
+        { id: 'entradas',
+          titulo: 'Historial de Entradas',
+          descripcion: 'Registro consolidado de abastecimientos y compras a proveedores.',
+          icon: 'bi-arrow-up-circle',
+          color: 'text-muted',
+          bg: 'bg-light',
+          enabled: false
+        },
+        { id: 'productos mas vendidos',
+          titulo: 'Historial de productos mas vendidos',
+          descripcion: 'Bitácora completa de los productos que se venden mas, ordenados desde mas a menos.',
+          icon: 'bi-arrow-right-circle',
+          color: 'text-white',
+          bg: 'bg-primary',
+          enabled: true,
+          path: '/freshbasket/reportes/productos'
+        },
+        { id: 'usuarios',
+          titulo: 'Reporte de usuarios',
+          descripcion: 'Reporte de usuarios registrados que están activos e inactivos, ademas de sus roles.',
+          icon: 'bi-people',
+          color: 'text-white',
+          bg: 'bg-primary',
+          enabled: true,
+          path: '/freshbasket/reportes/usuarios'
+        },
+
         { id: 'proveedores', titulo: 'Desempeño de Proveedores', descripcion: 'Frecuencia de entregas y marcas con mayor volumen de carga.', icon: 'bi-truck', color: 'text-muted', bg: 'bg-light', enabled: false }
     ];
 
