@@ -5,14 +5,14 @@ export default function Reports() {
     const navigate = useNavigate();
     const reportes = [
         {
-            id: 'auditoria',
-            titulo: 'Reporte de auditoría de cambios (Logs)',
-            descripcion: 'Historial detallado de inserciones, ediciones y eliminaciones hechas por los usuarios.',
-            icon: 'bi-shield-check',
-            color: 'text-white',
-            bg: 'bg-primary',
-            enabled: true,
-            path: '/freshbasket/reportes/auditoria'
+          id: 'auditoria',
+          titulo: 'Reporte de auditoría de cambios (Logs)',
+          descripcion: 'Historial detallado de inserciones, ediciones y eliminaciones hechas por los usuarios.',
+          icon: 'bi-shield-check',
+          color: 'text-white',
+          bg: 'bg-primary',
+          enabled: true,
+          path: '/freshbasket/reportes/auditoria'
         },
         { id: 'clientes',
           titulo: 'Reporte de compras por clientes (Fidelidad)',
@@ -69,7 +69,15 @@ export default function Reports() {
           path: '/freshbasket/reportes/usuarios'
         },
 
-        { id: 'proveedores', titulo: 'Desempeño de Proveedores', descripcion: 'Frecuencia de entregas y marcas con mayor volumen de carga.', icon: 'bi-truck', color: 'text-muted', bg: 'bg-light', enabled: false }
+        { id: 'proveedores',
+          titulo: 'Reporte de proveedores',
+          descripcion: 'Historial de productos entregados, productos principales y total inventario disponible.',
+          icon: 'bi-truck',
+          color: 'text-white',
+          bg: 'bg-primary',
+          enabled: true,
+          path: "/freshbasket/reportes/proveedores"
+        }
     ];
 
     return (

@@ -73,7 +73,6 @@ public class SalesReportServiceImpl implements SalesReportService {
 
         List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
 
-        // Usar date_part en lugar de DAY/MONTH
         if (day != null) {
             predicates.add(cb.equal(
                     cb.function("date_part", Integer.class, cb.literal("day"), root.get("saleDate")),

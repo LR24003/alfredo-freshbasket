@@ -127,7 +127,8 @@ public class ExportDocUtil {
                         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
                     } else if (currentHeader.equals("ID") || currentHeader.contains("CORREO") || currentHeader.contains("ENTIDAD")|| currentHeader.contains("ROL")) {
                         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                    } else if (currentHeader.contains("FECHA") || currentHeader.contains("HORA") || currentHeader.contains("ACCIÓN")|| currentHeader.contains("PAIS")) {
+                    } else if (currentHeader.contains("FECHA") || currentHeader.contains("HORA") || currentHeader.contains("ACCIÓN") ||
+                            currentHeader.contains("PAIS") || currentHeader.contains("CATALOGO") || currentHeader.contains("VOLUMEN")) {
                         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
                     } else if (currentHeader.contains("INVENTARIO") || currentHeader.contains("RAZON") || currentHeader.contains("ESTADO")|| currentHeader.contains("UNIDADES")) {
                         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
