@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "DTO para enviar datos del producto al cliente (con ID y relaciones)")
+@Schema(description = "DTO para enviar datos del producto al cliente (con ID, relaciones y configuración fiscal)")
 public class ProductResponseDTO {
 
     @Schema(description = "ID del producto", example = "1")
@@ -33,7 +33,7 @@ public class ProductResponseDTO {
     @Schema(description = "URL de la imagen del producto", example = "https://miapp.com/img/manzana.jpg")
     private String imageUrl;
 
-    @Schema(description = "Descuentos en el producto por promociones", example = "10%")
+    @Schema(description = "Descuento decimal aplicable al producto", example = "0.10")
     private BigDecimal discount;
 
     @Schema(description = "Indica si el producto está activo", example = "true")
@@ -56,4 +56,13 @@ public class ProductResponseDTO {
 
     @Schema(description = "Nombre del usuario", example = "Juan Martinez")
     private String userName;
+
+    @Schema(description = "Clasificación del ítem según el catálogo del MH (1: Bienes/Mercancías, 2: Servicios/Fletes)", example = "1")
+    private Integer tipoItem;
+
+    @Schema(description = "Tratamiento tributario por defecto (1: Gravado con IVA 13%, 2: Exento, 3: No sujeto)", example = "1")
+    private Integer tipoImpuestoDefecto;
+
+    @Schema(description = "Código de unidad de medida del catálogo MH (Ej: '99' para unidades/piezas)", example = "99")
+    private String unidadMedidaDefecto;
 }

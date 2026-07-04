@@ -1,18 +1,14 @@
 package com.group1.proyect.freshbasket.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.Immutable;
 
 import java.math.BigDecimal;
 
 @Entity
 @Immutable
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "view_inventory_losses_report", schema = "public")

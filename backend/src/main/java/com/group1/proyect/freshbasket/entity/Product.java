@@ -9,8 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "products")
@@ -53,6 +52,19 @@ public class Product implements Identifiable<Long> {
 
     @Column(name = "discount", nullable = false, precision = 10, scale = 2)
     private BigDecimal discount = BigDecimal.ZERO;
+
+    @NotNull(message = "El tipo de ítem de Hacienda es obligatorio")
+    @Column(name = "tipo_item_mh", nullable = false)
+    private Integer tipoItem = 1;
+
+    @NotNull(message = "El tipo de impuesto por defecto es obligatorio")
+    @Column(name = "tipo_impuesto_defecto", nullable = false)
+    private Integer tipoImpuestoDefecto = 1;
+
+    @NotBlank(message = "La unidad de medida por defecto es obligatoria")
+    @Size(max = 3)
+    @Column(name = "unidad_medida_defecto", nullable = false, length = 3)
+    private String unidadMedidaDefecto = "99";
 
     // Relación con Categoría
     @JsonIgnore

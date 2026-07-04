@@ -6,7 +6,10 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface SaleDetailsRepository extends JpaRepository<SaleDetails, Long> {
+public interface SaleDetailsRepository extends GenericRepository<SaleDetails, Long> {
 
     List<SaleDetails> findBySaleIdAndActiveTrue(Long saleId);
+
+    List<SaleDetails> findBySaleId(Long saleId);
+
 }

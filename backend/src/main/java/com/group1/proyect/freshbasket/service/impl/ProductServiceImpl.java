@@ -47,8 +47,10 @@ public class ProductServiceImpl extends GenericServiceImpl<Product, ProductReque
         dto.setImageUrl(product.getImageUrl());
         dto.setMinStock(product.getMinStock());
         dto.setDiscount(product.getDiscount());
-
         dto.setActive(product.isActive());
+        dto.setTipoItem(product.getTipoItem());
+        dto.setTipoImpuestoDefecto(product.getTipoImpuestoDefecto());
+        dto.setUnidadMedidaDefecto(product.getUnidadMedidaDefecto());
 
         if (product.getCategory() != null) {
             dto.setCategoryId(product.getCategory().getId());
@@ -102,6 +104,9 @@ public class ProductServiceImpl extends GenericServiceImpl<Product, ProductReque
         product.setImageUrl(dto.getImageUrl());
         product.setMinStock(dto.getMinStock());
         product.setDiscount(dto.getDiscount());
+        product.setTipoItem(dto.getTipoItem());
+        product.setTipoImpuestoDefecto(dto.getTipoImpuestoDefecto());
+        product.setUnidadMedidaDefecto(dto.getUnidadMedidaDefecto());
 
         String cleanCategoryName = dto.getCategoryName() != null ? dto.getCategoryName().trim() : "";
         Category category = categoryRepository.findByNameIgnoreCase(cleanCategoryName)

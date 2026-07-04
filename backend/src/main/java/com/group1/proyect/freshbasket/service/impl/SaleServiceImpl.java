@@ -18,14 +18,16 @@ import com.group1.proyect.freshbasket.service.SaleService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
-public class SaleServiceImpl extends GenericServiceImpl<Sale,
-        SaleRequestDTO, SaleResponseDTO, Long> implements SaleService {
+@Transactional(readOnly = true)
+public class SaleServiceImpl extends GenericServiceImpl<Sale, SaleRequestDTO, SaleResponseDTO, Long> implements SaleService {
 
     private final SaleRepository saleRepository;
     private final UserRepository userRepository;
@@ -68,14 +70,16 @@ public class SaleServiceImpl extends GenericServiceImpl<Sale,
             details.setProduct(product);
             details.setQuantity(detailDto.getQuantity());
             details.setUnitCost(detailDto.getUnitCost());
-            details .setDiscount(detailDto.getDiscount());
+            details.setDiscount(detailDto.getDiscount());
+            details.setTipoItemExento(detailDto.getTipoItemExento());
+            details.setUnidadMedidaCodigo(detailDto.getUnidadMedidaCodigo());
+            details.setIvaItem(detailDto.getIvaItem());
             details.setActive(true);
 
             entitiesDetails.add(details);
         }
 
         sale.setDetails(entitiesDetails);
-
         Sale savedSale = saleRepository.save(sale);
 
         for (SaleDetails savedDetails : savedSale.getDetails()) {
@@ -104,6 +108,9 @@ public class SaleServiceImpl extends GenericServiceImpl<Sale,
         dto.setTotalAmount(sale.getTotalAmount());
         dto.setPaymentMethod(sale.getPaymentMethod());
         dto.setStatus(sale.getStatus());
+        dto.setCondicionOperacion(sale.getCondicionOperacion());
+        dto.setIvaTotal(sale.getIvaTotal());
+        dto.setTotalLetras(sale.getTotalLetras());
 
         if (sale.getCustomer() != null) {
             String cName = sale.getCustomer().getName() != null ? sale.getCustomer().getName() : "";
@@ -118,12 +125,11 @@ public class SaleServiceImpl extends GenericServiceImpl<Sale,
             String eName = sale.getEmployee().getName() != null ? sale.getEmployee().getName() : "";
             String eLastName = sale.getEmployee().getLastName() != null ? sale.getEmployee().getLastName() : "";
             String eFullName = (eName + " " + eLastName).trim();
-            dto.setEmployeeName(!eFullName.isEmpty() ? eFullName : "Empleado #" + sale.getEmployee().getId());
+            dto.setEmployeeName(!eFullName.isEmpty() ? eFullName : "Empleado " + sale.getEmployee().getId());
         } else {
-            dto.setEmployeeName("Sistema / Autoventa");
+            dto.setEmployeeName("Carrito Virtual");
         }
 
-        // MAPEO MANUAL Y SEGURO: Mapeamos los detalles aquí sin depender de otro Service
         if (sale.getDetails() != null) {
             List<SaleDetailsResponseDTO> detailsDtos = sale.getDetails().stream()
                     .map(detail -> {
@@ -131,6 +137,7 @@ public class SaleServiceImpl extends GenericServiceImpl<Sale,
                         d.setId(detail.getId());
                         d.setSaleId(sale.getId());
                         if (detail.getProduct() != null) {
+                            d.setProductId(detail.getProduct().getId());
                             d.setProductName(detail.getProduct().getName());
                         } else {
                             d.setProductName("Producto no disponible");
@@ -138,6 +145,10 @@ public class SaleServiceImpl extends GenericServiceImpl<Sale,
                         d.setQuantity(detail.getQuantity());
                         d.setUnitCost(detail.getUnitCost());
                         d.setDiscount(detail.getDiscount());
+
+                        d.setTipoItemExento(detail.getTipoItemExento());
+                        d.setUnidadMedidaCodigo(detail.getUnidadMedidaCodigo());
+                        d.setIvaItem(detail.getIvaItem());
                         return d;
                     })
                     .collect(Collectors.toList());
@@ -153,6 +164,10 @@ public class SaleServiceImpl extends GenericServiceImpl<Sale,
         sale.setTotalAmount(dto.getTotalAmount());
         sale.setPaymentMethod(dto.getPaymentMethod());
         sale.setStatus(dto.getStatus());
+        sale.setCondicionOperacion(dto.getCondicionOperacion());
+        sale.setIvaTotal(dto.getIvaTotal());
+        sale.setTotalLetras(dto.getTotalLetras());
+
         mapRelationsFromDto(dto, sale);
         return sale;
     }
@@ -162,6 +177,10 @@ public class SaleServiceImpl extends GenericServiceImpl<Sale,
         sale.setTotalAmount(dto.getTotalAmount());
         sale.setPaymentMethod(dto.getPaymentMethod());
         sale.setStatus(dto.getStatus());
+        sale.setCondicionOperacion(dto.getCondicionOperacion());
+        sale.setIvaTotal(dto.getIvaTotal());
+        sale.setTotalLetras(dto.getTotalLetras());
+
         mapRelationsFromDto(dto, sale);
     }
 
@@ -177,7 +196,6 @@ public class SaleServiceImpl extends GenericServiceImpl<Sale,
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<SaleResponseDTO> getAll() {
         return saleRepository.findByActiveTrue()
                 .stream()
@@ -186,7 +204,6 @@ public class SaleServiceImpl extends GenericServiceImpl<Sale,
     }
 
     @Override
-    @Transactional(readOnly = true)
     public SaleResponseDTO getById(Long id) {
         return saleRepository.findById(id)
                 .filter(Sale::isActive)
@@ -213,10 +230,10 @@ public class SaleServiceImpl extends GenericServiceImpl<Sale,
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<SaleDetailsResponseDTO> getDetailsBySaleId(Long saleId) {
-        return saleDetailsRepository.findBySaleIdAndActiveTrue(saleId)
+        return saleDetailsRepository.findBySaleId(saleId)
                 .stream()
+                .filter(SaleDetails::isActive)
                 .map(detail -> {
                     SaleDetailsResponseDTO d = new SaleDetailsResponseDTO();
                     d.setId(detail.getId());
@@ -230,9 +247,30 @@ public class SaleServiceImpl extends GenericServiceImpl<Sale,
                     d.setQuantity(detail.getQuantity());
                     d.setUnitCost(detail.getUnitCost());
                     d.setDiscount(detail.getDiscount());
+
+                    d.setTipoItemExento(detail.getTipoItemExento());
+                    d.setUnidadMedidaCodigo(detail.getUnidadMedidaCodigo());
+                    d.setIvaItem(detail.getIvaItem());
                     return d;
                 })
                 .collect(Collectors.toList());
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SaleResponseDTO> getSalesByDateRange(LocalDateTime start, LocalDateTime end) {
+        return saleRepository.findBySaleDateBetweenAndActiveTrue(start, end)
+                .stream()
+                .map(this::convertToResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BigDecimal getDailyTotalSales() {
+        LocalDateTime inicioDia = LocalDate.now().atStartOfDay(); // 2026-XX-XX 00:00:00
+        return saleRepository.calculateDailyTotal(inicioDia).orElse(BigDecimal.ZERO);
     }
 
     @Override

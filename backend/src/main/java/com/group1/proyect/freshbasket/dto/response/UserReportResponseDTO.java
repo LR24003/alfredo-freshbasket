@@ -2,13 +2,10 @@ package com.group1.proyect.freshbasket.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
-@Setter
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "DTO para enviar los datos del reporte de usuarios")

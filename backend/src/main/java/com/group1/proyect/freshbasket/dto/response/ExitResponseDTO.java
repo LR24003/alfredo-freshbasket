@@ -7,8 +7,8 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "DTO para enviar datos de una salida (con ID y relaciones)")

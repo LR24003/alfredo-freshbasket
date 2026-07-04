@@ -3,10 +3,8 @@ package com.group1.proyect.freshbasket.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.validation.constraints.Size;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,8 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "sales")
@@ -46,6 +43,16 @@ public class Sale implements Identifiable<Long> {
 
     @Column(name = "status", nullable = false)
     private String status;
+
+    @Column(name = "condicion_operacion", nullable = false)
+    private Integer condicionOperacion = 1;
+
+    @Column(name = "iva_total", nullable = false, precision = 10, scale = 2)
+    private BigDecimal ivaTotal = BigDecimal.ZERO;
+
+    @Size(max = 255)
+    @Column(name = "total_letras")
+    private String totalLetras;
 
     @Column(name = "active", nullable = false)
     private boolean active = true;

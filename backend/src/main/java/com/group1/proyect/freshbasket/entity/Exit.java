@@ -7,8 +7,7 @@ import java.time.LocalDateTime;
 import lombok.*;
 
 @Entity
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "exits")

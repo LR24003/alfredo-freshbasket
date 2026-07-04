@@ -7,8 +7,6 @@ import java.math.BigDecimal;
 
 @Entity
 @Data
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "sale_details")
@@ -19,12 +17,10 @@ public class SaleDetails implements Identifiable<Long> {
     @Column(name = "detail_id")
     private Long id;
 
-    // Relación con la Venta madre (sale_id)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sale_id", nullable = false)
     private Sale sale;
 
-    // Relación con el Producto (product_id)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
@@ -32,12 +28,20 @@ public class SaleDetails implements Identifiable<Long> {
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    // Usamos BigDecimal para costos/precios por precisión financiera (numeric(10,2) en BD)
     @Column(name = "unit_cost", nullable = false, precision = 10, scale = 2)
     private BigDecimal unitCost;
 
     @Column(name = "discount", nullable = false, precision = 5, scale = 2)
     private BigDecimal discount = BigDecimal.ZERO;
+
+    @Column(name = "tipo_item_exento", nullable = false)
+    private Integer tipoItemExento = 1;
+
+    @Column(name = "unidad_medida_codigo", nullable = false, length = 3)
+    private String unidadMedidaCodigo = "99";
+
+    @Column(name = "iva_item", nullable = false, precision = 10, scale = 2)
+    private BigDecimal ivaItem = BigDecimal.ZERO;
 
     @Column(name = "active", nullable = false)
     private boolean active = true;

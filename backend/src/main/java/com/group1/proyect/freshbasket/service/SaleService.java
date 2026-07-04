@@ -5,6 +5,8 @@ import com.group1.proyect.freshbasket.dto.response.SaleDetailsResponseDTO;
 import com.group1.proyect.freshbasket.dto.response.SaleResponseDTO;
 import com.group1.proyect.freshbasket.entity.Sale;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface SaleService extends GenericService<Sale, SaleRequestDTO, SaleResponseDTO, Long> {
@@ -14,4 +16,8 @@ public interface SaleService extends GenericService<Sale, SaleRequestDTO, SaleRe
     List<SaleResponseDTO> getSalesByCustomerId(Long customerId);
 
     List<SaleDetailsResponseDTO> getDetailsBySaleId(Long saleId);
+
+    List<SaleResponseDTO> getSalesByDateRange(LocalDateTime start, LocalDateTime end);
+
+    BigDecimal getDailyTotalSales();
 }

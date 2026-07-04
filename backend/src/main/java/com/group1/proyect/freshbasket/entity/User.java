@@ -8,8 +8,7 @@ import java.util.List;
 import lombok.*;
 
 @Entity
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "users")
@@ -35,7 +34,7 @@ public class User implements Identifiable<Long> {
     @Column(nullable = false, length = 100, unique = true)
     private String email;
 
-    @NotBlank(message = "El telefono es obligatorio")
+    @NotBlank(message = "El teléfono es obligatorio")
     @Column(nullable = false, length = 20)
     private String phone;
 
@@ -54,6 +53,31 @@ public class User implements Identifiable<Long> {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "country_id", nullable = false)
     private Country country;
+
+    @Size(max = 2)
+    @Column(name = "tipo_documento", length = 2)
+    private String tipoDocumento = "13";
+
+    @NotBlank(message = "El número de documento legal es obligatorio")
+    @Size(max = 20)
+    @Column(name = "numero_documento", length = 20, nullable = false, unique = true)
+    private String numeroDocumento;
+
+    @Size(max = 10)
+    @Column(name = "nrc_customer", length = 10)
+    private String nrcCustomer;
+
+    @Size(max = 8)
+    @Column(name = "actividad_economica_codigo", length = 8)
+    private String actividadEconomicaCodigo;
+
+    @Size(max = 2)
+    @Column(name = "departamento_codigo", length = 2)
+    private String departamentoCodigo = "01";
+
+    @Size(max = 250)
+    @Column(name = "direccion_detallada", length = 250)
+    private String direccionDetallada;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     @JsonIgnore
